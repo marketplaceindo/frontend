@@ -18,13 +18,6 @@ Schema/DTO API diimpor dari package privat `@marketplaceindo/shared` yang di-hos
 
 `.npmrc` repo ini me-resolve scope `@marketplaceindo` ke `https://npm.pkg.github.com` dengan token dari `${GITHUB_TOKEN}`. Bila token tidak tersedia/salah, install gagal dengan `npm error 401 Unauthorized - GET https://npm.pkg.github.com/@marketplaceindo%2fshared`; bila token ada tapi scope kurang, `403 ... does not match expected scopes` → cek kembali langkah 1–2.
 
-> **⚠️ Status sementara (2026-07-14):** token `read:packages` belum tersedia di mesin dev, jadi `@marketplaceindo/shared` di-install dari tarball lokal `vendor/marketplaceindo-shared-0.1.0.tgz` (hasil `npm pack` repo shared — isinya identik dengan artefak publish). Setelah token tersedia, kembalikan ke registry:
->
-> ```bash
-> npm install @marketplaceindo/shared@0.1.0 --save-exact
-> rm -rf vendor
-> ```
-
 ## Aturan versi shared
 
 - `@marketplaceindo/shared` dipasang dengan **versi pasti** (tanpa `^`/`~`). Upgrade selalu eksplisit: baca CHANGELOG rilisnya, bump versi, sesuaikan kode, typecheck + test hijau.

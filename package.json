@@ -9,7 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@marketplaceindo/shared": "file:vendor/marketplaceindo-shared-0.1.0.tgz",
+    "@marketplaceindo/shared": "0.1.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
