@@ -1,0 +1,15 @@
+{
+  // Sementara (Fase 0): Nuxt 4 (Fase 1) akan meng-extend .nuxt/tsconfig.json.
+  // Zod 4 mensyaratkan TypeScript 5.5+ dengan strict mode.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["tests/**/*.ts"]
+}
