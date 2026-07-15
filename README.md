@@ -24,9 +24,31 @@ Schema/DTO API diimpor dari package privat `@marketplaceindo/shared` yang di-hos
 - **DILARANG mendefinisikan ulang schema/DTO API di repo ini.** Semua bentuk data API (block, section, theme, collection, request/response, konstanta) diimpor dari `@marketplaceindo/shared`. Butuh perubahan bentuk data? Berhenti — perubahan dilakukan di repo shared (lihat `docs/PLAN-SHARED.md` di repo shared), bukan di sini.
 - Catatan penamaan: schema runtime memakai suffix `Schema` (mis. `blockSchema.safeParse(...)`), sedangkan `Block` adalah tipe hasil `z.infer`.
 
+## Menjalankan (Fase 1)
+
+```bash
+npm run dev
+```
+
+Dev memakai **`lvh.me`** (DNS publik yang selalu me-resolve ke `127.0.0.1`, butuh internet; alternatif offline: `*.localhost`):
+
+| URL | Mode |
+|---|---|
+| `http://localhost:3000` / `http://lvh.me:3000` / `http://app.lvh.me:3000` | Dashboard (placeholder, dibangun Fase 7) |
+| `http://demo.lvh.me:3000` | Tenant fixture `demo` (kuliner, active) |
+| `http://otojaya.lvh.me:3000` | Tenant fixture `otojaya` (otomotif, active) |
+| `http://rintisan.lvh.me:3000/?preview=1` | Tenant `draft` — tanpa `?preview=1` → 404; preview selalu noindex |
+| `http://tutupsementara.lvh.me:3000` | Tenant `suspended` → 410 |
+
+Data situs tenant datang dari **mock render API** (`server/mock/` — fixture JSON tervalidasi schema shared, semantik kontrak §10). Saat backend siap, set `NUXT_RENDER_MOCK=false` + `NUXT_RENDER_API_BASE` + `NUXT_RENDER_SERVICE_TOKEN` (server-to-server, header `X-Service-Token`); `server/utils/render-client.ts` beralih otomatis tanpa perubahan kode.
+
+Resolusi tenant: `server/plugins/tenant.ts` membaca Host per request → `event.context.tenant` (`app`/`www`/apex → dashboard; subdomain lain → tenant). Catatan: `SUBDOMAIN_BLACKLIST` shared adalah aturan registrasi, bukan routing — subdomain seed platform (mis. `demo`) tetap di-serve sebagai tenant.
+
 ## Perintah
 
 ```bash
-npm run typecheck   # tsc --noEmit (strict, wajib untuk Zod 4)
-npm test            # vitest — termasuk smoke test konsumsi package shared
+npm run dev         # dev server (subdomain via lvh.me, lihat atas)
+npm run typecheck   # nuxt typecheck (vue-tsc) + tsc project tests
+npm test            # vitest — host parsing, fixture vs schema shared, akses per status
+npm run build       # build produksi Nitro
 ```

@@ -1,0 +1,21 @@
+{
+  // Project TS untuk unit test vitest (di luar graph .nuxt/*) — mencakup
+  // modul murni yang diuji: server/utils/tenant-host, server/mock/*.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "./**/*.ts",
+    "../server/utils/tenant-host.ts",
+    "../server/mock/**/*.ts",
+    "../shared/**/*.ts"
+  ]
+}

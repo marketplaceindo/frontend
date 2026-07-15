@@ -1,0 +1,140 @@
+{
+  "site": {
+    "tenant": { "subdomain": "demo", "status": "active", "publishedAt": "2026-07-10T03:00:00Z" },
+    "theme": {
+      "primaryColor": "#c2410c",
+      "backgroundColor": "#fff7ed",
+      "textColor": "#1c1917",
+      "fontHeading": "Poppins",
+      "fontBody": "Inter",
+      "radius": "md"
+    },
+    "template": { "slug": "kuliner" },
+    "nav": [
+      { "slug": "home", "title": "Beranda" },
+      { "slug": "menu", "title": "Menu" }
+    ],
+    "contact": { "whatsapp": "6281234567890", "address": "Jl. Melati No. 5, Bandung" }
+  },
+  "pages": {
+    "home": {
+      "page": {
+        "slug": "home",
+        "title": "Beranda",
+        "seoJson": {
+          "title": "Warung Demo — Masakan Sunda Otentik di Bandung",
+          "description": "Warung makan keluarga dengan masakan Sunda otentik sejak 2010. Nasi timbel, sate maranggi, dan menu rumahan lainnya."
+        }
+      },
+      "sections": [
+        {
+          "sectionKey": "hero",
+          "order": 0,
+          "styleJson": { "align": "center" },
+          "blocks": [
+            {
+              "type": "hero",
+              "data": {
+                "heading": "Warung Demo — Rasa Rumahan Sunda",
+                "subheading": "Masakan Sunda otentik sejak 2010, dimasak segar setiap hari.",
+                "align": "center",
+                "ctas": [{ "label": "Lihat Menu", "href": "/menu", "variant": "primary" }]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "featured_menu",
+          "order": 1,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "featured_menu",
+              "data": {
+                "heading": "Menu Andalan",
+                "items": [
+                  { "name": "Nasi Timbel Komplit", "price": 35000, "description": "Nasi timbel, ayam goreng, tahu, tempe, lalapan, sambal." },
+                  { "name": "Sate Maranggi", "price": 40000, "description": "10 tusuk, daging sapi pilihan, bumbu khas Purwakarta." },
+                  { "name": "Es Cincau Hijau", "price": 12000 }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "opening_hours",
+          "order": 2,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "opening_hours",
+              "data": {
+                "heading": "Jam Buka",
+                "hours": [
+                  { "days": "Senin–Jumat", "open": "08:00", "close": "21:00" },
+                  { "days": "Sabtu–Minggu", "open": "07:00", "close": "22:00" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "footer",
+          "order": 3,
+          "styleJson": {},
+          "blocks": [
+            { "type": "footer", "data": { "text": "© 2026 Warung Demo. Dibuat dengan MarketIndonesia." } },
+            { "type": "whatsapp_float", "data": { "whatsapp": "6281234567890", "defaultMessage": "Halo, saya mau pesan.", "position": "right" } }
+          ]
+        }
+      ]
+    },
+    "menu": {
+      "page": {
+        "slug": "menu",
+        "title": "Menu",
+        "seoJson": { "title": "Menu — Warung Demo", "description": "Daftar menu lengkap Warung Demo: makanan, minuman, dan paket keluarga." }
+      },
+      "sections": [
+        {
+          "sectionKey": "menu",
+          "order": 0,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "menu",
+              "data": {
+                "heading": "Menu Lengkap",
+                "groups": [
+                  {
+                    "title": "Makanan",
+                    "items": [
+                      { "name": "Nasi Timbel Komplit", "price": 35000 },
+                      { "name": "Sate Maranggi", "price": 40000 },
+                      { "name": "Karedok", "price": 18000 }
+                    ]
+                  },
+                  {
+                    "title": "Minuman",
+                    "items": [
+                      { "name": "Es Cincau Hijau", "price": 12000 },
+                      { "name": "Teh Tawar Panas", "price": 5000 }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "footer",
+          "order": 1,
+          "styleJson": {},
+          "blocks": [
+            { "type": "footer", "data": { "text": "© 2026 Warung Demo. Dibuat dengan MarketIndonesia." } }
+          ]
+        }
+      ]
+    }
+  }
+}

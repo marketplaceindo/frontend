@@ -1,0 +1,30 @@
+{
+  "site": {
+    "tenant": { "subdomain": "rintisan", "status": "draft", "publishedAt": null },
+    "theme": { "primaryColor": "#15803d" },
+    "template": { "slug": "bisnis-jasa" },
+    "nav": [{ "slug": "home", "title": "Beranda" }],
+    "contact": { "whatsapp": "6285611122233", "address": "Jl. Kaliurang KM 5, Yogyakarta" }
+  },
+  "pages": {
+    "home": {
+      "page": { "slug": "home", "title": "Beranda" },
+      "sections": [
+        {
+          "sectionKey": "hero",
+          "order": 0,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "hero",
+              "data": {
+                "heading": "Rintisan Kopi — Segera Hadir",
+                "subheading": "Draft situs dari wizard onboarding; hanya terlihat lewat mode preview."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

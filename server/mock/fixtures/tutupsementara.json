@@ -1,0 +1,30 @@
+{
+  "site": {
+    "tenant": { "subdomain": "tutupsementara", "status": "suspended", "publishedAt": "2026-05-01T00:00:00Z" },
+    "theme": { "primaryColor": "#7c3aed" },
+    "template": { "slug": "katalog" },
+    "nav": [{ "slug": "home", "title": "Beranda" }],
+    "contact": { "whatsapp": "6289900011122", "address": "Jl. Pahlawan No. 10, Surabaya" }
+  },
+  "pages": {
+    "home": {
+      "page": { "slug": "home", "title": "Beranda" },
+      "sections": [
+        {
+          "sectionKey": "hero",
+          "order": 0,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "hero",
+              "data": {
+                "heading": "Toko Berkah Jaya",
+                "subheading": "Tenant ini di-suspend (langganan berakhir) — render publik harus 410."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

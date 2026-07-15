@@ -5,16 +5,24 @@
   "description": "Nuxt 4 SSR (situs tenant) + dashboard MarketIndonesia. Schema/DTO API diimpor dari @marketplaceindo/shared — dilarang didefinisikan ulang di sini.",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck && tsc -p tests/tsconfig.json",
     "test": "vitest run"
   },
   "dependencies": {
     "@marketplaceindo/shared": "0.1.0",
+    "nuxt": "^4.3.1",
+    "vue": "^3.5.39",
+    "vue-router": "^4.6.4",
     "zod": "^4.0.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "vue-tsc": "^3.3.7"
   },
   "engines": {
     "node": ">=20"

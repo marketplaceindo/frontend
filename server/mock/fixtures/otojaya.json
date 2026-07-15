@@ -1,0 +1,87 @@
+{
+  "site": {
+    "tenant": { "subdomain": "otojaya", "status": "active", "publishedAt": "2026-07-12T08:30:00Z" },
+    "theme": {
+      "primaryColor": "#1d4ed8",
+      "backgroundColor": "#f8fafc",
+      "textColor": "#0f172a",
+      "fontHeading": "Plus Jakarta Sans",
+      "fontBody": "Inter",
+      "radius": "lg"
+    },
+    "template": { "slug": "otomotif" },
+    "nav": [{ "slug": "home", "title": "Beranda" }],
+    "contact": { "whatsapp": "6281299988877", "address": "Jl. Raya Serpong KM 7, Tangerang Selatan" }
+  },
+  "pages": {
+    "home": {
+      "page": {
+        "slug": "home",
+        "title": "Beranda",
+        "seoJson": {
+          "title": "Otojaya Motor — Jual Beli Mobil Bekas Berkualitas Tangerang",
+          "description": "Showroom mobil bekas terpercaya di Tangerang Selatan. Garansi mesin, bebas banjir, dokumen lengkap."
+        }
+      },
+      "sections": [
+        {
+          "sectionKey": "hero",
+          "order": 0,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "hero",
+              "data": {
+                "heading": "Otojaya Motor — Mobil Bekas Berkualitas",
+                "subheading": "Garansi mesin 1 bulan, bebas banjir, dokumen dijamin lengkap.",
+                "ctas": [{ "label": "Hubungi Sales", "href": "https://wa.me/6281299988877", "variant": "primary" }]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "stats",
+          "order": 1,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "stats",
+              "data": {
+                "items": [
+                  { "value": "350+", "label": "Unit terjual" },
+                  { "value": "12 th", "label": "Berpengalaman" },
+                  { "value": "4.9", "label": "Rating Google" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "hubungi_sales",
+          "order": 2,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "hubungi_sales",
+              "data": {
+                "heading": "Tim Sales Kami",
+                "sales": [
+                  { "name": "Ridwan", "whatsapp": "6281299988877" },
+                  { "name": "Sari", "whatsapp": "6281377766655" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "footer",
+          "order": 3,
+          "styleJson": {},
+          "blocks": [
+            { "type": "footer", "data": { "text": "© 2026 Otojaya Motor. Dibuat dengan MarketIndonesia." } }
+          ]
+        }
+      ]
+    }
+  }
+}
