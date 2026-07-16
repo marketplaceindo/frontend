@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — Level 1 cascade (default template/seed).
+ * Nilai di sini adalah fallback; Level 2 (tenant.themeJson) menimpanya lewat
+ * inline style di root wrapper layouts/tenant.vue, dan Level 3
+ * (section.styleJson) lewat inline style di wrapper tiap section.
+ * Tailwind membaca token yang sama, jadi utility (bg-primary, font-heading,
+ * text-text, dst) otomatis ikut cascade karena resolusinya via var().
+ */
+@theme {
+  --color-*: initial;
+  --color-primary: #2563eb;
+  --color-secondary: #475569;
+  --color-accent: #f59e0b;
+  --color-bg: #ffffff;
+  --color-text: #111827;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --font-heading: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Radius global tenant (theme.radius: none|sm|md|lg|full). */
+  --radius-theme: 0.5rem;
+}
+
+/* Padding-Y per section (section.styleJson.paddingY: none|sm|md|lg). */
+:root {
+  --section-py-none: 0;
+  --section-py-sm: 1rem;
+  --section-py-md: 2.5rem;
+  --section-py-lg: 5rem;
+}
+
+@layer components {
+  /* Shell situs tenant — konsumsi token (Level 2 di-set inline oleh layout). */
+  .tenant-shell {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+  }
+  .tenant-shell :is(h1, h2, h3, h4) {
+    font-family: var(--font-heading);
+  }
+  .tenant-shell a {
+    color: var(--color-primary);
+  }
+
+  /* Wrapper satu section — Level 3 (styleJson) di-set inline per section
+     dan menang atas Level 2 karena var terdekat. */
+  .section-shell {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    text-align: var(--section-align, start);
+    padding-block: var(--section-py, var(--section-py-md));
+  }
+}

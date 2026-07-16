@@ -44,6 +44,16 @@ Data situs tenant datang dari **mock render API** (`server/mock/` — fixture JS
 
 Resolusi tenant: `server/plugins/tenant.ts` membaca Host per request → `event.context.tenant` (`app`/`www`/apex → dashboard; subdomain lain → tenant). Catatan: `SUBDOMAIN_BLACKLIST` shared adalah aturan registrasi, bukan routing — subdomain seed platform (mis. `demo`) tetap di-serve sebagai tenant.
 
+## Theming (Fase 2)
+
+Design token = CSS custom properties (`--color-primary`, `--color-bg`, `--font-heading`, dst) dengan cascade 3 level:
+
+1. **Level 1** — seed default di `app/assets/css/main.css` (`@theme` Tailwind 4; utility spt `bg-primary` resolve via `var()` sehingga ikut cascade).
+2. **Level 2** — `tenant.themeJson` → `themeToVars()` → inline style root `.tenant-shell` di `layouts/tenant.vue` (ter-render di HTML SSR → tanpa FOUC).
+3. **Level 3** — `section.styleJson` → `sectionStyleToCss()` → inline style wrapper `.section-shell` per section (menang karena var terdekat).
+
+Konversi ada di `app/utils/theme-vars.ts` (murni, teruji); `app/composables/useTheme.ts` wiring reaktif + font loading dinamis via `useHead` (hanya family yang dipakai tenant, preconnect + `display=swap`). Semua nilai divalidasi ulang dengan `tenantThemeSchema`/`sectionStyleSchema` sebelum render — nilai invalid dibuang (guard injection CSS).
+
 ## Perintah
 
 ```bash

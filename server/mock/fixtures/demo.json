@@ -46,7 +46,11 @@
         {
           "sectionKey": "featured_menu",
           "order": 1,
-          "styleJson": {},
+          "styleJson": {
+            "backgroundColor": "#1c1917",
+            "textColor": "#fef3c7",
+            "paddingY": "lg"
+          },
           "blocks": [
             {
               "type": "featured_menu",

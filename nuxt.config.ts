@@ -1,13 +1,18 @@
+import tailwindcss from "@tailwindcss/vite";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2026-07-15",
   devtools: { enabled: false },
+
+  css: ["~/assets/css/main.css"],
 
   typescript: {
     strict: true,
   },
 
   vite: {
+    plugins: [tailwindcss()],
     server: {
       // Dev multi-subdomain: izinkan *.lvh.me (wildcard DNS → 127.0.0.1)
       // dan *.localhost menembus proteksi host-check Vite.

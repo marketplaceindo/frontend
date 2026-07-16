@@ -10,10 +10,14 @@ const navHref = (slug: string) => (slug === "home" ? "/" : `/${slug}`);
 const showPreviewBanner = computed(
   () => props.preview || props.site.tenant.status !== "active",
 );
+
+// Level 2 cascade: tenant.themeJson → CSS vars inline di root wrapper
+// (ter-render di HTML SSR → tanpa FOUC) + font loading dinamis.
+const { themeStyle } = useTenantTheme(() => props.site.theme);
 </script>
 
 <template>
-  <div class="tenant-shell">
+  <div class="tenant-shell" :style="themeStyle">
     <p v-if="showPreviewBanner" class="preview-banner" data-testid="preview-banner">
       Mode preview — halaman ini tidak diindeks mesin pencari dan bisa berbeda
       dari versi live.
@@ -46,12 +50,13 @@ const showPreviewBanner = computed(
 </template>
 
 <style scoped>
-/* Styling minimal Fase 1; theming CSS-variable menyusul di Fase 2. */
-.tenant-shell {
+/* Warna/font shell datang dari token .tenant-shell (main.css). */
+main,
+header,
+footer {
   max-width: 60rem;
   margin: 0 auto;
   padding: 0 1rem;
-  font-family: system-ui, sans-serif;
 }
 .preview-banner {
   background: #fef3c7;

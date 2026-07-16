@@ -111,10 +111,13 @@ function subheadingOf(block: Block): string | null {
     :site="site"
     :preview="isPreview"
   >
+    <!-- Level 3 cascade: styleJson section → CSS vars inline (menang atas theme). -->
     <section
       v-for="section in sortedSections"
       :key="section.sectionKey"
       :data-section="section.sectionKey"
+      class="section-shell"
+      :style="sectionStyleToCss(section.styleJson)"
     >
       <template v-for="(block, i) in section.blocks" :key="`${section.sectionKey}-${i}`">
         <h1 v-if="block.type === 'hero'">{{ headingOf(block) }}</h1>
