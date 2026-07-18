@@ -50,11 +50,11 @@ const { themeStyle } = useTenantTheme(() => props.site.theme);
 </template>
 
 <style scoped>
-/* Warna/font shell datang dari token .tenant-shell (main.css). */
-main,
+/* Warna/font shell dari token .tenant-shell (main.css). main full-bleed —
+   tiap section mengatur containernya sendiri via .section-inner. */
 header,
 footer {
-  max-width: 60rem;
+  max-width: 64rem;
   margin: 0 auto;
   padding: 0 1rem;
 }

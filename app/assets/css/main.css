@@ -44,8 +44,17 @@
   .tenant-shell :is(h1, h2, h3, h4) {
     font-family: var(--font-heading);
   }
-  .tenant-shell a {
+  /* :where → specificity 0, supaya utility (mis. text-white di tombol CTA)
+     selalu bisa menimpa warna link default. */
+  :where(.tenant-shell) a {
     color: var(--color-primary);
+  }
+
+  /* Container konten di dalam section full-bleed (bg section menyentuh tepi). */
+  .section-inner {
+    max-width: 64rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
   }
 
   /* Wrapper satu section — Level 3 (styleJson) di-set inline per section

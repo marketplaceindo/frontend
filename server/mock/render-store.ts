@@ -17,6 +17,7 @@ import {
   type RenderTenantResponse,
 } from "@marketplaceindo/shared";
 import demo from "./fixtures/demo.json";
+import lengkap from "./fixtures/lengkap.json";
 import otojaya from "./fixtures/otojaya.json";
 import rintisan from "./fixtures/rintisan.json";
 import tutupsementara from "./fixtures/tutupsementara.json";
@@ -41,6 +42,7 @@ export type TenantFixture = z.infer<typeof tenantFixtureSchema>;
 
 export const RAW_FIXTURES: Record<string, unknown> = {
   demo,
+  lengkap,
   otojaya,
   rintisan,
   tutupsementara,

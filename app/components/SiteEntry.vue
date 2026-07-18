@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type {
-  Block,
   RenderPageResponse,
   RenderTenantResponse,
 } from "@marketplaceindo/shared";
@@ -70,9 +69,6 @@ if (error.value) {
 }
 
 const site = computed(() => data.value?.site);
-const sortedSections = computed(() =>
-  [...(data.value?.page.sections ?? [])].sort((a, b) => a.order - b.order),
-);
 
 // SEO: title/description dari seoJson; draft/suspended/preview SELALU noindex.
 const noindex = computed(
@@ -88,20 +84,6 @@ useSeoMeta({
   description: () => data.value?.page.page.seoJson?.description,
   robots: () => (noindex.value ? "noindex, nofollow" : undefined),
 });
-
-/** Placeholder renderer Fase 1 — blockMap/SectionRenderer sesungguhnya = Fase 3. */
-function headingOf(block: Block): string | null {
-  const d: Record<string, unknown> = block.data;
-  return typeof d.heading === "string" ? d.heading : null;
-}
-function subheadingOf(block: Block): string | null {
-  const d: Record<string, unknown> = block.data;
-  return typeof d.subheading === "string"
-    ? d.subheading
-    : typeof d.text === "string"
-      ? d.text
-      : null;
-}
 </script>
 
 <template>
@@ -111,25 +93,7 @@ function subheadingOf(block: Block): string | null {
     :site="site"
     :preview="isPreview"
   >
-    <!-- Level 3 cascade: styleJson section → CSS vars inline (menang atas theme). -->
-    <section
-      v-for="section in sortedSections"
-      :key="section.sectionKey"
-      :data-section="section.sectionKey"
-      class="section-shell"
-      :style="sectionStyleToCss(section.styleJson)"
-    >
-      <template v-for="(block, i) in section.blocks" :key="`${section.sectionKey}-${i}`">
-        <h1 v-if="block.type === 'hero'">{{ headingOf(block) }}</h1>
-        <h2 v-else-if="headingOf(block)">{{ headingOf(block) }}</h2>
-        <p v-if="subheadingOf(block)">{{ subheadingOf(block) }}</p>
-        <!-- Dump data sementara supaya konten fixture terlihat; diganti Fase 3. -->
-        <details :data-block="block.type">
-          <summary><code>{{ block.type }}</code></summary>
-          <pre>{{ block.data }}</pre>
-        </details>
-      </template>
-    </section>
+    <SectionRenderer :sections="data.page.sections" />
   </NuxtLayout>
 
   <NuxtLayout v-else name="dashboard">

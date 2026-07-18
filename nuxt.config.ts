@@ -7,6 +7,25 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css"],
 
+  features: {
+    // Inline CSS ke HTML SSR — menghapus request CSS render-blocking
+    // (halaman publik tenant dinilai Lighthouse; lihat DoD Fase 3).
+    inlineStyles: true,
+  },
+
+  hooks: {
+    // Tanpa ini semua chunk JS di-<link modulepreload> berprioritas tinggi dan
+    // berebut bandwidth dengan CSS/HTML sebelum first paint (FCP mobile jeblok).
+    // Script entry tetap dimuat via <script type=module>; hydration hanya
+    // bergeser sedikit — halaman publik tenant nyaris tanpa interaksi JS.
+    "build:manifest"(manifest) {
+      for (const item of Object.values(manifest)) {
+        item.prefetch = false;
+        item.preload = false;
+      }
+    },
+  },
+
   typescript: {
     strict: true,
   },

@@ -1,0 +1,396 @@
+{
+  "site": {
+    "tenant": {
+      "subdomain": "lengkap",
+      "status": "active",
+      "publishedAt": "2026-07-15T02:00:00Z"
+    },
+    "theme": {
+      "primaryColor": "#0f766e",
+      "secondaryColor": "#334155",
+      "accentColor": "#f59e0b",
+      "backgroundColor": "#ffffff",
+      "textColor": "#111827",
+      "fontHeading": "Poppins",
+      "fontBody": "Inter",
+      "radius": "lg"
+    },
+    "template": {
+      "slug": "bisnis-jasa"
+    },
+    "nav": [
+      {
+        "slug": "home",
+        "title": "Beranda"
+      }
+    ],
+    "contact": {
+      "whatsapp": "6281255566777",
+      "address": "Jl. Sudirman Kav. 21, Jakarta Selatan"
+    }
+  },
+  "pages": {
+    "home": {
+      "page": {
+        "slug": "home",
+        "title": "Beranda",
+        "seoJson": {
+          "title": "Studio Pilar — Jasa Arsitektur & Interior Jakarta",
+          "description": "Studio arsitektur dan desain interior di Jakarta. Showcase 12 section inti MarketIndonesia dalam satu halaman."
+        }
+      },
+      "sections": [
+        {
+          "sectionKey": "navbar",
+          "order": 0,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "navbar",
+              "data": {
+                "sticky": true,
+                "links": [
+                  {
+                    "label": "Beranda",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Tentang",
+                    "href": "#tentang"
+                  },
+                  {
+                    "label": "Galeri",
+                    "href": "#galeri"
+                  },
+                  {
+                    "label": "FAQ",
+                    "href": "#faq"
+                  },
+                  {
+                    "label": "Kontak",
+                    "href": "#kontak"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "hero",
+          "order": 1,
+          "styleJson": {
+            "align": "center"
+          },
+          "blocks": [
+            {
+              "type": "hero",
+              "data": {
+                "heading": "Ruang yang Bercerita, Desain yang Bekerja",
+                "subheading": "Studio Pilar merancang rumah, kantor, dan ruang usaha yang fungsional sejak 2015.",
+                "align": "center",
+                "image": {
+                  "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22675%22%3E%3Crect%20width%3D%221200%22%20height%3D%22675%22%20fill%3D%22%230f766e%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EStudio%20Pilar%3C%2Ftext%3E%3C%2Fsvg%3E",
+                  "alt": "Portofolio Studio Pilar"
+                },
+                "ctas": [
+                  {
+                    "label": "Konsultasi Gratis",
+                    "href": "#kontak",
+                    "variant": "primary"
+                  },
+                  {
+                    "label": "Lihat Galeri",
+                    "href": "#galeri",
+                    "variant": "outline"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "about",
+          "order": 2,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "about",
+              "data": {
+                "heading": "Tentang Kami",
+                "body": "Studio Pilar berdiri sejak 2015 dengan satu keyakinan: ruang yang baik mengubah cara orang hidup dan bekerja.\n\nTim kami menggabungkan arsitek, desainer interior, dan pelaksana lapangan dalam satu alur kerja.",
+                "image": {
+                  "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22600%22%3E%3Crect%20width%3D%22800%22%20height%3D%22600%22%20fill%3D%22%23334155%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ETim%20Studio%3C%2Ftext%3E%3C%2Fsvg%3E",
+                  "alt": "Tim Studio Pilar"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "features",
+          "order": 3,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "features",
+              "data": {
+                "heading": "Kenapa Studio Pilar",
+                "items": [
+                  {
+                    "icon": "📐",
+                    "title": "Desain Terukur",
+                    "description": "Setiap gambar kerja detail dan siap bangun."
+                  },
+                  {
+                    "icon": "🧱",
+                    "title": "Satu Pintu",
+                    "description": "Desain sampai serah terima dikelola satu tim."
+                  },
+                  {
+                    "icon": "⏱️",
+                    "title": "Tepat Waktu",
+                    "description": "Jadwal transparan, laporan progres mingguan."
+                  },
+                  {
+                    "icon": "💰",
+                    "title": "RAB Jujur",
+                    "description": "Anggaran terbuka tanpa biaya tersembunyi."
+                  },
+                  {
+                    "icon": "🌿",
+                    "title": "Material Lokal",
+                    "description": "Prioritas material lokal berkualitas."
+                  },
+                  {
+                    "icon": "🛠️",
+                    "title": "Garansi Struktur",
+                    "description": "Garansi pekerjaan struktur 5 tahun."
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "gallery",
+          "order": 4,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "gallery",
+              "data": {
+                "heading": "Galeri Proyek",
+                "images": [
+                  {
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22600%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%230d9488%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ERumah%20K%3C%2Ftext%3E%3C%2Fsvg%3E",
+                    "alt": "Rumah keluarga Kemang"
+                  },
+                  {
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22600%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%230f766e%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EKantor%20A%3C%2Ftext%3E%3C%2Fsvg%3E",
+                    "alt": "Kantor startup SCBD"
+                  },
+                  {
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22600%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%23115e59%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EKafe%20B%3C%2Ftext%3E%3C%2Fsvg%3E",
+                    "alt": "Kafe di Bintaro"
+                  },
+                  {
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22600%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%23134e4a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EVilla%20C%3C%2Ftext%3E%3C%2Fsvg%3E",
+                    "alt": "Villa Puncak"
+                  },
+                  {
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22600%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%23155e75%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EKlinik%20D%3C%2Ftext%3E%3C%2Fsvg%3E",
+                    "alt": "Klinik gigi BSD"
+                  },
+                  {
+                    "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22600%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%23164e63%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EToko%20E%3C%2Ftext%3E%3C%2Fsvg%3E",
+                    "alt": "Toko roti Senopati"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "testimonials",
+          "order": 5,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "testimonials",
+              "data": {
+                "heading": "Kata Klien",
+                "items": [
+                  {
+                    "name": "Andira",
+                    "role": "Pemilik rumah, Kemang",
+                    "quote": "Prosesnya rapi dari desain sampai serah terima. Hasilnya melebihi ekspektasi.",
+                    "rating": 5
+                  },
+                  {
+                    "name": "Bimo",
+                    "role": "Founder startup",
+                    "quote": "Kantor jadi tepat waktu dan sesuai budget. Timnya responsif sekali.",
+                    "rating": 5
+                  },
+                  {
+                    "name": "Clara",
+                    "role": "Pemilik kafe",
+                    "quote": "Desainnya bikin pelanggan betah. Omzet naik sejak renovasi.",
+                    "rating": 4
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "stats",
+          "order": 6,
+          "styleJson": {
+            "backgroundColor": "#f0fdfa"
+          },
+          "blocks": [
+            {
+              "type": "stats",
+              "data": {
+                "items": [
+                  {
+                    "value": "120+",
+                    "label": "Proyek selesai"
+                  },
+                  {
+                    "value": "9 th",
+                    "label": "Berpengalaman"
+                  },
+                  {
+                    "value": "35",
+                    "label": "Kota terlayani"
+                  },
+                  {
+                    "value": "4.9",
+                    "label": "Rating klien"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "cta_band",
+          "order": 7,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "cta_band",
+              "data": {
+                "heading": "Punya proyek dalam waktu dekat?",
+                "subheading": "Ceritakan kebutuhanmu, kami bantu hitung estimasi tanpa biaya.",
+                "cta": {
+                  "label": "Mulai Konsultasi",
+                  "href": "#kontak"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "faq",
+          "order": 8,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "faq",
+              "data": {
+                "heading": "Pertanyaan Umum",
+                "items": [
+                  {
+                    "question": "Berapa lama proses desain?",
+                    "answer": "Desain konsep 2–3 minggu, gambar kerja lengkap 4–6 minggu tergantung skala proyek."
+                  },
+                  {
+                    "question": "Apakah melayani luar Jakarta?",
+                    "answer": "Ya, kami melayani seluruh Jabodetabek dan kota besar lain dengan penyesuaian biaya mobilisasi."
+                  },
+                  {
+                    "question": "Bagaimana skema pembayaran?",
+                    "answer": "Bertahap mengikuti progres: DP 20%, lalu termin sesuai milestone yang disepakati di kontrak."
+                  },
+                  {
+                    "question": "Bisa desain saja tanpa bangun?",
+                    "answer": "Bisa. Paket desain berdiri sendiri dan gambar kerja bisa dipakai kontraktor mana pun."
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "contact",
+          "order": 9,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "contact",
+              "data": {
+                "heading": "Hubungi Kami",
+                "address": "Jl. Sudirman Kav. 21, Jakarta Selatan\nSenin–Jumat 09.00–17.00",
+                "whatsapp": "6281255566777",
+                "email": "halo@studiopilar.id",
+                "mapEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966!2d106.8!3d-6.22",
+                "showForm": false
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "footer",
+          "order": 10,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "footer",
+              "data": {
+                "text": "© 2026 Studio Pilar. Seluruh hak cipta.",
+                "links": [
+                  {
+                    "label": "Tentang",
+                    "href": "#tentang"
+                  },
+                  {
+                    "label": "Kontak",
+                    "href": "#kontak"
+                  }
+                ],
+                "socials": [
+                  {
+                    "platform": "instagram",
+                    "url": "https://instagram.com/studiopilar"
+                  },
+                  {
+                    "platform": "youtube",
+                    "url": "https://youtube.com/@studiopilar"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "whatsapp_float",
+          "order": 11,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "whatsapp_float",
+              "data": {
+                "whatsapp": "6281255566777",
+                "defaultMessage": "Halo Studio Pilar, saya mau konsultasi proyek.",
+                "position": "right"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

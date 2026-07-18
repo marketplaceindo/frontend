@@ -6,6 +6,7 @@ import {
   collectGoogleFontFamilies,
   googleFontsHref,
   sectionStyleToCss,
+  selfHostedFontPlan,
   themeToVars,
 } from "../app/utils/theme-vars";
 
@@ -96,9 +97,13 @@ describe("font loading dinamis", () => {
     ).toEqual([]);
   });
 
-  it("href Google Fonts memuat subset weight + display=swap", () => {
+  it("href Google Fonts memuat subset weight per peran + display=swap", () => {
     expect(googleFontsHref({ fontHeading: "Plus Jakarta Sans", fontBody: "Inter" })).toBe(
-      "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap",
+      "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap",
+    );
+    // Family sama untuk dua peran → gabungan weight, satu entri family.
+    expect(googleFontsHref({ fontHeading: "Poppins", fontBody: "Poppins" })).toBe(
+      "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap",
     );
   });
 
@@ -109,5 +114,29 @@ describe("font loading dinamis", () => {
 
   it("nama font berbahaya tidak pernah masuk URL", () => {
     expect(googleFontsHref({ fontBody: "Inter&family=Evil@../../x" })).toBeNull();
+  });
+});
+
+describe("font self-host (registry curated)", () => {
+  it("family curated → @font-face lokal + preload woff2 heading weight teratas", () => {
+    const plan = selfHostedFontPlan({ fontHeading: "Poppins", fontBody: "Inter" });
+    expect(plan).not.toBeNull();
+    expect(plan!.css).toContain('font-family:"Poppins"');
+    expect(plan!.css).toContain("/fonts/poppins-700.woff2");
+    expect(plan!.css).toContain("/fonts/inter-400.woff2");
+    expect(plan!.css).toContain("font-display:swap");
+    expect(plan!.preload).toEqual(["/fonts/poppins-700.woff2"]);
+  });
+
+  it("ada family di luar registry → null (fallback Google Fonts)", () => {
+    expect(selfHostedFontPlan({ fontHeading: "Roboto Slab", fontBody: "Inter" })).toBeNull();
+    expect(googleFontsHref({ fontHeading: "Roboto Slab", fontBody: "Inter" })).toContain(
+      "Roboto+Slab",
+    );
+  });
+
+  it("semua font sistem → null tanpa preload", () => {
+    expect(selfHostedFontPlan({})).toBeNull();
+    expect(selfHostedFontPlan({ fontBody: "system-ui" })).toBeNull();
   });
 });

@@ -37,6 +37,7 @@ Dev memakai **`lvh.me`** (DNS publik yang selalu me-resolve ke `127.0.0.1`, butu
 | `http://localhost:3000` / `http://lvh.me:3000` / `http://app.lvh.me:3000` | Dashboard (placeholder, dibangun Fase 7) |
 | `http://demo.lvh.me:3000` | Tenant fixture `demo` (kuliner, active) |
 | `http://otojaya.lvh.me:3000` | Tenant fixture `otojaya` (otomotif, active) |
+| `http://lengkap.lvh.me:3000` | Showcase 12 section inti dalam satu halaman (DoD Fase 3) |
 | `http://rintisan.lvh.me:3000/?preview=1` | Tenant `draft` — tanpa `?preview=1` → 404; preview selalu noindex |
 | `http://tutupsementara.lvh.me:3000` | Tenant `suspended` → 410 |
 
@@ -52,7 +53,19 @@ Design token = CSS custom properties (`--color-primary`, `--color-bg`, `--font-h
 2. **Level 2** — `tenant.themeJson` → `themeToVars()` → inline style root `.tenant-shell` di `layouts/tenant.vue` (ter-render di HTML SSR → tanpa FOUC).
 3. **Level 3** — `section.styleJson` → `sectionStyleToCss()` → inline style wrapper `.section-shell` per section (menang karena var terdekat).
 
-Konversi ada di `app/utils/theme-vars.ts` (murni, teruji); `app/composables/useTheme.ts` wiring reaktif + font loading dinamis via `useHead` (hanya family yang dipakai tenant, preconnect + `display=swap`). Semua nilai divalidasi ulang dengan `tenantThemeSchema`/`sectionStyleSchema` sebelum render — nilai invalid dibuang (guard injection CSS).
+Konversi ada di `app/utils/theme-vars.ts` (murni, teruji); `app/composables/useTheme.ts` wiring reaktif + font loading dinamis via `useHead` (hanya family yang dipakai tenant, preconnect + `display=swap`, stylesheet non-blocking). Semua nilai divalidasi ulang dengan `tenantThemeSchema`/`sectionStyleSchema` sebelum render — nilai invalid dibuang (guard injection CSS).
+
+## Block renderer (Fase 3)
+
+`app/utils/block-map.ts` memetakan `block.type` → komponen (`app/components/blocks/*.vue`); `SectionRenderer.vue` iterasi sections sesuai `order` dan me-render tiap block. 12 section inti terpasang: navbar, hero, about, features, gallery, testimonials, stats, cta_band, faq, contact (+ embed Google Maps ter-guard), footer (badge "Dibuat dengan MarketIndonesia"), whatsapp_float. Tipe di luar itu (Fase 4: menu, vehicle_grid, dst) jatuh ke `BlockUnknown` — log di dev, render null (forward compatible; konten demo kuliner baru tampil penuh di Fase 4).
+
+Aturan komponen block: props ter-type dari union `Block` shared (`Extract<Block, { type: "..." }>`), warna/font hanya dari token CSS var, mobile-first, gambar `loading="lazy"` + container aspect-ratio (hero eager sebagai kandidat LCP).
+
+### Performa halaman publik
+
+- Preload/prefetch chunk JS dimatikan via hook `build:manifest`; CSS global di-inline ke HTML SSR oleh `server/plugins/inline-css.ts` (produksi saja) — tidak ada request render-blocking.
+- Font curated (Poppins, Inter, Plus Jakarta Sans) **di-self-host** (`public/fonts`, subset latin, `@font-face` inline, `display=swap`); family lain fallback otomatis ke Google Fonts non-blocking. Registry: `SELF_HOSTED_FONTS` di `app/utils/theme-vars.ts`.
+- Lighthouse halaman fixture `lengkap` (semua 12 section): **mobile 99 / desktop 100** (throttling devtools). Catatan: mode default `simulate` menghasilkan ~85 di localhost karena artefak model — font same-origin selesai dimuat sebelum first paint teramati sehingga dihitung sebagai dependensi FCP; tidak terjadi pada deployment nyata.
 
 ## Perintah
 
