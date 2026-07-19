@@ -9,6 +9,8 @@ import type { ImageRef } from "@marketplaceindo/shared";
 const props = defineProps<{
   image?: ImageRef;
   eager?: boolean;
+  /** object-contain (logo) alih-alih object-cover (foto). */
+  contain?: boolean;
 }>();
 
 const src = computed(() => props.image?.url ?? null);
@@ -22,6 +24,7 @@ const src = computed(() => props.image?.url ?? null);
     :loading="eager ? 'eager' : 'lazy'"
     :fetchpriority="eager ? 'high' : undefined"
     decoding="async"
-    class="h-full w-full object-cover"
+    class="h-full w-full"
+    :class="contain ? 'object-contain' : 'object-cover'"
   />
 </template>

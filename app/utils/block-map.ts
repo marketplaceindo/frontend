@@ -1,6 +1,7 @@
 /**
- * blockMap Fase 3: type block → komponen Vue. 12 section inti; tipe khas
- * template & fungsional (services, menu, vehicle_grid, dst) menyusul Fase 4.
+ * blockMap: type block → komponen Vue. Fase 3 = 12 section inti;
+ * Fase 4 = section khas template (bisnis_jasa/katalog/kuliner/otomotif)
+ * + block fungsional (simulasi_kredit, test_drive, hubungi_sales).
  * Tipe tak dikenal → BlockUnknown (log dev, render null) — forward compatibility.
  */
 import { defineComponent, type Component } from "vue";
@@ -17,6 +18,23 @@ import BlockFaq from "../components/blocks/BlockFaq.vue";
 import BlockContact from "../components/blocks/BlockContact.vue";
 import BlockFooter from "../components/blocks/BlockFooter.vue";
 import BlockWhatsappFloat from "../components/blocks/BlockWhatsappFloat.vue";
+import BlockServices from "../components/blocks/BlockServices.vue";
+import BlockProcess from "../components/blocks/BlockProcess.vue";
+import BlockTeam from "../components/blocks/BlockTeam.vue";
+import BlockClientLogos from "../components/blocks/BlockClientLogos.vue";
+import BlockProductGrid from "../components/blocks/BlockProductGrid.vue";
+import BlockProductCategories from "../components/blocks/BlockProductCategories.vue";
+import BlockPriceList from "../components/blocks/BlockPriceList.vue";
+import BlockPromoBanner from "../components/blocks/BlockPromoBanner.vue";
+import BlockMenu from "../components/blocks/BlockMenu.vue";
+import BlockFeaturedMenu from "../components/blocks/BlockFeaturedMenu.vue";
+import BlockOpeningHours from "../components/blocks/BlockOpeningHours.vue";
+import BlockReservation from "../components/blocks/BlockReservation.vue";
+import BlockVehicleGrid from "../components/blocks/BlockVehicleGrid.vue";
+import BlockFeaturedVehicles from "../components/blocks/BlockFeaturedVehicles.vue";
+import BlockSimulasiKredit from "../components/blocks/BlockSimulasiKredit.vue";
+import BlockTestDrive from "../components/blocks/BlockTestDrive.vue";
+import BlockHubungiSales from "../components/blocks/BlockHubungiSales.vue";
 
 /** Fallback: log sekali di dev, tidak me-render apa pun. */
 export const BlockUnknown = defineComponent({
@@ -36,7 +54,8 @@ export const CORE_BLOCK_TYPES = [
   "stats", "cta_band", "faq", "contact", "footer", "whatsapp_float",
 ] as const satisfies readonly BlockType[];
 
-export const blockMap: Partial<Record<BlockType, Component>> = {
+export const blockMap: Record<BlockType, Component> = {
+  // Inti (Fase 3)
   navbar: BlockNavbar,
   hero: BlockHero,
   about: BlockAbout,
@@ -49,6 +68,27 @@ export const blockMap: Partial<Record<BlockType, Component>> = {
   contact: BlockContact,
   footer: BlockFooter,
   whatsapp_float: BlockWhatsappFloat,
+  // Bisnis & Jasa (Fase 4)
+  services: BlockServices,
+  process: BlockProcess,
+  team: BlockTeam,
+  client_logos: BlockClientLogos,
+  // Katalog (Fase 4)
+  product_grid: BlockProductGrid,
+  product_categories: BlockProductCategories,
+  price_list: BlockPriceList,
+  promo_banner: BlockPromoBanner,
+  // Kuliner (Fase 4)
+  menu: BlockMenu,
+  featured_menu: BlockFeaturedMenu,
+  opening_hours: BlockOpeningHours,
+  reservation: BlockReservation,
+  // Otomotif + fungsional (Fase 4)
+  vehicle_grid: BlockVehicleGrid,
+  featured_vehicles: BlockFeaturedVehicles,
+  simulasi_kredit: BlockSimulasiKredit,
+  test_drive: BlockTestDrive,
+  hubungi_sales: BlockHubungiSales,
 };
 
 export function resolveBlock(type: string): Component {

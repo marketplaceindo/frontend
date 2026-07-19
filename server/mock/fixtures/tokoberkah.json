@@ -1,0 +1,278 @@
+{
+  "site": {
+    "tenant": {
+      "subdomain": "tokoberkah",
+      "status": "active",
+      "publishedAt": "2026-07-14T01:00:00Z"
+    },
+    "theme": {
+      "primaryColor": "#7c2d12",
+      "secondaryColor": "#0f172a",
+      "accentColor": "#f59e0b",
+      "backgroundColor": "#fffbeb",
+      "textColor": "#1c1917",
+      "fontHeading": "Plus Jakarta Sans",
+      "fontBody": "Inter",
+      "radius": "sm"
+    },
+    "template": {
+      "slug": "katalog"
+    },
+    "nav": [
+      {
+        "slug": "home",
+        "title": "Beranda"
+      }
+    ],
+    "contact": {
+      "whatsapp": "6285677788899",
+      "address": "Jl. Pasar Baru No. 88, Jakarta Pusat"
+    }
+  },
+  "products": [
+    {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "slug": "kopi-arabika-gayo-250g",
+      "name": "Kopi Arabika Gayo 250g",
+      "category": "Kopi",
+      "price": 85000,
+      "createdAt": "2026-07-01T03:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "inStock": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "slug": "kopi-robusta-lampung-250g",
+      "name": "Kopi Robusta Lampung 250g",
+      "category": "Kopi",
+      "price": 55000,
+      "createdAt": "2026-07-02T03:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "inStock": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000013",
+      "slug": "teh-melati-premium",
+      "name": "Teh Melati Premium 100g",
+      "category": "Teh",
+      "price": 40000,
+      "createdAt": "2026-07-03T03:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "inStock": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000014",
+      "slug": "madu-hutan-500ml",
+      "name": "Madu Hutan Asli 500ml",
+      "category": "Madu",
+      "price": 120000,
+      "createdAt": "2026-07-04T03:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "inStock": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000015",
+      "slug": "gula-aren-organik",
+      "name": "Gula Aren Organik 500g",
+      "category": "Gula",
+      "price": 35000,
+      "createdAt": "2026-07-05T03:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "inStock": false
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000016",
+      "slug": "keripik-pisang-cokelat",
+      "name": "Keripik Pisang Cokelat 200g",
+      "category": "Camilan",
+      "price": 25000,
+      "createdAt": "2026-07-06T03:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "inStock": true
+    }
+  ],
+  "pages": {
+    "home": {
+      "page": {
+        "slug": "home",
+        "title": "Beranda",
+        "seoJson": {
+          "title": "Toko Berkah — Oleh-oleh & Pangan Nusantara",
+          "description": "Kopi, teh, madu, dan camilan khas Nusantara. Kirim ke seluruh Indonesia."
+        }
+      },
+      "sections": [
+        {
+          "sectionKey": "navbar",
+          "order": 0,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "navbar",
+              "data": {
+                "sticky": true,
+                "links": [
+                  {
+                    "label": "Beranda",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Produk",
+                    "href": "#produk"
+                  },
+                  {
+                    "label": "Kontak",
+                    "href": "#kontak"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "hero",
+          "order": 1,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "hero",
+              "data": {
+                "heading": "Oleh-oleh & Pangan Nusantara Pilihan",
+                "subheading": "Dari petani dan UMKM lokal, dikurasi Toko Berkah sejak 2012.",
+                "align": "center",
+                "ctas": [
+                  {
+                    "label": "Belanja Sekarang",
+                    "href": "#produk",
+                    "variant": "primary"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "promo_banner",
+          "order": 2,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "promo_banner",
+              "data": {
+                "text": "Gratis ongkir Jabodetabek untuk belanja di atas Rp150rb",
+                "until": "2026-08-31T16:59:00Z"
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "product_categories",
+          "order": 3,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "product_categories",
+              "data": {
+                "heading": "Kategori",
+                "categories": [
+                  {
+                    "name": "Kopi",
+                    "image": {
+                      "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22400%22%3E%3Crect%20width%3D%22400%22%20height%3D%22400%22%20fill%3D%22%237c2d12%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EKopi%3C%2Ftext%3E%3C%2Fsvg%3E",
+                      "alt": "Kategori kopi"
+                    }
+                  },
+                  {
+                    "name": "Teh",
+                    "image": {
+                      "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22400%22%3E%3Crect%20width%3D%22400%22%20height%3D%22400%22%20fill%3D%22%23166534%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ETeh%3C%2Ftext%3E%3C%2Fsvg%3E",
+                      "alt": "Kategori teh"
+                    }
+                  },
+                  {
+                    "name": "Madu",
+                    "image": {
+                      "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22400%22%3E%3Crect%20width%3D%22400%22%20height%3D%22400%22%20fill%3D%22%23b45309%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EMadu%3C%2Ftext%3E%3C%2Fsvg%3E",
+                      "alt": "Kategori madu"
+                    }
+                  },
+                  {
+                    "name": "Camilan",
+                    "image": {
+                      "url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22400%22%3E%3Crect%20width%3D%22400%22%20height%3D%22400%22%20fill%3D%22%239a3412%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23ffffff%22%20font-family%3D%22sans-serif%22%20font-size%3D%2240%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ECamilan%3C%2Ftext%3E%3C%2Fsvg%3E",
+                      "alt": "Kategori camilan"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "product_grid",
+          "order": 4,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "product_grid",
+              "data": {
+                "heading": "Produk Terbaru",
+                "limit": 8
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "price_list",
+          "order": 5,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "price_list",
+              "data": {
+                "heading": "Daftar Harga Grosir",
+                "groups": [
+                  {
+                    "title": "Kopi (min. 5 kg)",
+                    "items": [
+                      {
+                        "name": "Arabika Gayo /kg",
+                        "price": 290000
+                      },
+                      {
+                        "name": "Robusta Lampung /kg",
+                        "price": 180000,
+                        "description": "Roast level medium"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "footer",
+          "order": 6,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "footer",
+              "data": {
+                "text": "© 2026 Toko Berkah."
+              }
+            },
+            {
+              "type": "whatsapp_float",
+              "data": {
+                "whatsapp": "6285677788899",
+                "defaultMessage": "Halo Toko Berkah, saya mau pesan.",
+                "position": "right"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

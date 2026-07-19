@@ -70,6 +70,12 @@ if (error.value) {
 
 const site = computed(() => data.value?.site);
 
+// Bagikan data situs ke block (mis. VehicleCard butuh WA kontak tenant).
+const tenantSite = useTenantSite();
+watchEffect(() => {
+  tenantSite.value = data.value?.site ?? null;
+});
+
 // SEO: title/description dari seoJson; draft/suspended/preview SELALU noindex.
 const noindex = computed(
   () =>

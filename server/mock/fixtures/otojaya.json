@@ -1,6 +1,10 @@
 {
   "site": {
-    "tenant": { "subdomain": "otojaya", "status": "active", "publishedAt": "2026-07-12T08:30:00Z" },
+    "tenant": {
+      "subdomain": "otojaya",
+      "status": "active",
+      "publishedAt": "2026-07-12T08:30:00Z"
+    },
     "theme": {
       "primaryColor": "#1d4ed8",
       "backgroundColor": "#f8fafc",
@@ -9,9 +13,19 @@
       "fontBody": "Inter",
       "radius": "lg"
     },
-    "template": { "slug": "otomotif" },
-    "nav": [{ "slug": "home", "title": "Beranda" }],
-    "contact": { "whatsapp": "6281299988877", "address": "Jl. Raya Serpong KM 7, Tangerang Selatan" }
+    "template": {
+      "slug": "otomotif"
+    },
+    "nav": [
+      {
+        "slug": "home",
+        "title": "Beranda"
+      }
+    ],
+    "contact": {
+      "whatsapp": "6281299988877",
+      "address": "Jl. Raya Serpong KM 7, Tangerang Selatan"
+    }
   },
   "pages": {
     "home": {
@@ -34,7 +48,13 @@
               "data": {
                 "heading": "Otojaya Motor — Mobil Bekas Berkualitas",
                 "subheading": "Garansi mesin 1 bulan, bebas banjir, dokumen dijamin lengkap.",
-                "ctas": [{ "label": "Hubungi Sales", "href": "https://wa.me/6281299988877", "variant": "primary" }]
+                "ctas": [
+                  {
+                    "label": "Hubungi Sales",
+                    "href": "https://wa.me/6281299988877",
+                    "variant": "primary"
+                  }
+                ]
               }
             }
           ]
@@ -48,9 +68,18 @@
               "type": "stats",
               "data": {
                 "items": [
-                  { "value": "350+", "label": "Unit terjual" },
-                  { "value": "12 th", "label": "Berpengalaman" },
-                  { "value": "4.9", "label": "Rating Google" }
+                  {
+                    "value": "350+",
+                    "label": "Unit terjual"
+                  },
+                  {
+                    "value": "12 th",
+                    "label": "Berpengalaman"
+                  },
+                  {
+                    "value": "4.9",
+                    "label": "Rating Google"
+                  }
                 ]
               }
             }
@@ -58,7 +87,7 @@
         },
         {
           "sectionKey": "hubungi_sales",
-          "order": 2,
+          "order": 6,
           "styleJson": {},
           "blocks": [
             {
@@ -66,8 +95,14 @@
               "data": {
                 "heading": "Tim Sales Kami",
                 "sales": [
-                  { "name": "Ridwan", "whatsapp": "6281299988877" },
-                  { "name": "Sari", "whatsapp": "6281377766655" }
+                  {
+                    "name": "Ridwan",
+                    "whatsapp": "6281299988877"
+                  },
+                  {
+                    "name": "Sari",
+                    "whatsapp": "6281377766655"
+                  }
                 ]
               }
             }
@@ -75,13 +110,159 @@
         },
         {
           "sectionKey": "footer",
+          "order": 7,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "footer",
+              "data": {
+                "text": "© 2026 Otojaya Motor. Dibuat dengan MarketIndonesia."
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "featured_vehicles",
+          "order": 2,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "featured_vehicles",
+              "data": {
+                "heading": "Unit Pilihan Minggu Ini",
+                "vehicleSlugs": [
+                  "honda-brio-2023",
+                  "toyota-avanza-2022"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "vehicle_grid",
           "order": 3,
           "styleJson": {},
           "blocks": [
-            { "type": "footer", "data": { "text": "© 2026 Otojaya Motor. Dibuat dengan MarketIndonesia." } }
+            {
+              "type": "vehicle_grid",
+              "data": {
+                "heading": "Semua Unit",
+                "limit": 12,
+                "sort": "price_asc"
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "simulasi_kredit",
+          "order": 4,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "simulasi_kredit",
+              "data": {
+                "bungaDefault": 6.5,
+                "tenorOptions": [
+                  12,
+                  24,
+                  36,
+                  48,
+                  60
+                ],
+                "metodeDefault": "flat",
+                "dpMin": 20
+              }
+            }
+          ]
+        },
+        {
+          "sectionKey": "test_drive",
+          "order": 5,
+          "styleJson": {},
+          "blocks": [
+            {
+              "type": "test_drive",
+              "data": {
+                "heading": "Jadwalkan Test Drive",
+                "description": "Isi form ini — tim kami akan menghubungi untuk mengatur jadwal."
+              }
+            }
           ]
         }
       ]
     }
-  }
+  },
+  "vehicles": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "slug": "toyota-avanza-2022",
+      "name": "Toyota Avanza 1.5 G",
+      "brand": "Toyota",
+      "model": "Avanza",
+      "year": 2022,
+      "price": 195000000,
+      "transmission": "automatic",
+      "fuelType": "bensin",
+      "mileageKm": 31000,
+      "createdAt": "2026-07-11T02:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "slug": "honda-brio-2023",
+      "name": "Honda Brio RS",
+      "brand": "Honda",
+      "model": "Brio",
+      "year": 2023,
+      "price": 189000000,
+      "transmission": "cvt",
+      "fuelType": "bensin",
+      "mileageKm": 12000,
+      "createdAt": "2026-07-12T02:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "slug": "daihatsu-terios-2021",
+      "name": "Daihatsu Terios X",
+      "brand": "Daihatsu",
+      "model": "Terios",
+      "year": 2021,
+      "price": 205000000,
+      "transmission": "manual",
+      "fuelType": "bensin",
+      "mileageKm": 45000,
+      "createdAt": "2026-07-13T02:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "slug": "toyota-innova-2020",
+      "name": "Toyota Kijang Innova V",
+      "brand": "Toyota",
+      "model": "Innova",
+      "year": 2020,
+      "price": 320000000,
+      "transmission": "automatic",
+      "fuelType": "diesel",
+      "mileageKm": 60000,
+      "createdAt": "2026-07-14T02:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000005",
+      "slug": "suzuki-ertiga-2019",
+      "name": "Suzuki Ertiga GX",
+      "brand": "Suzuki",
+      "model": "Ertiga",
+      "year": 2019,
+      "price": 152000000,
+      "transmission": "manual",
+      "fuelType": "bensin",
+      "mileageKm": 78000,
+      "createdAt": "2026-07-15T02:00:00Z",
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "sold": true
+    }
+  ]
 }

@@ -6,11 +6,27 @@
  */
 import type { H3Event } from "h3";
 import type {
+  CreateLeadRequest,
+  CreateLeadResponse,
+  Product,
   RenderPageResponse,
   RenderTenantResponse,
+  Vehicle,
 } from "@marketplaceindo/shared";
 import { FetchError } from "ofetch";
-import { RenderApiError, getMockPage, getMockSite } from "../mock/render-store";
+import {
+  RenderApiError,
+  createMockLead,
+  getMockPage,
+  getMockProducts,
+  getMockSite,
+  getMockVehicles,
+} from "../mock/render-store";
+
+interface Paginated<T> {
+  items: T[];
+  nextCursor: string | null;
+}
 
 export interface RenderOptions {
   /** Render draft snapshot (?preview=1). Sesi owner divalidasi backend (Fase 7a). */
@@ -74,6 +90,63 @@ export async function fetchRenderPage(
       `/render/${subdomain}/pages/${pageSlug}`,
       opts,
     );
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** GET /v1/render/:subdomain/vehicles — list + filter §7. */
+export async function fetchRenderVehicles(
+  event: H3Event,
+  subdomain: string,
+  query: Record<string, unknown>,
+  opts: RenderOptions = {},
+): Promise<Paginated<Vehicle>> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return getMockVehicles(subdomain, query, opts.preview);
+    return await $fetch<Paginated<Vehicle>>(`${config.renderApiBase}/render/${subdomain}/vehicles`, {
+      headers: { "X-Service-Token": config.renderServiceToken },
+      query: { ...query, ...(opts.preview ? { preview: "1" } : {}) },
+    });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** GET /v1/render/:subdomain/products — list + filter §7. */
+export async function fetchRenderProducts(
+  event: H3Event,
+  subdomain: string,
+  query: Record<string, unknown>,
+  opts: RenderOptions = {},
+): Promise<Paginated<Product>> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return getMockProducts(subdomain, query, opts.preview);
+    return await $fetch<Paginated<Product>>(`${config.renderApiBase}/render/${subdomain}/products`, {
+      headers: { "X-Service-Token": config.renderServiceToken },
+      query: { ...query, ...(opts.preview ? { preview: "1" } : {}) },
+    });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** POST /v1/public/:subdomain/leads — dipanggil route Nuxt /api/leads (bukan browser langsung). */
+export async function submitPublicLead(
+  event: H3Event,
+  subdomain: string,
+  body: CreateLeadRequest,
+): Promise<CreateLeadResponse> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return createMockLead(subdomain, body);
+    return await $fetch<CreateLeadResponse>(`${config.renderApiBase}/public/${subdomain}/leads`, {
+      method: "POST",
+      headers: { "X-Service-Token": config.renderServiceToken },
+      body,
+    });
   } catch (err) {
     toH3Error(err);
   }

@@ -35,9 +35,10 @@ Dev memakai **`lvh.me`** (DNS publik yang selalu me-resolve ke `127.0.0.1`, butu
 | URL | Mode |
 |---|---|
 | `http://localhost:3000` / `http://lvh.me:3000` / `http://app.lvh.me:3000` | Dashboard (placeholder, dibangun Fase 7) |
-| `http://demo.lvh.me:3000` | Tenant fixture `demo` (kuliner, active) |
-| `http://otojaya.lvh.me:3000` | Tenant fixture `otojaya` (otomotif, active) |
-| `http://lengkap.lvh.me:3000` | Showcase 12 section inti dalam satu halaman (DoD Fase 3) |
+| `http://demo.lvh.me:3000` | Template **kuliner** (menu, menu andalan, jam buka, reservasi) |
+| `http://otojaya.lvh.me:3000` | Template **otomotif** (vehicle grid + koleksi, unit pilihan, simulasi kredit, form test drive, hubungi sales) |
+| `http://tokoberkah.lvh.me:3000` | Template **katalog** (grid produk + koleksi, kategori, daftar harga, promo banner) |
+| `http://lengkap.lvh.me:3000` | Template **bisnis & jasa** + showcase 12 section inti (layanan, proses, tim, logo klien) |
 | `http://rintisan.lvh.me:3000/?preview=1` | Tenant `draft` — tanpa `?preview=1` → 404; preview selalu noindex |
 | `http://tutupsementara.lvh.me:3000` | Tenant `suspended` → 410 |
 
@@ -60,6 +61,15 @@ Konversi ada di `app/utils/theme-vars.ts` (murni, teruji); `app/composables/useT
 `app/utils/block-map.ts` memetakan `block.type` → komponen (`app/components/blocks/*.vue`); `SectionRenderer.vue` iterasi sections sesuai `order` dan me-render tiap block. 12 section inti terpasang: navbar, hero, about, features, gallery, testimonials, stats, cta_band, faq, contact (+ embed Google Maps ter-guard), footer (badge "Dibuat dengan MarketIndonesia"), whatsapp_float. Tipe di luar itu (Fase 4: menu, vehicle_grid, dst) jatuh ke `BlockUnknown` — log di dev, render null (forward compatible; konten demo kuliner baru tampil penuh di Fase 4).
 
 Aturan komponen block: props ter-type dari union `Block` shared (`Extract<Block, { type: "..." }>`), warna/font hanya dari token CSS var, mobile-first, gambar `loading="lazy"` + container aspect-ratio (hero eager sebagai kandidat LCP).
+
+## Section khas template & block fungsional (Fase 4)
+
+Seluruh 29 tipe block shared kini punya komponen. Catatan implementasi:
+
+- **Koleksi**: `vehicle_grid`/`product_grid`/`featured_vehicles` fetch via `/api/_render/vehicles|products` (filter kontrak §7; subdomain selalu dari Host). Kontrak §7 tidak punya param `sort` — opsi sort block diterapkan pada slice yang terambil. Kartu unit ber-CTA deep link WA ter-prefill nama unit (Fase 5 menggantinya dengan link VDP).
+- **`simulasi_kredit`**: logika flat & efektif/anuitas di `app/utils/kredit.ts` (teruji unit, dibulatkan ke rupiah), konfigurasi (bunga default, tenor, DP min) dari `data` block; menampilkan metode + disclaimer biaya tambahan.
+- **`test_drive`**: form lead tervalidasi dua arah — client vee-validate + `leadPayloadSchema` shared (adapter Zod 4 lokal `app/utils/vv-zod.ts`, karena `@vee-validate/zod` masih terkunci peer zod v3), server `/api/leads` memvalidasi ulang `createLeadRequestSchema` → 422 `fieldErrors` dot-notation §1.4 → dipetakan balik ke field form. Lead diteruskan ke `/v1/public/:subdomain/leads` (mock: in-memory).
+- Urutan section datang dari data render API (`order` — hasil materialisasi `structure_json` backend), tidak pernah di-hardcode di frontend.
 
 ### Performa halaman publik
 
