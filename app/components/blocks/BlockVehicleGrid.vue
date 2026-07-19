@@ -7,7 +7,6 @@ const props = defineProps<{ data: Data }>();
 
 const requestFetch = useRequestFetch();
 const route = useRoute();
-const site = useTenantSite();
 
 const query = computed(() => ({
   limit: String(props.data.limit ?? 8),
@@ -45,7 +44,7 @@ const items = computed(() => {
         v-for="vehicle in items"
         :key="vehicle.id"
         :vehicle="vehicle"
-        :whatsapp="site?.contact.whatsapp"
+
       />
     </ul>
     <p v-else class="text-sm opacity-70">Belum ada unit tersedia.</p>

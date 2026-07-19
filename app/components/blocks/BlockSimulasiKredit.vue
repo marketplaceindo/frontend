@@ -2,11 +2,15 @@
 import type { Block } from "@marketplaceindo/shared";
 
 type Data = Extract<Block, { type: "simulasi_kredit" }>["data"];
-const props = defineProps<{ data: Data }>();
+const props = defineProps<{
+  data: Data;
+  /** Prefill harga unit (VDP Fase 5); tanpa ini pakai contoh default. */
+  hargaAwal?: number;
+}>();
 
 // Konfigurasi datang dari data block (bungaDefault, tenorOptions, metodeDefault,
 // dpMin); logika hitung di app/utils/kredit.ts (teruji unit).
-const harga = ref(200_000_000);
+const harga = ref(props.hargaAwal ?? 200_000_000);
 const dpPersen = ref(Math.max(props.data.dpMin, 20));
 const tenor = ref(props.data.tenorOptions[0] ?? 12);
 const metode = ref<"flat" | "efektif">(props.data.metodeDefault);

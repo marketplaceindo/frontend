@@ -3,21 +3,11 @@ import type {
   RenderPageResponse,
   RenderTenantResponse,
 } from "@marketplaceindo/shared";
-import type { TenantRouting } from "../../shared/types/tenant-routing";
 
 // Dipakai pages/index.vue dan pages/[...slug].vue (keduanya layout: false);
 // satu komponen supaya logika render tenant/dashboard tidak terduplikasi.
 const route = useRoute();
-
-// Mode routing dihitung server-side dari Host (server/plugins/tenant.ts) dan
-// dibekukan di state — host tidak berubah selama navigasi client-side.
-const routing = useState<TenantRouting>("tenant-routing", () => {
-  if (import.meta.server) {
-    const fromHost = useRequestEvent()?.context.tenant as TenantRouting | undefined;
-    return fromHost ?? { mode: "dashboard" };
-  }
-  return { mode: "dashboard" };
-});
+const routing = useTenantRouting();
 
 // Saat SSR, $fetch internal tidak membawa header Host asli — pakai
 // useRequestFetch supaya /api/_render/* menerima Host tenant yang benar.
@@ -53,20 +43,7 @@ const { data, error } = await useAsyncData<
   },
 );
 
-if (error.value) {
-  // error dari $fetch membungkus response route internal di .data — ambil
-  // payload kontrak ({ error: { code, message } }) dari lapisan terdalam.
-  const nested = error.value.data as
-    | { data?: { error?: { code?: string; message?: string } } }
-    | undefined;
-  const apiError = nested?.data?.error;
-  throw createError({
-    statusCode: error.value.statusCode ?? 500,
-    message: apiError?.message ?? error.value.message,
-    data: apiError ? { error: apiError } : error.value.data,
-    fatal: true,
-  });
-}
+if (error.value) rethrowRenderError(error.value);
 
 const site = computed(() => data.value?.site);
 

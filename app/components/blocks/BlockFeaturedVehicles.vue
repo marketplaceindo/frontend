@@ -7,7 +7,6 @@ const props = defineProps<{ data: Data }>();
 
 const requestFetch = useRequestFetch();
 const route = useRoute();
-const site = useTenantSite();
 
 // Render API belum punya endpoint multi-slug — ambil list lalu saring
 // (fixture mock kecil; Fase 5 beralih ke fetch per-slug VDP bila perlu).
@@ -37,7 +36,7 @@ const items = computed(() => {
         v-for="vehicle in items"
         :key="vehicle.id"
         :vehicle="vehicle"
-        :whatsapp="site?.contact.whatsapp"
+
       />
     </ul>
   </div>

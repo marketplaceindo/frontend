@@ -18,8 +18,10 @@ import {
   RenderApiError,
   createMockLead,
   getMockPage,
+  getMockProduct,
   getMockProducts,
   getMockSite,
+  getMockVehicle,
   getMockVehicles,
 } from "../mock/render-store";
 
@@ -128,6 +130,38 @@ export async function fetchRenderProducts(
       headers: { "X-Service-Token": config.renderServiceToken },
       query: { ...query, ...(opts.preview ? { preview: "1" } : {}) },
     });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** GET /v1/render/:subdomain/vehicles/:slug — item penuh untuk VDP (Fase 5). */
+export async function fetchRenderVehicle(
+  event: H3Event,
+  subdomain: string,
+  slug: string,
+  opts: RenderOptions = {},
+): Promise<Vehicle> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return getMockVehicle(subdomain, slug, opts.preview);
+    return await renderFetch<Vehicle>(event, `/render/${subdomain}/vehicles/${slug}`, opts);
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** GET /v1/render/:subdomain/products/:slug — item penuh untuk PDP (Fase 5). */
+export async function fetchRenderProduct(
+  event: H3Event,
+  subdomain: string,
+  slug: string,
+  opts: RenderOptions = {},
+): Promise<Product> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return getMockProduct(subdomain, slug, opts.preview);
+    return await renderFetch<Product>(event, `/render/${subdomain}/products/${slug}`, opts);
   } catch (err) {
     toH3Error(err);
   }

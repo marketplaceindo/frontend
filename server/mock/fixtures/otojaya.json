@@ -20,6 +20,10 @@
       {
         "slug": "home",
         "title": "Beranda"
+      },
+      {
+        "slug": "mobil",
+        "title": "Semua Mobil"
       }
     ],
     "contact": {
@@ -205,7 +209,14 @@
       "fuelType": "bensin",
       "mileageKm": 31000,
       "createdAt": "2026-07-11T02:00:00Z",
-      "updatedAt": "2026-07-16T04:00:00Z"
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "color": "Putih",
+      "description": "Avanza 1.5 G AT 2022 tangan pertama, servis rutin Auto2000, pajak panjang sampai Maret 2027.\n\nInterior orisinal, ban tebal, siap pakai luar kota.",
+      "mediaIds": [
+        "00000000-0000-4000-9000-000000000001",
+        "00000000-0000-4000-9000-000000000002",
+        "00000000-0000-4000-9000-000000000003"
+      ]
     },
     {
       "id": "00000000-0000-4000-8000-000000000002",
@@ -219,7 +230,13 @@
       "fuelType": "bensin",
       "mileageKm": 12000,
       "createdAt": "2026-07-12T02:00:00Z",
-      "updatedAt": "2026-07-16T04:00:00Z"
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "color": "Kuning",
+      "description": "Brio RS CVT 2023 km rendah, masih garansi pabrik sampai 2028. Full orisinal, atas nama pribadi.",
+      "mediaIds": [
+        "00000000-0000-4000-9000-000000000004",
+        "00000000-0000-4000-9000-000000000005"
+      ]
     },
     {
       "id": "00000000-0000-4000-8000-000000000003",
@@ -233,7 +250,8 @@
       "fuelType": "bensin",
       "mileageKm": 45000,
       "createdAt": "2026-07-13T02:00:00Z",
-      "updatedAt": "2026-07-16T04:00:00Z"
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "color": "Hitam"
     },
     {
       "id": "00000000-0000-4000-8000-000000000004",
@@ -247,7 +265,9 @@
       "fuelType": "diesel",
       "mileageKm": 60000,
       "createdAt": "2026-07-14T02:00:00Z",
-      "updatedAt": "2026-07-16T04:00:00Z"
+      "updatedAt": "2026-07-16T04:00:00Z",
+      "color": "Silver",
+      "description": "Innova V diesel 2020, favorit keluarga & travel. Kaki-kaki senyap, AC double blower dingin."
     },
     {
       "id": "00000000-0000-4000-8000-000000000005",
@@ -262,7 +282,8 @@
       "mileageKm": 78000,
       "createdAt": "2026-07-15T02:00:00Z",
       "updatedAt": "2026-07-16T04:00:00Z",
-      "sold": true
+      "sold": true,
+      "color": "Abu-abu"
     }
   ]
 }

@@ -179,6 +179,28 @@ export function getMockProducts(
   return paginate(items, query.limit, query.cursor);
 }
 
+/** Mock GET /v1/render/:subdomain/vehicles/:slug — item penuh untuk VDP (Fase 5). */
+export function getMockVehicle(subdomain: string, slug: string, preview = false): Vehicle {
+  const fixture = findFixture(subdomain);
+  assertAccessible(fixture.site, preview);
+  const vehicle = (fixture.vehicles ?? []).find((v) => v.slug === slug);
+  if (!vehicle) {
+    throw new RenderApiError(404, "NOT_FOUND", "Unit tidak ditemukan");
+  }
+  return vehicle;
+}
+
+/** Mock GET /v1/render/:subdomain/products/:slug — item penuh untuk PDP (Fase 5). */
+export function getMockProduct(subdomain: string, slug: string, preview = false): Product {
+  const fixture = findFixture(subdomain);
+  assertAccessible(fixture.site, preview);
+  const product = (fixture.products ?? []).find((p) => p.slug === slug);
+  if (!product) {
+    throw new RenderApiError(404, "NOT_FOUND", "Produk tidak ditemukan");
+  }
+  return product;
+}
+
 // ---------------------------------------------------------------------------
 // Leads (Fase 4) — mock POST /v1/public/:subdomain/leads (kontrak §8).
 // ---------------------------------------------------------------------------

@@ -71,6 +71,13 @@ Seluruh 29 tipe block shared kini punya komponen. Catatan implementasi:
 - **`test_drive`**: form lead tervalidasi dua arah — client vee-validate + `leadPayloadSchema` shared (adapter Zod 4 lokal `app/utils/vv-zod.ts`, karena `@vee-validate/zod` masih terkunci peer zod v3), server `/api/leads` memvalidasi ulang `createLeadRequestSchema` → 422 `fieldErrors` dot-notation §1.4 → dipetakan balik ke field form. Lead diteruskan ke `/v1/public/:subdomain/leads` (mock: in-memory).
 - Urutan section datang dari data render API (`order` — hasil materialisasi `structure_json` backend), tidak pernah di-hardcode di frontend.
 
+## Listing & detail collection (Fase 5)
+
+- **Listing** `/mobil` dan `/produk` (template halaman tetap, bukan section): filter via query params (`?brand=&priceMin=&priceMax=&year=&transmission=` / `?q=&category=&priceMin=&priceMax=`) — form GET native sehingga tiap kombinasi filter menghasilkan URL unik yang shareable & crawlable, hasil di-render SSR. Pagination cursor diteruskan lewat `?cursor=`.
+- **Detail** `/mobil/[slug]` (VDP) dan `/produk/[slug]` (PDP): data dari `/api/_render/vehicles|products/[slug]` (kontrak §10 item), SSR dengan URL sendiri; VDP memuat tabel spesifikasi, deskripsi, CTA hubungi sales (WA ter-prefill nama unit), form test drive ber-`sourceItemSlug`, dan **simulasi kredit otomatis terisi harga unit** (`hargaAwal`). Galeri masih placeholder — resolusi `mediaId → URL` menunggu backend media (Fase 7).
+- Prefix path `mobil` dan `produk` menjadi **reserved** (halaman CMS tenant dengan slug sama akan terbayangi oleh route listing).
+- Catatan kontrak: plan menyebut "harga + varian" di VDP, tetapi schema `Vehicle` shared tidak punya field varian — tidak diimplementasikan sampai ada keputusan perubahan schema shared.
+
 ### Performa halaman publik
 
 - Preload/prefetch chunk JS dimatikan via hook `build:manifest`; CSS global di-inline ke HTML SSR oleh `server/plugins/inline-css.ts` (produksi saja) — tidak ada request render-blocking.

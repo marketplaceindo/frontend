@@ -22,6 +22,10 @@
       {
         "slug": "home",
         "title": "Beranda"
+      },
+      {
+        "slug": "produk",
+        "title": "Semua Produk"
       }
     ],
     "contact": {
@@ -38,7 +42,12 @@
       "price": 85000,
       "createdAt": "2026-07-01T03:00:00Z",
       "updatedAt": "2026-07-16T04:00:00Z",
-      "inStock": true
+      "inStock": true,
+      "description": "Single origin dataran tinggi Gayo, proses semi-washed, roast medium. Notes: cokelat, karamel, sedikit citrus.\n\nDisangrai maksimal 7 hari sebelum dikirim.",
+      "mediaIds": [
+        "00000000-0000-4000-9000-000000000021",
+        "00000000-0000-4000-9000-000000000022"
+      ]
     },
     {
       "id": "00000000-0000-4000-8000-000000000012",
@@ -68,7 +77,8 @@
       "price": 120000,
       "createdAt": "2026-07-04T03:00:00Z",
       "updatedAt": "2026-07-16T04:00:00Z",
-      "inStock": true
+      "inStock": true,
+      "description": "Madu hutan liar Sumatera, panen musiman, tanpa campuran. Sudah uji lab kadar air < 22%."
     },
     {
       "id": "00000000-0000-4000-8000-000000000015",

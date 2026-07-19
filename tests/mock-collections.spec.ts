@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 import {
   RenderApiError,
   createMockLead,
+  getMockProduct,
   getMockProducts,
+  getMockVehicle,
   getMockVehicles,
   mockLeads,
 } from "../server/mock/render-store";
@@ -48,6 +50,30 @@ describe("getMockProducts (tokoberkah)", () => {
     expect(getMockProducts("tokoberkah", { category: "Kopi" }).items).toHaveLength(2);
     expect(getMockProducts("tokoberkah", { priceMin: "50000" }).items).toHaveLength(3);
     expect(getMockProducts("tokoberkah", { q: "madu" }).items[0]!.slug).toBe("madu-hutan-500ml");
+  });
+});
+
+describe("item getter VDP/PDP (Fase 5)", () => {
+  it("getMockVehicle: slug dikenal → item penuh; asing → 404 NOT_FOUND", () => {
+    const v = getMockVehicle("otojaya", "honda-brio-2023");
+    expect(v.name).toBe("Honda Brio RS");
+    expect(v.description).toContain("garansi pabrik");
+    try {
+      getMockVehicle("otojaya", "tidak-ada");
+      expect.unreachable();
+    } catch (err) {
+      expect((err as RenderApiError).status).toBe(404);
+      expect((err as RenderApiError).code).toBe("NOT_FOUND");
+    }
+  });
+
+  it("getMockProduct: slug dikenal → item penuh; asing → 404", () => {
+    expect(getMockProduct("tokoberkah", "madu-hutan-500ml").price).toBe(120000);
+    expect(() => getMockProduct("tokoberkah", "tidak-ada")).toThrow(RenderApiError);
+  });
+
+  it("status tenant tetap ditegakkan di item getter (draft → 404 tanpa preview)", () => {
+    expect(() => getMockVehicle("rintisan", "apapun")).toThrow(RenderApiError);
   });
 });
 
