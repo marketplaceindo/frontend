@@ -82,10 +82,23 @@ const kreditConfig = {
 };
 
 const noindex = computed(() => isPreview.value || site.value?.tenant.status !== "active");
-useSeoMeta({
+const { canonical } = useTenantSeo({
   title: () => (vehicle.value ? `${vehicle.value.name} ${vehicle.value.year}` : ""),
   description: () => vehicle.value?.description?.slice(0, 160),
-  robots: () => (noindex.value ? "noindex, nofollow" : undefined),
+  noindex: () => noindex.value,
+});
+
+// JSON-LD Car (eligibility Google Vehicle Listings).
+useHead({
+  script: () =>
+    vehicle.value && !noindex.value
+      ? [
+          {
+            type: "application/ld+json",
+            innerHTML: serializeJsonLd(carJsonLd(vehicle.value, canonical.value)),
+          },
+        ]
+      : [],
 });
 </script>
 

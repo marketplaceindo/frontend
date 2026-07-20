@@ -10,6 +10,7 @@ import type {
   CreateLeadResponse,
   Product,
   RenderPageResponse,
+  RenderSitemapResponse,
   RenderTenantResponse,
   Vehicle,
 } from "@marketplaceindo/shared";
@@ -21,6 +22,7 @@ import {
   getMockProduct,
   getMockProducts,
   getMockSite,
+  getMockSitemap,
   getMockVehicle,
   getMockVehicles,
 } from "../mock/render-store";
@@ -56,10 +58,12 @@ function toH3Error(err: unknown): never {
 
 function renderFetch<T>(event: H3Event, path: string, opts: RenderOptions): Promise<T> {
   const config = useRuntimeConfig(event);
-  return $fetch<T>(`${config.renderApiBase}${path}`, {
+  // $fetch<T> lewat generic bebas menghasilkan TypedInternalResponse yang tak
+  // menyatu dengan T; URL ini eksternal (renderApiBase absolut) → cast aman.
+  return $fetch(`${config.renderApiBase}${path}`, {
     headers: { "X-Service-Token": config.renderServiceToken },
     query: opts.preview ? { preview: "1" } : undefined,
-  });
+  }) as Promise<T>;
 }
 
 /** GET /v1/render/:subdomain — data global situs (theme, nav, kontak). */
@@ -92,6 +96,21 @@ export async function fetchRenderPage(
       `/render/${subdomain}/pages/${pageSlug}`,
       opts,
     );
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** GET /v1/render/:subdomain/sitemap — daftar URL publik tenant (Fase 6). */
+export async function fetchRenderSitemap(
+  event: H3Event,
+  subdomain: string,
+  opts: RenderOptions = {},
+): Promise<RenderSitemapResponse> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return getMockSitemap(subdomain, opts.preview);
+    return await renderFetch<RenderSitemapResponse>(event, `/render/${subdomain}/sitemap`, opts);
   } catch (err) {
     toH3Error(err);
   }

@@ -54,9 +54,10 @@ const nextPageTo = computed(() => {
 });
 
 const noindex = computed(() => isPreview.value || site.value?.tenant.status !== "active");
-useSeoMeta({
+useTenantSeo({
   title: () => `Semua Produk — ${site.value?.tenant.subdomain ?? ""}`,
-  robots: () => (noindex.value ? "noindex, nofollow" : undefined),
+  description: () => "Katalog produk yang tersedia — filter kategori dan rentang harga.",
+  noindex: () => noindex.value,
 });
 </script>
 

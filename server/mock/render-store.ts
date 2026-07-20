@@ -24,6 +24,7 @@ import {
   type Product,
   type ProductQuery,
   type RenderPageResponse,
+  type RenderSitemapResponse,
   type RenderTenantResponse,
   type Vehicle,
   type VehicleQuery,
@@ -199,6 +200,38 @@ export function getMockProduct(subdomain: string, slug: string, preview = false)
     throw new RenderApiError(404, "NOT_FOUND", "Produk tidak ditemukan");
   }
   return product;
+}
+
+/**
+ * Mock GET /v1/render/:subdomain/sitemap (Fase 6) — daftar URL publik tenant:
+ * halaman + item koleksi (VDP /mobil, PDP /produk). Backend nyata membangun ini
+ * dari snapshot published + collection; mock menurunkannya dari fixture.
+ */
+export function getMockSitemap(subdomain: string, preview = false): RenderSitemapResponse {
+  const fixture = findFixture(subdomain);
+  assertAccessible(fixture.site, preview);
+
+  const publishedAt = fixture.site.tenant.publishedAt ?? new Date().toISOString();
+  const urls: RenderSitemapResponse["urls"] = [];
+
+  for (const slug of Object.keys(fixture.pages)) {
+    // Render page response tidak memuat updatedAt per halaman → pakai publishedAt.
+    urls.push({ path: slug === "home" ? "/" : `/${slug}`, updatedAt: publishedAt });
+  }
+  // Halaman listing koleksi + tiap item (URL sendiri = crawlable, Fase 5).
+  if (fixture.vehicles?.length) {
+    urls.push({ path: "/mobil", updatedAt: publishedAt });
+    for (const v of fixture.vehicles) {
+      urls.push({ path: `/mobil/${v.slug}`, updatedAt: v.updatedAt });
+    }
+  }
+  if (fixture.products?.length) {
+    urls.push({ path: "/produk", updatedAt: publishedAt });
+    for (const p of fixture.products) {
+      urls.push({ path: `/produk/${p.slug}`, updatedAt: p.updatedAt });
+    }
+  }
+  return { urls };
 }
 
 // ---------------------------------------------------------------------------

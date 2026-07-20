@@ -78,6 +78,15 @@ Seluruh 29 tipe block shared kini punya komponen. Catatan implementasi:
 - Prefix path `mobil` dan `produk` menjadi **reserved** (halaman CMS tenant dengan slug sama akan terbayangi oleh route listing).
 - Catatan kontrak: plan menyebut "harga + varian" di VDP, tetapi schema `Vehicle` shared tidak punya field varian — tidak diimplementasikan sampai ada keputusan perubahan schema shared.
 
+## SEO (Fase 6)
+
+- **Meta per-halaman** via `useTenantSeo` (`app/composables/useTenantSeo.ts`): title/description dari `seoJson`, canonical self-referencing (`origin + path`, **tanpa query** → varian filter listing terkonsolidasi ke URL dasar), Open Graph + Twitter card, robots `index/noindex`.
+- **noindex** untuk: `?preview=1`, tenant non-`active` (draft/suspended), dan `seoJson.noindex` per halaman.
+- **sitemap.xml** per-tenant (`server/routes/sitemap.xml.ts`): daftar URL dari render API (`/`, tiap halaman, `/mobil` + `/produk` beserta item VDP/PDP). Tenant draft/suspended → 404/410 (tidak ada sitemap non-publik).
+- **robots.txt** per-tenant (`server/routes/robots.txt.ts`): active → `Allow: /` + baris `Sitemap:`; draft/suspended/tidak-ada dan host dashboard/`app.` → `Disallow: /`.
+- **JSON-LD** (`app/utils/jsonld.ts`, fungsi murni + `serializeJsonLd` yang escape `<`): `LocalBusiness` (semua template) atau `Restaurant` + `hasMenu` (kuliner, saat halaman memuat block `menu`), `FAQPage` (halaman ber-block `faq`), `Car` di VDP (eligibility Google Vehicle Listings), `Product` di PDP. Hanya di-emit saat halaman indexable (bukan preview/non-active).
+- Keterbatasan diketahui: render API tidak mengekspos nama bisnis khusus → `businessName()` menurunkannya dari `seoJson.title` (bagian sebelum `—`/`|`), fallback subdomain. Bila nanti butuh presisi, tambahkan field di schema shared (perubahan kontrak, perlu keputusan).
+
 ### Performa halaman publik
 
 - Preload/prefetch chunk JS dimatikan via hook `build:manifest`; CSS global di-inline ke HTML SSR oleh `server/plugins/inline-css.ts` (produksi saja) — tidak ada request render-blocking.

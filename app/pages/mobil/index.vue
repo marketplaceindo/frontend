@@ -69,9 +69,10 @@ const nextPageTo = computed(() => {
 });
 
 const noindex = computed(() => isPreview.value || site.value?.tenant.status !== "active");
-useSeoMeta({
+useTenantSeo({
   title: () => `Semua Mobil — ${site.value?.tenant.subdomain ?? ""}`,
-  robots: () => (noindex.value ? "noindex, nofollow" : undefined),
+  description: () => "Daftar mobil bekas yang tersedia — filter merk, harga, tahun, dan transmisi.",
+  noindex: () => noindex.value,
 });
 </script>
 

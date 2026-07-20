@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type {
+  Block,
   RenderPageResponse,
   RenderTenantResponse,
 } from "@marketplaceindo/shared";
@@ -53,19 +54,63 @@ watchEffect(() => {
   tenantSite.value = data.value?.site ?? null;
 });
 
-// SEO: title/description dari seoJson; draft/suspended/preview SELALU noindex.
+const seo = computed(() => data.value?.page.page.seoJson);
+const pageTitle = computed(() =>
+  routing.value.mode === "tenant"
+    ? (seo.value?.title ?? data.value?.page.page.title ?? "")
+    : "Dashboard — MarketIndonesia",
+);
+
+// draft/suspended/preview SELALU noindex; hormati juga seoJson.noindex per halaman.
 const noindex = computed(
   () =>
     routing.value.mode === "tenant" &&
-    (isPreview.value || site.value?.tenant.status !== "active"),
+    (isPreview.value || site.value?.tenant.status !== "active" || seo.value?.noindex === true),
 );
-useSeoMeta({
-  title: () =>
-    routing.value.mode === "tenant"
-      ? (data.value?.page.page.seoJson?.title ?? data.value?.page.page.title ?? "")
-      : "Dashboard — MarketIndonesia",
-  description: () => data.value?.page.page.seoJson?.description,
-  robots: () => (noindex.value ? "noindex, nofollow" : undefined),
+
+// Mode dashboard: SEO minimal (bukan situs tenant); tenant: SEO penuh + JSON-LD.
+const { origin } = useTenantSeo({
+  title: () => pageTitle.value,
+  description: () => seo.value?.description,
+  ogImage: () => seo.value?.ogImage?.url,
+  noindex: () => noindex.value || routing.value.mode !== "tenant",
+});
+
+// JSON-LD: LocalBusiness (Restaurant utk kuliner + hasMenu) + FAQPage bila ada.
+const allBlocks = computed<Block[]>(() =>
+  (data.value?.page.sections ?? []).flatMap((s) => s.blocks),
+);
+const menuBlock = computed(() =>
+  allBlocks.value.find((b): b is Extract<Block, { type: "menu" }> => b.type === "menu"),
+);
+const faqBlock = computed(() =>
+  allBlocks.value.find((b): b is Extract<Block, { type: "faq" }> => b.type === "faq"),
+);
+
+const jsonLd = computed(() => {
+  const s = site.value;
+  if (routing.value.mode !== "tenant" || !s || noindex.value) return [];
+  const business = {
+    name: businessName(seo.value?.title, s.tenant.subdomain),
+    url: origin,
+    whatsapp: s.contact.whatsapp,
+    address: s.contact.address || undefined,
+    image: toAbsoluteUrl(origin, seo.value?.ogImage?.url),
+  };
+  const list = [
+    s.template.slug === "kuliner"
+      ? restaurantJsonLd(business, menuBlock.value?.data)
+      : localBusinessJsonLd(business),
+  ];
+  if (faqBlock.value) list.push(faqPageJsonLd(faqBlock.value.data.items));
+  return list;
+});
+
+useHead({
+  script: () =>
+    jsonLd.value.length
+      ? [{ type: "application/ld+json", innerHTML: serializeJsonLd(jsonLd.value) }]
+      : [],
 });
 </script>
 

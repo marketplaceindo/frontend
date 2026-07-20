@@ -7,6 +7,7 @@ import {
   createMockLead,
   getMockProduct,
   getMockProducts,
+  getMockSitemap,
   getMockVehicle,
   getMockVehicles,
   mockLeads,
@@ -74,6 +75,33 @@ describe("item getter VDP/PDP (Fase 5)", () => {
 
   it("status tenant tetap ditegakkan di item getter (draft → 404 tanpa preview)", () => {
     expect(() => getMockVehicle("rintisan", "apapun")).toThrow(RenderApiError);
+  });
+});
+
+describe("getMockSitemap (Fase 6)", () => {
+  it("otojaya: memuat /, /mobil, dan tiap VDP /mobil/[slug]", () => {
+    const paths = getMockSitemap("otojaya").urls.map((u) => u.path);
+    expect(paths).toContain("/");
+    expect(paths).toContain("/mobil");
+    expect(paths).toContain("/mobil/honda-brio-2023");
+    expect(paths).not.toContain("/produk");
+  });
+
+  it("tokoberkah: memuat /produk + PDP, tidak memuat /mobil", () => {
+    const paths = getMockSitemap("tokoberkah").urls.map((u) => u.path);
+    expect(paths).toContain("/produk/kopi-arabika-gayo-250g");
+    expect(paths).not.toContain("/mobil");
+  });
+
+  it("dua tenant berbeda menghasilkan daftar URL berbeda (DoD Fase 6)", () => {
+    const a = getMockSitemap("otojaya").urls.map((u) => u.path).sort();
+    const b = getMockSitemap("tokoberkah").urls.map((u) => u.path).sort();
+    expect(a).not.toEqual(b);
+  });
+
+  it("tenant draft/suspended tanpa preview → error (tak ada sitemap publik)", () => {
+    expect(() => getMockSitemap("rintisan")).toThrow(RenderApiError);
+    expect(() => getMockSitemap("tutupsementara")).toThrow(RenderApiError);
   });
 });
 

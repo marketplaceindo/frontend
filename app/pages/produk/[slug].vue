@@ -43,10 +43,23 @@ const waHref = computed(() => {
 });
 
 const noindex = computed(() => isPreview.value || site.value?.tenant.status !== "active");
-useSeoMeta({
+const { canonical } = useTenantSeo({
   title: () => product.value?.name ?? "",
   description: () => product.value?.description?.slice(0, 160),
-  robots: () => (noindex.value ? "noindex, nofollow" : undefined),
+  noindex: () => noindex.value,
+});
+
+// JSON-LD Product (PDP katalog).
+useHead({
+  script: () =>
+    product.value && !noindex.value
+      ? [
+          {
+            type: "application/ld+json",
+            innerHTML: serializeJsonLd(productJsonLd(product.value, canonical.value)),
+          },
+        ]
+      : [],
 });
 </script>
 
