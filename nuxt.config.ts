@@ -48,6 +48,12 @@ export default defineNuxtConfig({
     // Shared secret server-to-server (header X-Service-Token) — via env, jangan commit.
     renderServiceToken: "",
 
+    // Dashboard API (auth/tenants/content/billing). Mock in-memory (Fase 7a)
+    // sampai backend NestJS siap; set NUXT_DASHBOARD_MOCK=false untuk proxy nyata.
+    dashboardMock: true,
+    // Base URL NestJS termasuk prefix versi, mis. http://localhost:4000/v1.
+    dashboardApiBase: "",
+
     public: {
       // Domain platform. Produksi: marketindonesia.co.id (NUXT_PUBLIC_BASE_DOMAIN).
       // Dev memakai lvh.me (wildcard DNS ke 127.0.0.1) — lihat README.

@@ -34,7 +34,7 @@ Dev memakai **`lvh.me`** (DNS publik yang selalu me-resolve ke `127.0.0.1`, butu
 
 | URL | Mode |
 |---|---|
-| `http://localhost:3000` / `http://lvh.me:3000` / `http://app.lvh.me:3000` | Dashboard (placeholder, dibangun Fase 7) |
+| `http://localhost:3000` / `http://lvh.me:3000` / `http://app.lvh.me:3000` | Dashboard (login/register + shell — Fase 7a) |
 | `http://demo.lvh.me:3000` | Template **kuliner** (menu, menu andalan, jam buka, reservasi) |
 | `http://otojaya.lvh.me:3000` | Template **otomotif** (vehicle grid + koleksi, unit pilihan, simulasi kredit, form test drive, hubungi sales) |
 | `http://tokoberkah.lvh.me:3000` | Template **katalog** (grid produk + koleksi, kategori, daftar harga, promo banner) |
@@ -43,6 +43,17 @@ Dev memakai **`lvh.me`** (DNS publik yang selalu me-resolve ke `127.0.0.1`, butu
 | `http://tutupsementara.lvh.me:3000` | Tenant `suspended` → 410 |
 
 Data situs tenant datang dari **mock render API** (`server/mock/` — fixture JSON tervalidasi schema shared, semantik kontrak §10). Saat backend siap, set `NUXT_RENDER_MOCK=false` + `NUXT_RENDER_API_BASE` + `NUXT_RENDER_SERVICE_TOKEN` (server-to-server, header `X-Service-Token`); `server/utils/render-client.ts` beralih otomatis tanpa perubahan kode.
+
+## Dashboard: Auth & shell (Fase 7a)
+
+Diakses pada Host mode dashboard (`app.`/`www`/apex). Routing dashboard **tidak** memakai file `pages/*` tersendiri (agar path seperti `/login` tak bocor ke Host tenant) — `SiteEntry` mendispatch ke `DashboardApp` yang memilih view (login/register/home/onboarding) berdasarkan path + sesi.
+
+- **Pola token (kontrak §1.1)**: browser → proxy Nitro `/api/auth/*` → mock in-memory (atau NestJS `/v1/auth/*` saat `NUXT_DASHBOARD_MOCK=false` + `NUXT_DASHBOARD_API_BASE`). Token **tidak pernah** menyentuh JS browser: access/refresh + profil user disimpan di cookie **httpOnly** (`mi_access`, `mi_refresh`, `mi_user`), `SameSite=Lax`, `Secure` di produksi.
+- **Restore sesi**: kontrak §2 tidak punya `/auth/me`, jadi profil dibaca dari cookie httpOnly `mi_user` (di-set server) — tidak menambah endpoint kontrak.
+- **Guard**: area dashboard butuh login (redirect `/login`); halaman auth menolak yang sudah login (redirect `/`).
+- **Validasi 2 arah**: form pakai schema shared (`registerRequestSchema`/`loginRequestSchema`); error server berformat §1.4 (`409 EMAIL_TAKEN`, `401 INVALID_CREDENTIALS`, `422` fieldErrors) dipetakan balik ke field.
+- Dev/mock menyediakan akun demo: `owner@demo.test` / `password123`.
+- Catatan: rotasi refresh-token & proxy dashboard ber-Authorization (untuk endpoint tenant/content/billing) di-*wire* saat backend nyata dipasang di fase integrasi berikutnya; Fase 7a menegakkan mekanisme sesi + cookie.
 
 Resolusi tenant: `server/plugins/tenant.ts` membaca Host per request → `event.context.tenant` (`app`/`www`/apex → dashboard; subdomain lain → tenant). Catatan: `SUBDOMAIN_BLACKLIST` shared adalah aturan registrasi, bukan routing — subdomain seed platform (mis. `demo`) tetap di-serve sebagai tenant.
 

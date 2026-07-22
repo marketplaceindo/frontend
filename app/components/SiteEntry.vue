@@ -4,6 +4,7 @@ import type {
   RenderPageResponse,
   RenderTenantResponse,
 } from "@marketplaceindo/shared";
+import DashboardApp from "./dashboard/DashboardApp.vue";
 
 // Dipakai pages/index.vue dan pages/[...slug].vue (keduanya layout: false);
 // satu komponen supaya logika render tenant/dashboard tidak terduplikasi.
@@ -125,10 +126,6 @@ useHead({
   </NuxtLayout>
 
   <NuxtLayout v-else name="dashboard">
-    <h1>Dashboard MarketIndonesia</h1>
-    <p>
-      Onboarding, editor konten, dan billing dibangun di Fase 7. Situs tenant
-      diakses lewat subdomain, mis. <code>demo.lvh.me:3000</code>.
-    </p>
+    <DashboardApp />
   </NuxtLayout>
 </template>
