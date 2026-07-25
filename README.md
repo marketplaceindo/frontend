@@ -46,14 +46,35 @@ Data situs tenant datang dari **mock render API** (`server/mock/` — fixture JS
 
 ## Dashboard: Auth & shell (Fase 7a)
 
-Diakses pada Host mode dashboard (`app.`/`www`/apex). Routing dashboard **tidak** memakai file `pages/*` tersendiri (agar path seperti `/login` tak bocor ke Host tenant) — `SiteEntry` mendispatch ke `DashboardApp` yang memilih view (login/register/home/onboarding) berdasarkan path + sesi.
+Diakses pada Host mode dashboard (`app.`/`www`/apex). Routing dashboard **tidak** memakai file `pages/*` tersendiri (agar path seperti `/login` tak bocor ke Host tenant) — `SiteEntry` mendispatch ke `DashboardApp` yang memilih view (login/register/home/onboarding/bayar-simulasi) berdasarkan path + sesi.
 
 - **Pola token (kontrak §1.1)**: browser → proxy Nitro `/api/auth/*` → mock in-memory (atau NestJS `/v1/auth/*` saat `NUXT_DASHBOARD_MOCK=false` + `NUXT_DASHBOARD_API_BASE`). Token **tidak pernah** menyentuh JS browser: access/refresh + profil user disimpan di cookie **httpOnly** (`mi_access`, `mi_refresh`, `mi_user`), `SameSite=Lax`, `Secure` di produksi.
 - **Restore sesi**: kontrak §2 tidak punya `/auth/me`, jadi profil dibaca dari cookie httpOnly `mi_user` (di-set server) — tidak menambah endpoint kontrak.
 - **Guard**: area dashboard butuh login (redirect `/login`); halaman auth menolak yang sudah login (redirect `/`).
 - **Validasi 2 arah**: form pakai schema shared (`registerRequestSchema`/`loginRequestSchema`); error server berformat §1.4 (`409 EMAIL_TAKEN`, `401 INVALID_CREDENTIALS`, `422` fieldErrors) dipetakan balik ke field.
 - Dev/mock menyediakan akun demo: `owner@demo.test` / `password123`.
-- Catatan: rotasi refresh-token & proxy dashboard ber-Authorization (untuk endpoint tenant/content/billing) di-*wire* saat backend nyata dipasang di fase integrasi berikutnya; Fase 7a menegakkan mekanisme sesi + cookie.
+- Catatan: rotasi refresh-token di-*wire* saat backend nyata dipasang di fase integrasi berikutnya; Fase 7a menegakkan mekanisme sesi + cookie.
+
+## Dashboard: Onboarding wizard & paywall (Fase 7b)
+
+Alur **coba dulu → bayar saat publish**: seluruh wizard berjalan tanpa pembayaran; paywall hanya muncul saat menekan Publish.
+
+```
+daftar gratis → wizard (6 pertanyaan) → situs ter-materialisasi → preview → Publish
+   → 402 PAYWALL_REQUIRED → pilih plan → invoice → poll status → auto-publish
+```
+
+- **Wizard** (`DashboardOnboarding.vue`, `/onboarding`) — enam pertanyaan bahasa manusia, satu per layar, mobile-first: nama usaha + slogan, jenis usaha, alamat + WhatsApp, jam buka (opsional), 1–3 andalan, alamat situs. Draft tenant dibuat otomatis saat wizard dibuka (draft yang belum jadi dipakai ulang → tidak menabrak `MAX_DRAFT_TENANTS_PER_USER`). Nomor WA `08xx`/`+62xx` dinormalisasi ke format kontrak `62xx`.
+- **Validasi** memakai `wizardAnswersSchema.pick(...)` per langkah — tidak ada schema yang didefinisikan ulang di repo ini.
+- **Cek subdomain real-time** (debounce 400 ms, balasan usang dibuang lewat nomor urut): `TAKEN`/`RESERVED`/`INVALID_FORMAT` + chip saran alternatif. Aturan format mengikat tetap `subdomainSchema` shared; `shared/utils/subdomain.ts` hanya menormalkan input mentah (dipakai klien maupun mock server).
+- **Materialisasi** (`server/mock/materialize.ts`): jawaban wizard → `TenantFixture` yang bentuknya identik dengan fixture render, jadi situs preview di-render renderer publik Fase 3–4 tanpa jalur khusus. **Tidak ada lorem ipsum** — hero, "tentang kami", andalan, jam buka, kontak, dan SEO semuanya diturunkan dari jawaban. Jenis usaha menentukan template + tema: `kuliner` (beranda + halaman menu, block `featured_menu`/`menu`), `katalog`/`bisnis-jasa`/`otomotif` (beranda, block `services` dengan judul sesuai jenis).
+- **Preview**: `http://<subdomain>.lvh.me:3000/?preview=1` — draft selalu `noindex`, dan tanpa `?preview=1` balasannya 404 (situs yang belum terbit tidak boleh terlihat ada).
+- **Paywall di publish** (kontrak §3): `POST /api/tenants/:id/publish` → `402 PAYWALL_REQUIRED` + `details.plans`. UI menonjolkan **tahunan Rp300rb sebagai hero** (hemat 17%), bulanan Rp30rb sekunder dengan kanal QRIS/e-wallet saja.
+- **Bayar → publish** (kontrak §9): `subscribe` → buka `invoiceUrl` → **poll `GET /billing/status` tiap 4 dtk (maks 10 mnt)** sampai `subscription.status=active` → publish. Redirect dari kanal bayar tidak pernah dianggap lunas. Di mode mock, `invoiceUrl` menunjuk halaman **checkout simulasi** (`/bayar-simulasi`) dan tombol bayarnya berdiri untuk webhook `invoice.paid`: langganan aktif → tenant auto-publish → situs live tanpa `?preview=1`.
+- **Isolasi**: seluruh route `/api/tenants/*` dan `/api/billing/*` butuh sesi (401) dan memeriksa kepemilikan tenant (403) — tenant/invoice milik user lain tidak pernah terbaca.
+- Backend nyata: set `NUXT_DASHBOARD_MOCK=false` + `NUXT_DASHBOARD_API_BASE`; `server/utils/dashboard-api.ts` beralih ke proxy NestJS ber-`Authorization: Bearer` (token dari cookie httpOnly, tidak pernah ke JS browser). Endpoint checkout simulasi otomatis 404 di mode ini.
+
+> Catatan dev: Nuxt mem-bind `localhost` yang di Windows bisa resolve ke `::1` saja, sementara `lvh.me` selalu `127.0.0.1`. Bila `*.lvh.me:3000` tidak bisa dibuka, jalankan `npx nuxt dev --host 127.0.0.1`.
 
 Resolusi tenant: `server/plugins/tenant.ts` membaca Host per request → `event.context.tenant` (`app`/`www`/apex → dashboard; subdomain lain → tenant). Catatan: `SUBDOMAIN_BLACKLIST` shared adalah aturan registrasi, bukan routing — subdomain seed platform (mis. `demo`) tetap di-serve sebagai tenant.
 

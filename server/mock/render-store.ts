@@ -79,8 +79,42 @@ for (const [name, raw] of Object.entries(RAW_FIXTURES)) {
   fixtures.set(name, parsed.data);
 }
 
+/**
+ * Situs yang dimaterialisasi wizard saat runtime (Fase 7b) — hidup berdampingan
+ * dengan fixture statis supaya tenant hasil onboarding langsung bisa di-render
+ * lewat jalur publik yang sama (`subdomain.lvh.me/?preview=1`).
+ */
+const materialized = new Map<string, TenantFixture>();
+
+/**
+ * Daftarkan/timpa situs tenant hasil wizard. Divalidasi terhadap schema shared
+ * di sini juga — materializer yang menghasilkan konten invalid gagal keras
+ * (setara `422 VALIDATION_ERROR` dari backend nyata), bukan diam-diam lolos.
+ */
+export function registerTenantSite(subdomain: string, fixture: TenantFixture): void {
+  const parsed = tenantFixtureSchema.safeParse(fixture);
+  if (!parsed.success) {
+    throw new Error(
+      `Materialisasi wizard untuk "${subdomain}" tidak lolos schema shared:\n${z.prettifyError(parsed.error)}`,
+    );
+  }
+  if (parsed.data.site.tenant.subdomain !== subdomain) {
+    throw new Error(`Materialisasi "${subdomain}": subdomain di dalam situs harus "${subdomain}"`);
+  }
+  materialized.set(subdomain, parsed.data);
+}
+
+export function unregisterTenantSite(subdomain: string): void {
+  materialized.delete(subdomain);
+}
+
+/** Subdomain sudah dipakai fixture seed atau tenant hasil wizard? (cek ketersediaan §3) */
+export function isSubdomainUsed(subdomain: string): boolean {
+  return fixtures.has(subdomain) || materialized.has(subdomain);
+}
+
 function findFixture(subdomain: string): TenantFixture {
-  const fixture = fixtures.get(subdomain);
+  const fixture = materialized.get(subdomain) ?? fixtures.get(subdomain);
   if (!fixture) {
     throw new RenderApiError(404, "TENANT_NOT_FOUND", "Situs tidak ditemukan");
   }

@@ -33,6 +33,14 @@ export function clearAuthSession(event: H3Event): void {
   }
 }
 
+/**
+ * Access token sesi berjalan (cookie httpOnly) — dipakai proxy dashboard sebagai
+ * header `Authorization: Bearer`. TIDAK PERNAH dikirim ke browser.
+ */
+export function currentAccessToken(event: H3Event): string | null {
+  return getCookie(event, ACCESS_COOKIE) ?? null;
+}
+
 /** Profil user sesi berjalan dari cookie httpOnly (null bila belum login). */
 export function currentUser(event: H3Event): User | null {
   const raw = getCookie(event, USER_COOKIE);

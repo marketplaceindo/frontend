@@ -7,6 +7,8 @@ export interface ApiError {
   code?: string;
   message: string;
   fieldErrors?: Record<string, string[]>;
+  /** Payload tambahan per-kode, mis. `plans` pada PAYWALL_REQUIRED (§1.4). */
+  details?: Record<string, unknown>;
 }
 
 export function apiErrorOf(err: unknown): ApiError {
