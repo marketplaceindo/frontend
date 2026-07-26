@@ -113,6 +113,13 @@ function siteUrl(tenant: Tenant): string {
               Terbitkan
             </NuxtLink>
           </div>
+
+          <NuxtLink
+            :to="{ path: '/langganan', query: { tenant: tenant.id } }"
+            class="mt-2 block py-2 text-center text-sm text-slate-500"
+          >
+            Langganan &amp; tagihan
+          </NuxtLink>
         </li>
       </ul>
 

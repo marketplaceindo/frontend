@@ -93,6 +93,18 @@ Diakses di `/editor?tenant=<id>`; navigasi antar-layar lewat query param (`&tab=
 - **Tema (Level 2)**: pemilih warna + font dengan pratinjau memakai token CSS yang sama dengan situs, lalu iframe `?preview=1` dimuat ulang setelah simpan.
 - **Isolasi**: kontrak §5/§7 memakai `/pages/:pageId` dan `/vehicles/:id` tanpa segmen tenant, jadi kepemilikan ditegakkan lewat indeks `pageId→tenantId` + cek pemilik tenant → tenant/halaman/koleksi milik user lain selalu `403`.
 
+## Dashboard: Langganan & tagihan (Fase 7d)
+
+Di `/langganan?tenant=<id>`.
+
+- **Status berjalan**: paket, masa berlaku, biaya, dan kanal bayar yang berlaku untuk paket itu — semuanya dibaca dari konstanta `PLANS` shared, tidak ditulis ulang di frontend.
+- **Presentasi plan**: tahunan Rp300rb selalu **hero** (badge "Hemat 17%", "setara 10 bulan"), bulanan Rp30rb sekunder. Kanal mengikuti backend: bulanan QRIS/e-wallet saja, tahunan semua kanal.
+- **Peringatan** (`app/utils/billing.ts`, teruji unit): lembut saat ≤14 hari menjelang jatuh tempo (berisi sisa hari), mendesak saat `past_due`/`canceled` — selaras dengan reminder WA dari backend.
+- **Perpanjangan**: `subscribe` → buka invoice → poll `GET /billing/status` sampai aktif. Tagihan `pending` yang belum dibayar ditampilkan menonjol dengan tombol bayar + cek status.
+- **Riwayat tagihan**: jumlah, tanggal lunas, dan status per invoice.
+
+> **Batas kontrak yang diketahui**: `POST /v1/billing/subscribe` menolak permintaan saat langganan masih aktif (`409 SUBSCRIPTION_ALREADY_ACTIVE`), sehingga **upgrade bulanan → tahunan di tengah periode belum bisa dilakukan**. UI menampilkannya sebagai "bisa dipilih saat perpanjangan berikutnya" alih-alih memanggil endpoint yang akan gagal. Mengaktifkan upsell di tengah periode butuh penambahan endpoint/semantik di `API-CONTRACT.md` — perubahan kontrak, jadi dimulai dari repo shared.
+
 Resolusi tenant: `server/plugins/tenant.ts` membaca Host per request → `event.context.tenant` (`app`/`www`/apex → dashboard; subdomain lain → tenant). Catatan: `SUBDOMAIN_BLACKLIST` shared adalah aturan registrasi, bukan routing — subdomain seed platform (mis. `demo`) tetap di-serve sebagai tenant.
 
 ## Theming (Fase 2)
