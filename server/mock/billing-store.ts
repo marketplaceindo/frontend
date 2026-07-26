@@ -18,7 +18,8 @@ import {
   type PlanId,
   type SubscribeResponse,
 } from "@marketplaceindo/shared";
-import { TenantApiError, activateTenantAfterPayment, assertTenantOwned } from "./tenant-store";
+import { TenantApiError } from "./api-error";
+import { activateTenantAfterPayment, assertTenantOwned } from "./tenant-store";
 
 interface StoredInvoice extends InvoiceSummary {
   tenantId: string;

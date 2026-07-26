@@ -82,21 +82,35 @@ function siteUrl(tenant: Tenant): string {
           </div>
 
           <div class="mt-4 flex gap-2">
-            <a
-              v-if="tenant.status === 'active' && tenant.subdomain"
-              :href="siteUrl(tenant)"
-              target="_blank"
-              rel="noopener"
-              class="flex-1 rounded-lg border border-slate-300 py-2.5 text-center text-sm font-medium"
+            <NuxtLink
+              v-if="tenant.subdomain"
+              :to="{ path: '/editor', query: { tenant: tenant.id } }"
+              class="flex-1 rounded-lg bg-teal-600 py-2.5 text-center text-sm font-semibold text-white"
             >
-              Lihat situs
-            </a>
+              Kelola isi situs
+            </NuxtLink>
             <NuxtLink
               v-else
               to="/onboarding"
               class="flex-1 rounded-lg bg-teal-600 py-2.5 text-center text-sm font-semibold text-white"
             >
-              Lanjutkan &amp; terbitkan
+              Lanjutkan pengaturan
+            </NuxtLink>
+            <a
+              v-if="tenant.status === 'active' && tenant.subdomain"
+              :href="siteUrl(tenant)"
+              target="_blank"
+              rel="noopener"
+              class="rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-medium"
+            >
+              Lihat situs
+            </a>
+            <NuxtLink
+              v-else-if="tenant.subdomain"
+              to="/onboarding"
+              class="rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-medium"
+            >
+              Terbitkan
             </NuxtLink>
           </div>
         </li>

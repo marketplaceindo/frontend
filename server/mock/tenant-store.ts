@@ -1,8 +1,11 @@
 /**
  * Mock modul Tenants & Onboarding (Fase 7b) — in-memory, meniru NestJS
- * `/v1/tenants/*` (kontrak §3). Setiap tenant dimiliki satu user; wizard
- * memateralisasi konten nyata ke render-store sehingga situs preview langsung
- * ter-render lewat jalur publik yang sama.
+ * `/v1/tenants/*` (kontrak §3). Setiap tenant dimiliki satu user.
+ *
+ * Sejak Fase 7c modul ini hanya memegang **metadata** tenant (subdomain, status,
+ * template, tema). Konten halaman/section/block dimiliki `content-store.ts`;
+ * di sini disediakan sinkronisasi draft → render store dan pembekuan snapshot
+ * saat publish (kontrak §5/§9).
  *
  * Bebas dependensi Nitro/h3 → bisa diuji unit murni.
  */
@@ -12,35 +15,30 @@ import {
   checkSubdomainRequestSchema,
   isReservedSubdomain,
   subdomainSchema,
+  tenantThemeSchema,
   updateSubdomainRequestSchema,
   wizardAnswersSchema,
   type CheckSubdomainResponse,
   type PublishResponse,
   type Tenant,
-  type WizardAnswers,
   type WizardResponse,
 } from "@marketplaceindo/shared";
 import { MIN_SUBDOMAIN_LENGTH, normalizeSubdomain } from "../../shared/utils/subdomain";
+import { TenantApiError } from "./api-error";
+import { contentToFixture, hasContent, seedContentFromFixture } from "./content-store";
 import { materializeWizard, templateIdForBusinessType, themeForBusinessType } from "./materialize";
-import { isSubdomainUsed, registerTenantSite, unregisterTenantSite } from "./render-store";
+import {
+  isSubdomainUsed,
+  publishDraftSite,
+  renameTenantSite,
+  setDraftSite,
+  unregisterTenantSite,
+} from "./render-store";
 
-/** Error setara response error kontrak §1.4; dikonversi ke H3Error di dashboard-api. */
-export class TenantApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-    readonly details?: Record<string, unknown>,
-  ) {
-    super(message);
-    this.name = "TenantApiError";
-  }
-}
+export { TenantApiError };
 
 interface StoredTenant extends Tenant {
   ownerId: string;
-  /** Jawaban wizard terakhir — sumber re-materialisasi saat publish. */
-  answers: WizardAnswers | null;
 }
 
 const tenants = new Map<string, StoredTenant>();
@@ -50,7 +48,7 @@ function nowIso(): string {
 }
 
 function publicTenant(t: StoredTenant): Tenant {
-  const { ownerId: _owner, answers: _answers, ...rest } = t;
+  const { ownerId: _owner, ...rest } = t;
   return rest;
 }
 
@@ -62,6 +60,30 @@ function ownedTenant(ownerId: string, tenantId: string): StoredTenant {
     throw new TenantApiError(403, "FORBIDDEN", "Kamu tidak punya akses ke situs ini");
   }
   return tenant;
+}
+
+/** Metadata tenant untuk pemanggil (dashboard-api) — sudah tervalidasi kepemilikan. */
+export function getTenant(ownerId: string, tenantId: string): Tenant {
+  return publicTenant(ownedTenant(ownerId, tenantId));
+}
+
+/**
+ * Tulis ulang draft situs dari konten terkini. Dipanggil setiap kali konten,
+ * tema, atau metadata tenant berubah — draft inilah yang dilihat `?preview=1`.
+ * Tenant tanpa subdomain/konten belum punya situs untuk di-render.
+ */
+export function syncDraftSite(tenantId: string): void {
+  const tenant = tenants.get(tenantId);
+  if (!tenant?.subdomain || !hasContent(tenantId)) return;
+  setDraftSite(
+    tenant.subdomain,
+    contentToFixture(tenantId, {
+      subdomain: tenant.subdomain,
+      status: tenant.status,
+      publishedAt: tenant.publishedAt,
+      theme: tenant.themeJson,
+    }),
+  );
 }
 
 /** GET /v1/tenants/me */
@@ -94,7 +116,6 @@ export function createTenant(ownerId: string): Tenant {
     themeJson: {},
     createdAt: nowIso(),
     publishedAt: null,
-    answers: null,
   };
   tenants.set(tenant.id, tenant);
   return publicTenant(tenant);
@@ -166,18 +187,24 @@ export function updateSubdomain(ownerId: string, tenantId: string, raw: unknown)
 
   const previous = tenant.subdomain;
   tenant.subdomain = value;
-  // Pindahkan konten yang sudah dimaterialisasi ke alamat baru.
-  if (previous && previous !== value && tenant.answers) {
-    unregisterTenantSite(previous);
-    registerTenantSite(value, materializeWizard(value, tenant.answers, tenant.status, tenant.publishedAt));
-  }
+  if (previous && previous !== value) renameTenantSite(previous, value);
+  syncDraftSite(tenantId);
+  return publicTenant(tenant);
+}
+
+/** PATCH /v1/tenants/:id/theme — tema global (cascade Level 2). */
+export function updateTheme(ownerId: string, tenantId: string, raw: unknown): Tenant {
+  const tenant = ownedTenant(ownerId, tenantId);
+  tenant.themeJson = tenantThemeSchema.parse(raw);
+  syncDraftSite(tenantId);
   return publicTenant(tenant);
 }
 
 /**
  * POST /v1/tenants/:id/wizard — pilih template dari `businessType`, materialisasi
  * konten nyata, kembalikan tenant + previewUrl. Idempotent: dipanggil ulang =
- * re-materialisasi (kontrak §3).
+ * re-materialisasi (kontrak §3) — konten editor ditimpa, karena itu frontend
+ * mengonfirmasi dulu bila situs sudah pernah diedit.
  */
 export function runWizard(
   ownerId: string,
@@ -201,13 +228,10 @@ export function runWizard(
     });
   }
 
-  tenant.answers = answers;
   tenant.templateId = templateIdForBusinessType(answers.businessType);
   tenant.themeJson = themeForBusinessType(answers.businessType);
-  registerTenantSite(
-    tenant.subdomain,
-    materializeWizard(tenant.subdomain, answers, tenant.status, tenant.publishedAt),
-  );
+  seedContentFromFixture(tenantId, materializeWizard(tenant.subdomain, answers, tenant.status));
+  syncDraftSite(tenantId);
 
   return {
     tenant: publicTenant(tenant),
@@ -247,17 +271,24 @@ export function publishTenant(
 function missingContent(tenant: StoredTenant): string[] {
   const missing: string[] = [];
   if (!tenant.subdomain) missing.push("subdomain");
-  if (!tenant.answers) missing.push("konten wizard");
   if (!tenant.templateId) missing.push("template");
+  if (!hasContent(tenant.id)) missing.push("konten wizard");
   return missing;
 }
 
+/** Aktifkan tenant + bekukan draft jadi snapshot publik (kontrak §5). */
 function activate(tenant: StoredTenant): Tenant {
   tenant.status = "active";
   tenant.publishedAt ??= nowIso();
-  registerTenantSite(
+  syncDraftSite(tenant.id);
+  publishDraftSite(
     tenant.subdomain!,
-    materializeWizard(tenant.subdomain!, tenant.answers!, "active", tenant.publishedAt),
+    contentToFixture(tenant.id, {
+      subdomain: tenant.subdomain!,
+      status: "active",
+      publishedAt: tenant.publishedAt,
+      theme: tenant.themeJson,
+    }),
   );
   return publicTenant(tenant);
 }
@@ -277,4 +308,14 @@ export function activateTenantAfterPayment(tenantId: string): Tenant | null {
 /** Dipakai billing untuk memastikan tenant target memang milik user (§1.5). */
 export function assertTenantOwned(ownerId: string, tenantId: string): void {
   ownedTenant(ownerId, tenantId);
+}
+
+/** Hapus situs draft beserta kontennya (dipakai saat user membatalkan). */
+export function deleteDraftTenant(ownerId: string, tenantId: string): void {
+  const tenant = ownedTenant(ownerId, tenantId);
+  if (tenant.status === "active") {
+    throw new TenantApiError(409, "TENANT_ALREADY_ACTIVE", "Situs yang sudah terbit tidak bisa dihapus");
+  }
+  if (tenant.subdomain) unregisterTenantSite(tenant.subdomain);
+  tenants.delete(tenantId);
 }

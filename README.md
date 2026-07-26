@@ -76,6 +76,23 @@ daftar gratis → wizard (6 pertanyaan) → situs ter-materialisasi → preview 
 
 > Catatan dev: Nuxt mem-bind `localhost` yang di Windows bisa resolve ke `::1` saja, sementara `lvh.me` selalu `127.0.0.1`. Bila `*.lvh.me:3000` tidak bisa dibuka, jalankan `npx nuxt dev --host 127.0.0.1`.
 
+## Dashboard: Editor konten (Fase 7c)
+
+Diakses di `/editor?tenant=<id>`; navigasi antar-layar lewat query param (`&tab=`, `&page=`) supaya tombol Back HP bekerja alami dan tiap layar bisa di-refresh. Mobile-first — perangkat uji utama Android Chrome.
+
+**Model draft vs published (kontrak §5).** Editor SELALU menulis ke *draft*; situs publik membaca *snapshot* yang dibekukan saat Publish. Konsekuensinya: perubahan hanya terlihat lewat `?preview=1` sampai user menekan Terbitkan. `server/mock/render-store.ts` menyimpan keduanya per subdomain (`draft` + `published`); `published` masih null = situs belum pernah terbit → 404 dari luar.
+
+- **Kepemilikan konten**: konten disemai sekali dari materialisasi wizard lalu menjadi milik editor (`server/mock/content-store.ts`) — bukan lagi turunan jawaban wizard, sehingga mengedit hero tidak tertimpa saat menyimpan hal lain. Menjalankan ulang wizard memang me-materialisasi ulang (kontrak §3).
+- **Halaman**: daftar, tambah (navbar+footer disalin dari beranda), hapus (beranda dilindungi), SEO per halaman. Nav situs diturunkan dari daftar halaman. Slug `mobil`/`produk` ditolak karena dipesan route listing koleksi.
+- **Section**: toggle aktif/nonaktif (data tetap tersimpan, hanya tidak ikut ter-render), geser urutan (server merapatkan `order` jadi 0..n-1 sehingga tidak ada nomor bolong/ganda), dan gaya per-section (cascade Level 3).
+- **Form block di-generate dari schema Zod shared** (`app/utils/block-form.ts`): introspeksi `blockSchema` menghasilkan deskriptor field (teks, textarea, URL, angka, uang, centang, pilihan, gambar, list bersarang) beserta batas `min/maxItems`. Menambah field di repo shared langsung memunculkan input baru tanpa perubahan di sini. Ke-29 tipe block terbukti tidak menyisakan field `unsupported` (`tests/block-form.spec.ts`). Mekanisme yang sama dipakai form koleksi lewat `describeSchemaFields(vehicleInputSchema|productInputSchema)`.
+- **Validasi dua arah**: klien memakai `blockSchema` shared; server memvalidasi ulang per-item dan mengembalikan `fieldErrors` ber-index (`blocks.0.data.heading`) yang dipetakan balik ke field. Tipe block di luar slot template → `422 BLOCK_NOT_ALLOWED_IN_SLOT`.
+- **Slot template (kontrak §4)**: `server/mock/templates.ts` mendeskripsikan `structureJson` per jenis usaha — selaras dengan section yang dihasilkan materializer. Catatan kontrak: §5 **tidak punya** endpoint membuat section baru, jadi section yang tersedia memang ditentukan template sejak materialisasi; editor menoggle/mengurutkan/mengisi, bukan menambah slot.
+- **Gambar (kontrak §6)**: presign → PUT langsung ke `uploadUrl` → pakai `fileUrl`. Sebelum upload gambar diperkecil di browser ke sisi terpanjang 1600 px (`app/utils/image-resize.ts`) — penting untuk foto kamera HP di jaringan seluler. Mode mock menyimpan byte di memori dan menyajikannya lewat `/api/media/:id`; alur kliennya identik dengan object storage sungguhan.
+- **Koleksi (kontrak §7)**: CRUD Vehicle/Product + pencarian, slug auto-generate dari nama dan unik per tenant. Koleksi ikut dibekukan ke snapshot saat publish.
+- **Tema (Level 2)**: pemilih warna + font dengan pratinjau memakai token CSS yang sama dengan situs, lalu iframe `?preview=1` dimuat ulang setelah simpan.
+- **Isolasi**: kontrak §5/§7 memakai `/pages/:pageId` dan `/vehicles/:id` tanpa segmen tenant, jadi kepemilikan ditegakkan lewat indeks `pageId→tenantId` + cek pemilik tenant → tenant/halaman/koleksi milik user lain selalu `403`.
+
 Resolusi tenant: `server/plugins/tenant.ts` membaca Host per request → `event.context.tenant` (`app`/`www`/apex → dashboard; subdomain lain → tenant). Catatan: `SUBDOMAIN_BLACKLIST` shared adalah aturan registrasi, bukan routing — subdomain seed platform (mis. `demo`) tetap di-serve sebagai tenant.
 
 ## Theming (Fase 2)

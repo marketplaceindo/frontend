@@ -32,6 +32,18 @@ interface Paginated<T> {
   nextCursor: string | null;
 }
 
+/**
+ * `$fetch` untuk URL **eksternal** (backend NestJS). Sengaja di-cast ke tanda
+ * tangan longgar: tipe bawaan Nuxt mencoba mencocokkan URL ke tabel route
+ * internal, dan seiring bertambahnya route dashboard inferensinya meledak
+ * ("excessive stack depth"). URL di sini absolut ke host lain, jadi pencocokan
+ * itu memang tidak relevan.
+ */
+const fetchExternal = $fetch as unknown as <T>(
+  url: string,
+  opts?: Record<string, unknown>,
+) => Promise<T>;
+
 export interface RenderOptions {
   /** Render draft snapshot (?preview=1). Sesi owner divalidasi backend (Fase 7a). */
   preview?: boolean;
@@ -58,12 +70,10 @@ function toH3Error(err: unknown): never {
 
 function renderFetch<T>(event: H3Event, path: string, opts: RenderOptions): Promise<T> {
   const config = useRuntimeConfig(event);
-  // $fetch<T> lewat generic bebas menghasilkan TypedInternalResponse yang tak
-  // menyatu dengan T; URL ini eksternal (renderApiBase absolut) → cast aman.
-  return $fetch(`${config.renderApiBase}${path}`, {
+  return fetchExternal<T>(`${config.renderApiBase}${path}`, {
     headers: { "X-Service-Token": config.renderServiceToken },
     query: opts.preview ? { preview: "1" } : undefined,
-  }) as Promise<T>;
+  });
 }
 
 /** GET /v1/render/:subdomain — data global situs (theme, nav, kontak). */
@@ -126,7 +136,7 @@ export async function fetchRenderVehicles(
   const config = useRuntimeConfig(event);
   try {
     if (config.renderMock) return getMockVehicles(subdomain, query, opts.preview);
-    return await $fetch<Paginated<Vehicle>>(`${config.renderApiBase}/render/${subdomain}/vehicles`, {
+    return await fetchExternal<Paginated<Vehicle>>(`${config.renderApiBase}/render/${subdomain}/vehicles`, {
       headers: { "X-Service-Token": config.renderServiceToken },
       query: { ...query, ...(opts.preview ? { preview: "1" } : {}) },
     });
@@ -145,7 +155,7 @@ export async function fetchRenderProducts(
   const config = useRuntimeConfig(event);
   try {
     if (config.renderMock) return getMockProducts(subdomain, query, opts.preview);
-    return await $fetch<Paginated<Product>>(`${config.renderApiBase}/render/${subdomain}/products`, {
+    return await fetchExternal<Paginated<Product>>(`${config.renderApiBase}/render/${subdomain}/products`, {
       headers: { "X-Service-Token": config.renderServiceToken },
       query: { ...query, ...(opts.preview ? { preview: "1" } : {}) },
     });
@@ -195,7 +205,7 @@ export async function submitPublicLead(
   const config = useRuntimeConfig(event);
   try {
     if (config.renderMock) return createMockLead(subdomain, body);
-    return await $fetch<CreateLeadResponse>(`${config.renderApiBase}/public/${subdomain}/leads`, {
+    return await fetchExternal<CreateLeadResponse>(`${config.renderApiBase}/public/${subdomain}/leads`, {
       method: "POST",
       headers: { "X-Service-Token": config.renderServiceToken },
       body,

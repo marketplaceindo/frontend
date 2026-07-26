@@ -84,12 +84,23 @@ function toH3Error(err: unknown): never {
   throw err;
 }
 
+/**
+ * `$fetch` untuk URL **eksternal** (backend NestJS). Di-cast ke tanda tangan
+ * longgar: tipe bawaan Nuxt mencoba mencocokkan URL ke tabel route internal dan
+ * inferensinya meledak seiring bertambahnya route ("excessive stack depth").
+ * URL di sini absolut ke host lain, jadi pencocokan itu memang tidak relevan.
+ */
+const fetchExternal = $fetch as unknown as <T>(
+  url: string,
+  opts?: Record<string, unknown>,
+) => Promise<T>;
+
 function realAuth(event: H3Event, path: string, body: unknown): Promise<AuthResponse> {
   const config = useRuntimeConfig(event);
-  return $fetch(`${config.dashboardApiBase}${path}`, {
+  return fetchExternal<AuthResponse>(`${config.dashboardApiBase}${path}`, {
     method: "POST",
-    body: body as Record<string, unknown>,
-  }) as Promise<AuthResponse>;
+    body,
+  });
 }
 
 /** POST /auth/register → set sesi, kembalikan user (tanpa token ke browser). */

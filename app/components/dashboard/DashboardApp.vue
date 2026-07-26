@@ -5,6 +5,7 @@ import DashboardRegister from "./DashboardRegister.vue";
 import DashboardHome from "./DashboardHome.vue";
 import DashboardOnboarding from "./DashboardOnboarding.vue";
 import DashboardCheckout from "./DashboardCheckout.vue";
+import DashboardEditor from "./DashboardEditor.vue";
 
 /**
  * Dispatcher dashboard (Fase 7a). Dirender oleh SiteEntry saat Host = mode
@@ -38,6 +39,7 @@ const view = computed(() => {
   if (route.path === "/register") return "register";
   if (route.path === "/onboarding") return "onboarding";
   if (route.path === "/bayar-simulasi") return "checkout";
+  if (route.path === "/editor") return "editor";
   return "home";
 });
 
@@ -49,5 +51,6 @@ useSeoMeta({ robots: "noindex, nofollow" });
   <DashboardRegister v-else-if="view === 'register'" />
   <DashboardOnboarding v-else-if="view === 'onboarding' && user" />
   <DashboardCheckout v-else-if="view === 'checkout' && user" />
+  <DashboardEditor v-else-if="view === 'editor' && user" />
   <DashboardHome v-else-if="user" />
 </template>

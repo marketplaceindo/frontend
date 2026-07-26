@@ -80,41 +80,84 @@ for (const [name, raw] of Object.entries(RAW_FIXTURES)) {
 }
 
 /**
- * Situs yang dimaterialisasi wizard saat runtime (Fase 7b) — hidup berdampingan
- * dengan fixture statis supaya tenant hasil onboarding langsung bisa di-render
- * lewat jalur publik yang sama (`subdomain.lvh.me/?preview=1`).
+ * Situs tenant yang dikelola dashboard (wizard Fase 7b + editor Fase 7c),
+ * berdampingan dengan fixture statis seed.
+ *
+ * Model draft vs published (kontrak §5/§9): editor SELALU bekerja pada `draft`;
+ * situs publik membaca `published` — snapshot yang dibekukan saat publish.
+ * Karena itu perubahan di editor hanya terlihat lewat `?preview=1` sampai user
+ * menekan Publish. `published` masih null = belum pernah terbit.
  */
-const materialized = new Map<string, TenantFixture>();
+interface TenantSiteEntry {
+  draft: TenantFixture;
+  published: TenantFixture | null;
+}
 
-/**
- * Daftarkan/timpa situs tenant hasil wizard. Divalidasi terhadap schema shared
- * di sini juga — materializer yang menghasilkan konten invalid gagal keras
- * (setara `422 VALIDATION_ERROR` dari backend nyata), bukan diam-diam lolos.
- */
-export function registerTenantSite(subdomain: string, fixture: TenantFixture): void {
+const managed = new Map<string, TenantSiteEntry>();
+
+function validateFixture(subdomain: string, fixture: TenantFixture, label: string): TenantFixture {
   const parsed = tenantFixtureSchema.safeParse(fixture);
   if (!parsed.success) {
     throw new Error(
-      `Materialisasi wizard untuk "${subdomain}" tidak lolos schema shared:\n${z.prettifyError(parsed.error)}`,
+      `${label} untuk "${subdomain}" tidak lolos schema shared:\n${z.prettifyError(parsed.error)}`,
     );
   }
   if (parsed.data.site.tenant.subdomain !== subdomain) {
-    throw new Error(`Materialisasi "${subdomain}": subdomain di dalam situs harus "${subdomain}"`);
+    throw new Error(`${label} "${subdomain}": subdomain di dalam situs harus "${subdomain}"`);
   }
-  materialized.set(subdomain, parsed.data);
+  return parsed.data;
+}
+
+/**
+ * Tulis draft situs tenant. Divalidasi terhadap schema shared di sini juga —
+ * materializer/editor yang menghasilkan konten invalid gagal keras (setara
+ * `422 VALIDATION_ERROR` dari backend nyata), bukan diam-diam lolos.
+ */
+export function setDraftSite(subdomain: string, fixture: TenantFixture): void {
+  const draft = validateFixture(subdomain, fixture, "Draft situs");
+  const entry = managed.get(subdomain);
+  if (entry) entry.draft = draft;
+  else managed.set(subdomain, { draft, published: null });
+}
+
+/** Bekukan draft jadi snapshot publik (dipanggil saat publish). */
+export function publishDraftSite(subdomain: string, fixture: TenantFixture): void {
+  const published = validateFixture(subdomain, fixture, "Snapshot publish");
+  const entry = managed.get(subdomain);
+  if (entry) entry.published = published;
+  else managed.set(subdomain, { draft: published, published });
 }
 
 export function unregisterTenantSite(subdomain: string): void {
-  materialized.delete(subdomain);
+  managed.delete(subdomain);
 }
 
-/** Subdomain sudah dipakai fixture seed atau tenant hasil wizard? (cek ketersediaan §3) */
+/** Pindahkan draft + snapshot ke alamat baru (ganti subdomain sebelum terbit). */
+export function renameTenantSite(from: string, to: string): void {
+  const entry = managed.get(from);
+  if (!entry) return;
+  managed.delete(from);
+  managed.set(to, entry);
+}
+
+/** Subdomain sudah dipakai fixture seed atau tenant dashboard? (cek ketersediaan §3) */
 export function isSubdomainUsed(subdomain: string): boolean {
-  return fixtures.has(subdomain) || materialized.has(subdomain);
+  return fixtures.has(subdomain) || managed.has(subdomain);
 }
 
-function findFixture(subdomain: string): TenantFixture {
-  const fixture = materialized.get(subdomain) ?? fixtures.get(subdomain);
+/**
+ * Pilih sumber render: `?preview=1` membaca draft, publik membaca snapshot.
+ * Fixture seed statis tidak punya pemisahan itu (dipakai untuk kedua jalur).
+ */
+function findFixture(subdomain: string, preview = false): TenantFixture {
+  const entry = managed.get(subdomain);
+  if (entry) {
+    if (preview) return entry.draft;
+    if (entry.published) return entry.published;
+    // Belum pernah terbit → dari luar tidak boleh terlihat ada.
+    throw new RenderApiError(404, "TENANT_NOT_FOUND", "Situs tidak ditemukan");
+  }
+  const fixture = fixtures.get(subdomain);
   if (!fixture) {
     throw new RenderApiError(404, "TENANT_NOT_FOUND", "Situs tidak ditemukan");
   }
@@ -135,7 +178,7 @@ function assertAccessible(site: RenderTenantResponse, preview: boolean): void {
 
 /** Mock GET /v1/render/:subdomain */
 export function getMockSite(subdomain: string, preview = false): RenderTenantResponse {
-  const fixture = findFixture(subdomain);
+  const fixture = findFixture(subdomain, preview);
   assertAccessible(fixture.site, preview);
   return fixture.site;
 }
@@ -146,7 +189,7 @@ export function getMockPage(
   pageSlug: string,
   preview = false,
 ): RenderPageResponse {
-  const fixture = findFixture(subdomain);
+  const fixture = findFixture(subdomain, preview);
   assertAccessible(fixture.site, preview);
   const page = fixture.pages[pageSlug];
   if (!page) {
@@ -180,7 +223,7 @@ export function getMockVehicles(
   rawQuery: unknown = {},
   preview = false,
 ): Paginated<Vehicle> {
-  const fixture = findFixture(subdomain);
+  const fixture = findFixture(subdomain, preview);
   assertAccessible(fixture.site, preview);
   const query: VehicleQuery = vehicleQuerySchema.parse(rawQuery);
   let items = fixture.vehicles ?? [];
@@ -201,7 +244,7 @@ export function getMockProducts(
   rawQuery: unknown = {},
   preview = false,
 ): Paginated<Product> {
-  const fixture = findFixture(subdomain);
+  const fixture = findFixture(subdomain, preview);
   assertAccessible(fixture.site, preview);
   const query: ProductQuery = productQuerySchema.parse(rawQuery);
   let items = fixture.products ?? [];
@@ -216,7 +259,7 @@ export function getMockProducts(
 
 /** Mock GET /v1/render/:subdomain/vehicles/:slug — item penuh untuk VDP (Fase 5). */
 export function getMockVehicle(subdomain: string, slug: string, preview = false): Vehicle {
-  const fixture = findFixture(subdomain);
+  const fixture = findFixture(subdomain, preview);
   assertAccessible(fixture.site, preview);
   const vehicle = (fixture.vehicles ?? []).find((v) => v.slug === slug);
   if (!vehicle) {
@@ -227,7 +270,7 @@ export function getMockVehicle(subdomain: string, slug: string, preview = false)
 
 /** Mock GET /v1/render/:subdomain/products/:slug — item penuh untuk PDP (Fase 5). */
 export function getMockProduct(subdomain: string, slug: string, preview = false): Product {
-  const fixture = findFixture(subdomain);
+  const fixture = findFixture(subdomain, preview);
   assertAccessible(fixture.site, preview);
   const product = (fixture.products ?? []).find((p) => p.slug === slug);
   if (!product) {
@@ -242,7 +285,7 @@ export function getMockProduct(subdomain: string, slug: string, preview = false)
  * dari snapshot published + collection; mock menurunkannya dari fixture.
  */
 export function getMockSitemap(subdomain: string, preview = false): RenderSitemapResponse {
-  const fixture = findFixture(subdomain);
+  const fixture = findFixture(subdomain, preview);
   assertAccessible(fixture.site, preview);
 
   const publishedAt = fixture.site.tenant.publishedAt ?? new Date().toISOString();
