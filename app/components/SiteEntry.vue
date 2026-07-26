@@ -4,7 +4,12 @@ import type {
   RenderPageResponse,
   RenderTenantResponse,
 } from "@marketplaceindo/shared";
-import DashboardApp from "./dashboard/DashboardApp.vue";
+/**
+ * Dashboard dimuat lazy (Fase 8): editor + wizard + billing adalah bundel besar
+ * yang TIDAK relevan bagi pengunjung situs tenant. Impor dinamis membuatnya
+ * jadi chunk terpisah sehingga halaman publik tidak ikut mengunduhnya.
+ */
+const DashboardApp = defineAsyncComponent(() => import("./dashboard/DashboardApp.vue"));
 
 // Dipakai pages/index.vue dan pages/[...slug].vue (keduanya layout: false);
 // satu komponen supaya logika render tenant/dashboard tidak terduplikasi.

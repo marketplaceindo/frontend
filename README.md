@@ -105,6 +105,30 @@ Di `/langganan?tenant=<id>`.
 
 > **Batas kontrak yang diketahui**: `POST /v1/billing/subscribe` menolak permintaan saat langganan masih aktif (`409 SUBSCRIPTION_ALREADY_ACTIVE`), sehingga **upgrade bulanan → tahunan di tengah periode belum bisa dilakukan**. UI menampilkannya sebagai "bisa dipilih saat perpanjangan berikutnya" alih-alih memanggil endpoint yang akan gagal. Mengaktifkan upsell di tengah periode butuh penambahan endpoint/semantik di `API-CONTRACT.md` — perubahan kontrak, jadi dimulai dari repo shared.
 
+## ISR, performa & hardening (Fase 8)
+
+**Di mana cache dipasang — dan kenapa bukan di HTML `/`.** Mode dashboard dan situs tenant berbagi path (`/`, `/<slug>`) dan hanya dibedakan Host, sedangkan `routeRules` Nitro berbasis path. Men-cache HTML `/` secara global berarti halaman dashboard milik satu user bisa tersaji ke user lain. Karena itu ISR dipasang satu lapis lebih dalam:
+
+- **`/api/_render/*` di-cache** (`server/utils/render-cache.ts`, `swr`, TTL 300 dtk) — data tenant murni, tidak pernah memuat data user, dan subdomain-nya selalu dari Host. Kunci cache diawali subdomain sehingga tenant tidak pernah saling tertukar.
+- **`?preview=1` selalu melewati cache** — editor harus melihat perubahannya seketika.
+- **Path yang pasti milik tenant** (`/mobil/**`, `/produk/**`) tetap di-cache di level HTML dengan `host` ikut jadi kunci.
+- **Area dashboard `cache: false`** di `routeRules` (login/register/onboarding/editor/langganan/bayar-simulasi + `/api/tenants|pages|billing|auth/**`).
+- Kunci memakai pemisah `__` karena unstorage **menghapus** `:` dan `=` saat menormalkan nama key. Pemisah ini juga mencegah purge tenant `warung` ikut menghapus `warung-budi` (diuji di `tests/render-cache.spec.ts`).
+
+**Revalidate (kontrak §11)** — `POST /api/_internal/revalidate` dengan header `X-Service-Token`, body `{ subdomain, paths }` → menghapus semua entri cache milik tenant itu, balasannya `{ purged }`. Tanpa token (atau `NUXT_RENDER_SERVICE_TOKEN` belum di-set) endpoint tertutup: `401`.
+
+**Performa**
+- Dashboard/editor dimuat **lazy** dari `SiteEntry` → chunk terpisah ±79 kB (18% dari total JS klien) yang tidak pernah diunduh pengunjung situs tenant.
+- TTFB halaman tenant ter-cache pada build produksi: **10–21 ms** (DoD < 200 ms).
+- CSS tetap inline di HTML SSR; preload/prefetch chunk dimatikan (lihat bagian Performa Fase 6).
+
+**Hardening / QA**
+- Halaman error branded (`app/error.vue`) untuk 404 / 410 `TENANT_SUSPENDED` / `TENANT_NOT_FOUND` / error umum, selalu `noindex`.
+- QA build produksi lintas empat template + status tenant (`draft` → 404, `?preview=1` → 200, `suspended` → 410, subdomain asing → 404) dan `robots.txt` per status.
+- Isolasi terverifikasi dua arah: konten tenant A tidak pernah muncul di tenant B, dan dua user dashboard berbeda tidak pernah saling melihat halaman satu sama lain meski path-nya sama.
+
+> **Belum dikerjakan**: integrasi **Sentry** (PLAN §8.4). Butuh DSN/akun proyek; menambahkan dependensi yang setengah terkonfigurasi hanya akan gagal saat build produksi. Halaman error branded — bagian lain dari poin itu — sudah ada sejak Fase 6.
+
 Resolusi tenant: `server/plugins/tenant.ts` membaca Host per request → `event.context.tenant` (`app`/`www`/apex → dashboard; subdomain lain → tenant). Catatan: `SUBDOMAIN_BLACKLIST` shared adalah aturan registrasi, bukan routing — subdomain seed platform (mis. `demo`) tetap di-serve sebagai tenant.
 
 ## Theming (Fase 2)

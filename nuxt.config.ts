@@ -30,6 +30,37 @@ export default defineNuxtConfig({
     strict: true,
   },
 
+  /**
+   * Fase 8 — kebijakan cache.
+   *
+   * Catatan penting: mode dashboard dan situs tenant BERBAGI path (`/`,
+   * `/<slug>`) dan hanya dibedakan Host, sedangkan routeRules berbasis path.
+   * Karena itu HTML `/` sengaja TIDAK di-cache global — men-cache-nya berisiko
+   * menyajikan dashboard milik satu user ke user lain. ISR-nya dipasang satu
+   * lapis lebih dalam, di `/api/_render/*` (data tenant murni, kunci memuat
+   * subdomain) — lihat server/utils/render-cache.ts.
+   *
+   * Path yang PASTI milik situs tenant tetap boleh di-cache di level HTML,
+   * dengan `host` ikut jadi kunci agar tenant tidak saling tertukar.
+   */
+  routeRules: {
+    "/mobil/**": { swr: 300, cache: { varies: ["host", "x-forwarded-host"] } },
+    "/produk/**": { swr: 300, cache: { varies: ["host", "x-forwarded-host"] } },
+
+    // Area dashboard: selalu personal, tidak boleh menyentuh cache mana pun.
+    // (noindex-nya sudah di-set DashboardApp lewat useSeoMeta.)
+    "/login": { cache: false },
+    "/register": { cache: false },
+    "/onboarding": { cache: false },
+    "/editor": { cache: false },
+    "/langganan": { cache: false },
+    "/bayar-simulasi": { cache: false },
+    "/api/tenants/**": { cache: false },
+    "/api/pages/**": { cache: false },
+    "/api/billing/**": { cache: false },
+    "/api/auth/**": { cache: false },
+  },
+
   vite: {
     plugins: [tailwindcss()],
     server: {
