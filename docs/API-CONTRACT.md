@@ -2,7 +2,7 @@
 
 Dokumen ini adalah **satu-satunya sumber kebenaran** untuk API antara backend (NestJS) dan frontend (Nuxt). Semua bentuk request/response merujuk ke schema Zod di package `@marketplaceindo/shared` (repo terpisah, GitHub Packages — lihat `PLAN-SHARED.md`) — jika dokumen ini dan schema shared berbeda, schema shared yang menang dan dokumen ini harus diperbarui.
 
-Status: Draft v1 · Berlaku untuk prefix `/v1`
+Status: Draft v1 · Berlaku untuk prefix `/v1` · Selaras dengan `@marketplaceindo/shared@1.0.0`
 
 ---
 
@@ -101,6 +101,12 @@ Tipe `Tenant`:
   "status": "draft",                   // draft | active | suspended
   "templateId": "uuid",               // null bila belum dipilih
   "themeJson": TenantTheme,            // schema shared
+  "settingsJson": {                    // schema shared; {} untuk tenant non-otomotif
+    "salesMode"?: "baru" | "bekas" | "keduanya",
+    "defaultCity"?: "JKT",
+    "cities": [{ "code": "JKT", "name": "Jakarta" }],
+    "curatedComparisons": [{ "label": "Exceed vs Ultimate", "v": "xpander:exceed,xpander:ultimate" }]
+  },
   "createdAt": "...", "publishedAt": null
 }
 ```
@@ -147,6 +153,11 @@ Ganti template = reset konten (kebijakan MVP); `confirmReset` wajib `true` bila 
 
 ### PATCH /v1/tenants/:id/theme
 Body: `TenantTheme` (schema shared, validasi hex/enum) → `200 Tenant`
+
+### PATCH /v1/tenants/:id/settings
+Body: `TenantSettings` parsial (field yang dikirim saja yang di-merge) → `200 Tenant`
+Dipakai untuk `salesMode`, daftar kota + kota default (harga OTR), dan kombinasi perbandingan yang dikurasi. Mengubah `curatedComparisons` memicu revalidate halaman `/bandingkan` terkait.
+Error: `422 VALIDATION_ERROR` (mis. kombinasi `v` berisi < 2 varian valid)
 
 ### POST /v1/tenants/:id/publish
 **Titik paywall.**
@@ -208,43 +219,92 @@ Body: `{ "filename": string, "mimeType": string, "size": number }`
 Klien meng-upload langsung ke `uploadUrl` (PUT). Batas: tipe MIME whitelist (jpeg/png/webp), ukuran maks per plan.
 Error: `422 UNSUPPORTED_MEDIA_TYPE | FILE_TOO_LARGE`, `409 PLAN_LIMIT_REACHED` (kuota storage)
 
+Setelah upload sukses, editor menyimpan `ImageRef` berisi **`mediaId` dan `url` (dari `fileUrl`) sekaligus** — `mediaId` untuk kuota/hapus/transformasi CDN, `url` supaya thumbnail langsung tampil tanpa request resolusi tambahan. `alt` diisi otomatis dari nama file dan tetap bisa diedit user.
+
 ---
 
-## 7. Collections (Vehicles & Products)
+## 7. Collections (Vehicle Models, Vehicle Units & Products)
 
-Tipe `Vehicle`/`Product` mengikuti schema shared; keduanya punya `slug` unik per tenant (auto-generate dari nama, bisa dioverride).
+Koleksi kendaraan bercabang dua sejak v1.0.0 (keputusan D-01, `PLAN-FRONTEND.md` §Otomotif):
 
-Pola endpoint identik untuk kedua koleksi (contoh: vehicles):
+```
+VehicleModel (1) ──< VehicleVariant (n)     → dealer mobil BARU
+VehicleUnit  (1 record = 1 unit fisik)      → showroom mobil BEKAS
+```
 
-### GET /v1/tenants/:id/vehicles
+Tenant memilih mode saat onboarding (`settingsJson.salesMode`: `baru` | `bekas` | `keduanya`); mode menentukan route, editor, dan block yang aktif. Semua tipe mengikuti schema shared; masing-masing punya `slug` unik per tenant (auto-generate dari nama, bisa dioverride). Slug varian unik dalam satu model.
+
+### 7.1 Vehicle Models (mobil baru)
+
+`VehicleVariant` memuat harga OTR **per kota** (`priceOtr[]`, keputusan D-03), warna, `specs` berkunci `SPEC_REGISTRY` (§7.3), `specsCustom[]` bebas, `highlights[]`, `stockStatus`, `trimRank`, `isFeatured`.
+
+### GET /v1/tenants/:id/vehicle-models
+Query: `?limit&cursor&q&city&brand&body&hargaMin&hargaMax&transmisi&bahanBakar&sort` → `200 { items, nextCursor }`
+
+### POST /v1/tenants/:id/vehicle-models
+Body: `VehicleModelInput` (model + minimal 1 varian) → `201 VehicleModel` · Error: `409 PLAN_LIMIT_REACHED`
+
+### PATCH /v1/vehicle-models/:modelId → `200 VehicleModel`
+### DELETE /v1/vehicle-models/:modelId → `204`
+
+Kuota plan (`PLAN_LIMITS.maxCollectionItems`) dihitung **per model**, bukan per varian — satu model dengan 4 varian = 1 item.
+
+### 7.2 Vehicle Units (mobil bekas)
+
+`VehicleUnit` = schema `Vehicle` lama yang di-rename, ditambah field khas unit bekas: `plateCode` (kode wilayah saja, mis. `B` — nomor pelat lengkap TIDAK disimpan), `condition`, `ownerCount`, `taxValidUntil`. Harga tunggal (bukan OTR per kota).
+
+### GET /v1/tenants/:id/vehicle-units
 Query: `?limit&cursor&q&brand&priceMin&priceMax&year&transmission` → `200 { items, nextCursor }`
 
-### POST /v1/tenants/:id/vehicles
-Body: `Vehicle` → `201 Vehicle` · Error: `409 PLAN_LIMIT_REACHED` (mis. 50 item di plan dasar)
+### POST /v1/tenants/:id/vehicle-units
+Body: `VehicleUnitInput` → `201 VehicleUnit` · Error: `409 PLAN_LIMIT_REACHED`
 
-### PATCH /v1/vehicles/:vehicleId → `200 Vehicle`
-### DELETE /v1/vehicles/:vehicleId → `204`
+### PATCH /v1/vehicle-units/:unitId → `200 VehicleUnit`
+### DELETE /v1/vehicle-units/:unitId → `204`
 
-Products: ganti segmen `vehicles` → `products`; filter `?category&priceMin&priceMax`.
+Products: pola sama dengan segmen `products`; filter `?category&priceMin&priceMax`.
+
+### 7.3 Spec registry (kunci kanonik spesifikasi)
+
+Spesifikasi yang dapat dibandingkan disimpan sebagai `Record<SpecKey, SpecValue>` dengan `SpecKey` dari registry tertutup di shared (`SPEC_REGISTRY`, 18 key awal). Setiap nilai wajib cocok dengan `valueType` definisinya — validasi ini dilakukan schema, bukan backend.
+
+```jsonc
+"specs": { "mesin.kapasitas_cc": 1499, "transmisi.tipe": "cvt", "fitur.keyless": true }
+```
+
+Registry **append-only**: menghapus atau mengubah `key` = breaking change untuk data tenant yang sudah ada. Field bebas tetap boleh diisi di `specsCustom[]`, tapi tidak ikut dibandingkan.
 
 ---
 
 ## 8. Leads
 
 ### POST /v1/public/:subdomain/leads  *(service-token; dipanggil Nuxt route, bukan browser)*
-Body:
+Body (`LeadPayload`):
 ```jsonc
-{ "type": "test_drive" | "contact" | "reservation",
-  "payload": { "name": "...", "phone": "...", "date"?: "...", "message"?: "..." },
-  "sourceItemSlug"?: "toyota-avanza-2024",
+{ "source": "test_drive",          // lama: contact | reservation · baru: test_drive | simulasi_kredit | hubungi_sales | brosur
+  "nama": "Andi",
+  "telepon": "081234567890",        // 08xx | 62xx | +62xx — dinormalisasi ke 62xx sebelum disimpan
+  "email"?: "andi@contoh.id",
+  "refType"?: "variant",            // model | variant | unit
+  "refId"?: "uuid",                 // ATAU refSlug untuk halaman publik
+  "refSlug"?: "xpander:ultimate",
+  "refLabel"?: "Xpander Ultimate CVT",
+  "meta"?: { "dp": 62500000, "tenorBulan": 36, "angsuran": 6555556, "metode": "flat" },
+  "utm"?: { "source": "instagram", "medium"?: "...", "campaign"?: "promo-juli" },
+  "hp"?: "",                        // honeypot — wajib kosong
   "turnstileToken"?: "..." }
 ```
-→ `201 { "id": "uuid" }` — memicu notifikasi WA (kanal utama) + email ke tenant via queue.
+→ `201 { "id": "uuid", "waDeepLink": "https://wa.me/62...?text=..." }` — memicu notifikasi WA (kanal utama) + email ke tenant via queue.
 Error: `404 TENANT_NOT_FOUND`, `409 TENANT_NOT_ACTIVE`, `429 RATE_LIMITED`, `422 VALIDATION_ERROR`
 
+Catatan kontrak:
+- **Tanpa `tenantId` di body** — tenant diidentifikasi dari `:subdomain`; endpoint publik tidak pernah menyentuh ID internal.
+- **`waDeepLink` disusun backend**, bukan frontend, supaya format pesan identik antara web, notifikasi ke sales, dan dashboard lead.
+- `source: "simulasi_kredit"` dikirim *fire-and-forget* sebelum membuka WhatsApp — kegagalannya tidak boleh memblokir navigasi user.
+
 ### GET /v1/tenants/:id/leads
-Query: `?type&read&limit&cursor` → `200 { items: Lead[], nextCursor }`
-`Lead`: `{ id, type, payload, sourceItemSlug?, read, createdAt }`
+Query: `?source&refType&read&limit&cursor` → `200 { items: Lead[], nextCursor }`
+`Lead`: `{ id, source, nama, telepon, email?, refType?, refId?, refSlug?, refLabel?, meta?, utm?, read, createdAt }`
 
 ### PATCH /v1/leads/:leadId
 Body: `{ "read": true }` → `200 Lead`
@@ -281,20 +341,46 @@ Alur frontend pasca-subscribe: buka `invoiceUrl` → poll `GET /billing/status` 
 Semua endpoint: `X-Service-Token`, read-only, agresif di-cache (Redis, key per tenant+path). **Tidak pernah** memuat data internal (owner, email, billing). Tenant `draft`/`suspended`: hanya bisa diakses dengan `?preview=1` + validasi sesi owner (diteruskan Nuxt); selain itu `404`/`410`.
 
 ### GET /v1/render/:subdomain
-→ `200 { "tenant": { "subdomain", "status", "publishedAt" }, "theme": TenantTheme, "template": { "slug" }, "nav": [{ "slug", "title" }], "contact": { "whatsapp", "address" } }`
+→ `200 { "tenant": { "subdomain", "status", "publishedAt" }, "theme": TenantTheme, "template": { "slug" }, "nav": [{ "slug", "title" }], "contact": { "whatsapp", "address" }, "sales"?: { "mode": "baru"|"bekas"|"keduanya", "defaultCity": City|null, "cities": City[] } }`
+`sales` hanya dikirim untuk tenant otomotif; `City` = `{ code, name }`.
 Error: `404 TENANT_NOT_FOUND`, `410 TENANT_SUSPENDED`
 
 ### GET /v1/render/:subdomain/pages/:pageSlug
 → `200 { "page": { "slug", "title", "seoJson" }, "sections": [{ "sectionKey", "order", "styleJson", "blocks": Block[] }] }` — dari snapshot published (draft bila `?preview=1`).
 
-### GET /v1/render/:subdomain/vehicles · /products
+### GET /v1/render/:subdomain/models  *(mobil baru — listing)*
+Query: `?city&limit&cursor&q&brand&body&hargaMin&hargaMax&transmisi&bahanBakar&sort`
+→ `200 { "city": City|null, "items": RenderModelCard[], "nextCursor" }`
+`RenderModelCard`: `{ slug, brand, name, modelYear, bodyType, image, summary, priceFrom, variantCount, defaultVariantSlug }` — varian di-trim: hanya harga "mulai dari" di kota yang diminta.
+
+### GET /v1/render/:subdomain/models/:modelSlug
+Query: `?city` → `200 { "city", "model": RenderModelSummary, "variants": VehicleVariant[], "defaultVariantSlug", "updatedAt" }`
+`defaultVariantSlug` = varian `isFeatured`, fallback `trimRank` tertinggi.
+
+### GET /v1/render/:subdomain/variants/:modelSlug/:variantSlug
+Query: `?city` → `200 { "city", "model": RenderModelSummary, "variant": VehicleVariant, "price": OtrPrice|null, "siblings": [{ slug, name, trimRank, price, stockStatus }], "updatedAt" }`
+
+### GET /v1/render/:subdomain/compare
+Query: `?city&v=model:varian,model:varian` (maks 4 item, kelebihan dipotong dari kanan)
+→ `200 { "city", "variants": VariantCompareView[], "specRows": SpecRow[], "canonicalV": "a:b,c:d", "ignored": string[], "curated": boolean }`
+
+- **Backend yang menyusun matriks**, frontend hanya me-render — logika "spec mana yang muncul" harus identik di SSR & client (fungsi `susunSpecRows` di shared dipakai keduanya).
+- Baris = `SPEC_REGISTRY` yang `comparable`, urut sesuai registry; baris yang kosong di semua kolom dibuang.
+- `SpecRow.values[i] === null` berarti **sales belum mengisi** — berbeda dari `false` (fitur tidak ada). Perbedaan ini wajib terlihat berbeda di UI.
+- `SpecRow.winners` hanya terisi untuk `valueType: "number"` yang punya `higherIsBetter`.
+- Item `?v=` yang tidak valid/tidak ditemukan **diabaikan** dan dilaporkan di `ignored` — bukan error page.
+- `canonicalV` = daftar terurut alfabetis, untuk `<link rel="canonical">` supaya `a,b` dan `b,a` tidak jadi dua halaman.
+- `curated: true` bila kombinasi ada di `settingsJson.curatedComparisons[]` → halaman boleh di-`index`; selain itu frontend memasang `noindex, follow`.
+
+### GET /v1/render/:subdomain/units · /products  *(mobil bekas & produk)*
 Query filter sama dengan §7 → `200 { items, nextCursor }` (hanya field publik).
 
-### GET /v1/render/:subdomain/vehicles/:slug · /products/:slug
+### GET /v1/render/:subdomain/units/:slug · /products/:slug
 → `200` item penuh untuk VDP/PDP (+ field yang dibutuhkan JSON-LD).
 
 ### GET /v1/render/:subdomain/sitemap
-→ `200 { "urls": [{ "path": "/", "updatedAt" }, { "path": "/mobil/toyota-avanza-2024", "updatedAt" }] }`
+→ `200 { "urls": [{ "path": "/", "updatedAt" }, { "path": "/mobil/xpander", "updatedAt" }, { "path": "/mobil/xpander/ultimate", "updatedAt" }] }`
+Sitemap wajib mencakup halaman model **dan** semua halaman varian. Halaman `/bandingkan` tidak masuk sitemap.
 
 ---
 
@@ -326,7 +412,8 @@ Dipanggil saat: publish, update collection item, suspend/reaktivasi. Gagal → r
 
 ## 13. Checklist konsistensi implementasi
 
-- [ ] Semua bentuk body/response di dokumen ini punya schema/DTO padanan di `@marketplaceindo/shared` (`WizardAnswers`, `Block`, `SectionStyle`, `TenantTheme`, `Vehicle`, `Product`, `PageSeo`, DTO auth/billing/leads).
+- [ ] Semua bentuk body/response di dokumen ini punya schema/DTO padanan di `@marketplaceindo/shared` (`WizardAnswers`, `Block`, `SectionStyle`, `TenantTheme`, `TenantSettings`, `VehicleModel`, `VehicleVariant`, `VehicleUnit`, `Product`, `PageSeo`, `SpecRow`, `VariantCompareView`, DTO auth/billing/leads).
+- [ ] Perhitungan angsuran & penyusunan matriks compare memakai fungsi murni dari shared (`hitungAngsuran`, `ringkasanKredit`, `susunSpecRows`, `parseCompareParam`) — tidak ditulis ulang di backend/frontend, supaya angka di layar, di pesan WA, dan di SSR selalu sama.
 - [ ] nestjs-zod dipakai sebagai ValidationPipe → error otomatis berformat §1.4.
 - [ ] Frontend & backend hanya mengimpor tipe dari `@marketplaceindo/shared` (versi **pasti**, tanpa `^`/`~`), tidak mendefinisikan ulang bentuk API.
 - [ ] Perubahan endpoint mengikuti alur multi-repo: update schema di repo shared → bump versi (semver, lihat PLAN-SHARED.md) → publish → perbarui dokumen ini di repo shared → repo backend & frontend upgrade versi secara eksplisit di PR masing-masing.
