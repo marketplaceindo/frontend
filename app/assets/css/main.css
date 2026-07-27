@@ -25,6 +25,53 @@
   --radius-theme: 0.5rem;
 }
 
+/*
+ * Palet UI dashboard.
+ *
+ * `--color-*: initial` di atas sengaja menghapus SELURUH palet bawaan Tailwind
+ * supaya situs tenant hanya bisa memakai token theme (cascade 3 level) — tanpa
+ * itu, block bisa diam-diam hardcode warna dan lepas dari theme_json tenant.
+ * Efek sampingnya: utility seperti `bg-teal-600` di UI dashboard TIDAK
+ * menghasilkan CSS apa pun, sehingga tombol `bg-teal-600 text-white` tampil
+ * putih-di-atas-putih alias tak terlihat.
+ *
+ * Dashboard bukan situs tenant: ia butuh palet tetap sendiri. Yang didaftarkan
+ * di sini hanya shade yang benar-benar dipakai komponen dashboard — bukan
+ * seluruh skala — supaya CSS situs tenant tetap ramping.
+ */
+@theme {
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-900: #0f172a;
+
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-200: #99f6e4;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-800: #115e59;
+
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+}
+
 /* Padding-Y per section (section.styleJson.paddingY: none|sm|md|lg). */
 :root {
   --section-py-none: 0;

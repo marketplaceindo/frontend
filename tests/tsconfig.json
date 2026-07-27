@@ -10,12 +10,16 @@
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    // dashboard-palette.spec memakai fitur Vite (`?raw`, import.meta.glob)
+    // untuk membaca main.css + memindai komponen tanpa perlu @types/node.
+    "types": ["vite/client"]
   },
   "include": [
     "./**/*.ts",
     "../app/utils/*.ts",
     "../server/utils/tenant-host.ts",
+    "../server/utils/render-cache-key.ts",
     "../server/mock/**/*.ts",
     "../shared/**/*.ts"
   ]
