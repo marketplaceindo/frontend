@@ -45,7 +45,16 @@ export default defineNuxtConfig({
    */
   routeRules: {
     "/mobil/**": { swr: 300, cache: { varies: ["host", "x-forwarded-host"] } },
+    "/mobil-bekas/**": { swr: 300, cache: { varies: ["host", "x-forwarded-host"] } },
     "/produk/**": { swr: 300, cache: { varies: ["host", "x-forwarded-host"] } },
+
+    /*
+     * `/bandingkan` sengaja TANPA cache (addendum §Fase 8): kombinasi varian
+     * tumbuh kombinatorial sehingga cache nyaris tak pernah hit dan hanya
+     * memakan storage. Halamannya juga ringan — semua data datang dari satu
+     * request `/render/compare`.
+     */
+    "/bandingkan": { cache: false },
 
     // Area dashboard: selalu personal, tidak boleh menyentuh cache mana pun.
     // (noindex-nya sudah di-set DashboardApp lewat useSeoMeta.)

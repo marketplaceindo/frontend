@@ -27,12 +27,15 @@ const props = defineProps<{
 
 const site = useTenantSite();
 
-/** Tanggal paling awal yang boleh dipilih: hari ini + minLeadTimeHari. */
-const tanggalMin = computed(() => {
-  const d = new Date();
-  d.setDate(d.getDate() + props.data.minLeadTimeHari);
-  return d.toISOString().slice(0, 10);
-});
+/**
+ * Tanggal paling awal yang boleh dipilih: hari ini + minLeadTimeHari.
+ *
+ * Dihitung setelah mount, BUKAN saat render: `new Date()` di server memakai
+ * zona waktu server sedangkan klien memakai zona waktu perangkat, sehingga
+ * atribut `min` bisa berbeda satu hari dan hidrasi meleset. Nilai awal kosong
+ * → SSR dan render hidrasi pertama identik.
+ */
+const tanggalMin = ref("");
 
 const { defineField, handleSubmit, errors, setErrors, isSubmitting, values } = useForm({
   validationSchema: zodTypedSchema(createLeadRequestSchema),
@@ -68,6 +71,11 @@ const PREFILL_COOKIE = "mi_lead_prefill";
 
 onMounted(() => {
   timer = setTimeout(() => (siap.value = true), 3000);
+
+  const d = new Date();
+  d.setDate(d.getDate() + props.data.minLeadTimeHari);
+  tanggalMin.value = d.toISOString().slice(0, 10);
+
   // Prefill dari lead sebelumnya di sesi yang sama.
   const saved = useCookie<{ nama?: string; telepon?: string } | null>(PREFILL_COOKIE).value;
   if (saved?.nama) nama.value = saved.nama;

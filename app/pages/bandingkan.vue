@@ -72,9 +72,13 @@ function tampil(row: (typeof baris.value)[number], i: number): string {
   return String(v);
 }
 
+// Dibaca di setup, bukan di dalam computed: komposabel Nuxt harus dipanggil
+// saat setup supaya SSR dan klien menghasilkan origin yang sama.
+const origin = useRequestURL().origin;
+
 const shareHref = computed(() => {
   const wa = data.value?.site.contact.whatsapp;
-  const url = `${useRequestURL().origin}/bandingkan?v=${data.value?.compare.canonicalV ?? ""}`;
+  const url = `${origin}/bandingkan?v=${data.value?.compare.canonicalV ?? ""}`;
   const nama = kolom.value.map((k) => `${k.modelName} ${k.variantName}`).join(" vs ");
   const pesan = `Perbandingan ${nama}:\n${url}`;
   return wa
