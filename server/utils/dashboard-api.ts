@@ -25,7 +25,7 @@ import type {
   Tenant,
   TemplatesResponse,
   User,
-  Vehicle,
+  VehicleUnit,
   WizardResponse,
 } from "@marketplaceindo/shared";
 import { TenantApiError } from "../mock/api-error";
@@ -531,7 +531,7 @@ export async function apiCreateCollectionItem(
   collection: Collection,
   tenantId: string,
   body: unknown,
-): Promise<Vehicle | Product> {
+): Promise<VehicleUnit | Product> {
   const user = requireUser(event);
   try {
     if (isMock(event)) {
@@ -541,7 +541,7 @@ export async function apiCreateCollectionItem(
       syncDraftSite(tenantId);
       return item;
     }
-    return await proxy<Vehicle | Product>(event, "POST", `/tenants/${tenantId}/${collection}`, {
+    return await proxy<VehicleUnit | Product>(event, "POST", `/tenants/${tenantId}/${collection}`, {
       body,
     });
   } catch (err) {
@@ -554,7 +554,7 @@ export async function apiUpdateCollectionItem(
   collection: Collection,
   itemId: string,
   body: unknown,
-): Promise<Vehicle | Product> {
+): Promise<VehicleUnit | Product> {
   requireUser(event);
   try {
     if (isMock(event)) {
@@ -566,7 +566,7 @@ export async function apiUpdateCollectionItem(
       syncDraftSite(tenantId);
       return item;
     }
-    return await proxy<Vehicle | Product>(event, "PATCH", `/${collection}/${itemId}`, { body });
+    return await proxy<VehicleUnit | Product>(event, "PATCH", `/${collection}/${itemId}`, { body });
   } catch (err) {
     toH3Error(err);
   }

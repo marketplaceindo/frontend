@@ -25,7 +25,7 @@ const HIGHLIGHT_BLOCKS: Record<BusinessType, BlockType[]> = {
   kuliner: ["featured_menu", "menu"],
   katalog: ["services", "price_list", "product_grid", "product_categories"],
   bisnis_jasa: ["services", "features", "process"],
-  otomotif: ["services", "vehicle_grid", "featured_vehicles"],
+  otomotif: ["model_grid", "unit_grid", "featured_vehicles", "variant_table"],
 };
 
 const TEMPLATE_NAMES: Record<BusinessType, { slug: string; name: string }> = {

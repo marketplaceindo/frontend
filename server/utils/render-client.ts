@@ -9,10 +9,14 @@ import type {
   CreateLeadRequest,
   CreateLeadResponse,
   Product,
+  RenderCompareResponse,
+  RenderModelResponse,
+  RenderModelsResponse,
+  RenderVariantResponse,
   RenderPageResponse,
   RenderSitemapResponse,
   RenderTenantResponse,
-  Vehicle,
+  VehicleUnit,
 } from "@marketplaceindo/shared";
 import { FetchError } from "ofetch";
 import {
@@ -23,8 +27,12 @@ import {
   getMockProducts,
   getMockSite,
   getMockSitemap,
-  getMockVehicle,
-  getMockVehicles,
+  getMockUnit,
+  getMockUnits,
+  getMockCompare,
+  getMockModel,
+  getMockModels,
+  getMockVariant,
 } from "../mock/render-store";
 
 interface Paginated<T> {
@@ -127,16 +135,16 @@ export async function fetchRenderSitemap(
 }
 
 /** GET /v1/render/:subdomain/vehicles — list + filter §7. */
-export async function fetchRenderVehicles(
+export async function fetchRenderUnits(
   event: H3Event,
   subdomain: string,
   query: Record<string, unknown>,
   opts: RenderOptions = {},
-): Promise<Paginated<Vehicle>> {
+): Promise<Paginated<VehicleUnit>> {
   const config = useRuntimeConfig(event);
   try {
-    if (config.renderMock) return getMockVehicles(subdomain, query, opts.preview);
-    return await fetchExternal<Paginated<Vehicle>>(`${config.renderApiBase}/render/${subdomain}/vehicles`, {
+    if (config.renderMock) return getMockUnits(subdomain, query, opts.preview);
+    return await fetchExternal<Paginated<VehicleUnit>>(`${config.renderApiBase}/render/${subdomain}/vehicles`, {
       headers: { "X-Service-Token": config.renderServiceToken },
       query: { ...query, ...(opts.preview ? { preview: "1" } : {}) },
     });
@@ -165,16 +173,16 @@ export async function fetchRenderProducts(
 }
 
 /** GET /v1/render/:subdomain/vehicles/:slug — item penuh untuk VDP (Fase 5). */
-export async function fetchRenderVehicle(
+export async function fetchRenderUnit(
   event: H3Event,
   subdomain: string,
   slug: string,
   opts: RenderOptions = {},
-): Promise<Vehicle> {
+): Promise<VehicleUnit> {
   const config = useRuntimeConfig(event);
   try {
-    if (config.renderMock) return getMockVehicle(subdomain, slug, opts.preview);
-    return await renderFetch<Vehicle>(event, `/render/${subdomain}/vehicles/${slug}`, opts);
+    if (config.renderMock) return getMockUnit(subdomain, slug, opts.preview);
+    return await renderFetch<VehicleUnit>(event, `/render/${subdomain}/vehicles/${slug}`, opts);
   } catch (err) {
     toH3Error(err);
   }
@@ -210,6 +218,101 @@ export async function submitPublicLead(
       headers: { "X-Service-Token": config.renderServiceToken },
       body,
     });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mobil baru: model, varian, compare (addendum §5)
+// ---------------------------------------------------------------------------
+
+/** GET /v1/render/:subdomain/models — listing model + harga "mulai dari". */
+export async function fetchRenderModels(
+  event: H3Event,
+  subdomain: string,
+  query: Record<string, unknown>,
+  opts: RenderOptions = {},
+): Promise<RenderModelsResponse> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return getMockModels(subdomain, query, opts.preview);
+    return await fetchExternal<RenderModelsResponse>(
+      `${config.renderApiBase}/render/${subdomain}/models`,
+      {
+        headers: { "X-Service-Token": config.renderServiceToken },
+        query: { ...query, ...(opts.preview ? { preview: "1" } : {}) },
+      },
+    );
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** GET /v1/render/:subdomain/models/:modelSlug — model + seluruh varian. */
+export async function fetchRenderModel(
+  event: H3Event,
+  subdomain: string,
+  modelSlug: string,
+  opts: RenderOptions & { city?: string } = {},
+): Promise<RenderModelResponse> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return getMockModel(subdomain, modelSlug, opts.city, opts.preview);
+    return await fetchExternal<RenderModelResponse>(
+      `${config.renderApiBase}/render/${subdomain}/models/${modelSlug}`,
+      {
+        headers: { "X-Service-Token": config.renderServiceToken },
+        query: { ...(opts.city ? { city: opts.city } : {}), ...(opts.preview ? { preview: "1" } : {}) },
+      },
+    );
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** GET /v1/render/:subdomain/compare — matriks perbandingan siap render. */
+export async function fetchRenderCompare(
+  event: H3Event,
+  subdomain: string,
+  v: string,
+  opts: RenderOptions & { city?: string } = {},
+): Promise<RenderCompareResponse> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) return getMockCompare(subdomain, v, opts.city, opts.preview);
+    return await fetchExternal<RenderCompareResponse>(
+      `${config.renderApiBase}/render/${subdomain}/compare`,
+      {
+        headers: { "X-Service-Token": config.renderServiceToken },
+        query: { v, ...(opts.city ? { city: opts.city } : {}), ...(opts.preview ? { preview: "1" } : {}) },
+      },
+    );
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** GET /v1/render/:subdomain/variants/:modelSlug/:variantSlug — VDP varian. */
+export async function fetchRenderVariant(
+  event: H3Event,
+  subdomain: string,
+  modelSlug: string,
+  variantSlug: string,
+  opts: RenderOptions & { city?: string } = {},
+): Promise<RenderVariantResponse> {
+  const config = useRuntimeConfig(event);
+  try {
+    if (config.renderMock) {
+      return getMockVariant(subdomain, modelSlug, variantSlug, opts.city, opts.preview);
+    }
+    return await fetchExternal<RenderVariantResponse>(
+      `${config.renderApiBase}/render/${subdomain}/variants/${modelSlug}/${variantSlug}`,
+      {
+        headers: { "X-Service-Token": config.renderServiceToken },
+        query: { ...(opts.city ? { city: opts.city } : {}), ...(opts.preview ? { preview: "1" } : {}) },
+      },
+    );
   } catch (err) {
     toH3Error(err);
   }

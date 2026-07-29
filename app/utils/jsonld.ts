@@ -3,7 +3,7 @@
  * (input → objek) supaya mudah diuji; komponen menyuntik hasilnya via useHead
  * script type="application/ld+json" (pakai serializeJsonLd untuk escape aman).
  */
-import type { Block, Product, Vehicle } from "@marketplaceindo/shared";
+import type { Block, Product, VehicleUnit } from "@marketplaceindo/shared";
 
 type JsonLd = Record<string, unknown>;
 
@@ -103,8 +103,8 @@ export function productJsonLd(product: Product, url: string): JsonLd {
   return ld;
 }
 
-/** Car/Vehicle (VDP otomotif — eligibility Google Vehicle Listings). */
-export function carJsonLd(vehicle: Vehicle, url: string): JsonLd {
+/** Car/VehicleUnit (VDP otomotif — eligibility Google VehicleUnit Listings). */
+export function carJsonLd(vehicle: VehicleUnit, url: string): JsonLd {
   const ld: JsonLd = {
     "@context": SCHEMA,
     "@type": "Car",

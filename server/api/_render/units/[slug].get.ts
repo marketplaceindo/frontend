@@ -1,5 +1,5 @@
 import { slugSchema } from "@marketplaceindo/shared";
-import { fetchRenderVehicle } from "../../../utils/render-client";
+import { fetchRenderUnit } from "../../../utils/render-client";
 
 /** Item kendaraan penuh untuk VDP (subdomain dari Host). */
 export default defineEventHandler((event) => {
@@ -12,5 +12,5 @@ export default defineEventHandler((event) => {
     throw createError({ statusCode: 404, message: "Unit tidak ditemukan" });
   }
   const preview = getQuery(event).preview === "1";
-  return fetchRenderVehicle(event, routing.subdomain, slug.data, { preview });
+  return fetchRenderUnit(event, routing.subdomain, slug.data, { preview });
 });

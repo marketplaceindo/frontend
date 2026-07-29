@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Block, Vehicle } from "@marketplaceindo/shared";
-import VehicleCard from "./VehicleCard.vue";
+import type { Block, VehicleUnit } from "@marketplaceindo/shared";
+import UnitCard from "./UnitCard.vue";
 
-type Data = Extract<Block, { type: "vehicle_grid" }>["data"];
+type Data = Extract<Block, { type: "unit_grid" }>["data"];
 const props = defineProps<{ data: Data }>();
 
 const requestFetch = useRequestFetch();
@@ -15,9 +15,9 @@ const query = computed(() => ({
 }));
 
 const { data: result } = await useAsyncData(
-  () => `vehicle-grid:${JSON.stringify(query.value)}`,
+  () => `unit-grid:${JSON.stringify(query.value)}`,
   () =>
-    requestFetch<{ items: Vehicle[]; nextCursor: string | null }>("/api/_render/vehicles", {
+    requestFetch<{ items: VehicleUnit[]; nextCursor: string | null }>("/api/_render/units", {
       query: query.value,
     }),
 );
@@ -40,10 +40,10 @@ const items = computed(() => {
       {{ data.heading }}
     </h2>
     <ul v-if="items.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <VehicleCard
-        v-for="vehicle in items"
-        :key="vehicle.id"
-        :vehicle="vehicle"
+      <UnitCard
+        v-for="unit in items"
+        :key="unit.id"
+        :unit="unit"
 
       />
     </ul>

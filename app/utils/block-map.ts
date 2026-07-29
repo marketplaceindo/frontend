@@ -30,7 +30,11 @@ import BlockMenu from "../components/blocks/BlockMenu.vue";
 import BlockFeaturedMenu from "../components/blocks/BlockFeaturedMenu.vue";
 import BlockOpeningHours from "../components/blocks/BlockOpeningHours.vue";
 import BlockReservation from "../components/blocks/BlockReservation.vue";
-import BlockVehicleGrid from "../components/blocks/BlockVehicleGrid.vue";
+import BlockUnitGrid from "../components/blocks/BlockUnitGrid.vue";
+import BlockModelGrid from "../components/blocks/BlockModelGrid.vue";
+import BlockVariantTable from "../components/blocks/BlockVariantTable.vue";
+import BlockCitySelector from "../components/blocks/BlockCitySelector.vue";
+import BlockCompareTray from "../components/blocks/BlockCompareTray.vue";
 import BlockFeaturedVehicles from "../components/blocks/BlockFeaturedVehicles.vue";
 import BlockSimulasiKredit from "../components/blocks/BlockSimulasiKredit.vue";
 import BlockTestDrive from "../components/blocks/BlockTestDrive.vue";
@@ -84,7 +88,11 @@ export const blockMap: Record<BlockType, Component> = {
   opening_hours: BlockOpeningHours,
   reservation: BlockReservation,
   // Otomotif + fungsional (Fase 4)
-  vehicle_grid: BlockVehicleGrid,
+  model_grid: BlockModelGrid,
+  unit_grid: BlockUnitGrid,
+  variant_table: BlockVariantTable,
+  city_selector: BlockCitySelector,
+  compare_tray: BlockCompareTray,
   featured_vehicles: BlockFeaturedVehicles,
   simulasi_kredit: BlockSimulasiKredit,
   test_drive: BlockTestDrive,

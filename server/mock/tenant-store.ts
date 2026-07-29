@@ -114,6 +114,9 @@ export function createTenant(ownerId: string): Tenant {
     status: "draft",
     templateId: null,
     themeJson: {},
+    // Default vertikal sales mobil (addendum D-01/D-03): mode & kota ditentukan
+    // ulang di wizard; nilai awal ini menjaga tenant selalu punya settings valid.
+    settingsJson: { salesMode: "baru", defaultCity: "JKT", cities: [], curatedComparisons: [] },
     createdAt: nowIso(),
     publishedAt: null,
   };

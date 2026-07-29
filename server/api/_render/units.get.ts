@@ -1,4 +1,4 @@
-import { fetchRenderVehicles } from "../../utils/render-client";
+import { fetchRenderUnits } from "../../utils/render-client";
 
 /** List kendaraan tenant (filter §7 diteruskan apa adanya; subdomain dari Host). */
 export default defineEventHandler((event) => {
@@ -7,5 +7,5 @@ export default defineEventHandler((event) => {
     throw createError({ statusCode: 404, message: "Bukan situs tenant" });
   }
   const { preview, ...query } = getQuery(event);
-  return fetchRenderVehicles(event, routing.subdomain, query, { preview: preview === "1" });
+  return fetchRenderUnits(event, routing.subdomain, query, { preview: preview === "1" });
 });

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 /**
- * Editor koleksi (kontrak §7): CRUD Vehicle/Product + pencarian. Form field
- * diturunkan dari schema shared `vehicleInputSchema`/`productInputSchema`
+ * Editor koleksi (kontrak §7): CRUD VehicleUnit/Product + pencarian. Form field
+ * diturunkan dari schema shared `vehicleUnitInputSchema`/`productInputSchema`
  * lewat introspeksi yang sama dengan editor block — jadi field baru di repo
  * shared otomatis muncul di sini.
  */
 import {
   productInputSchema,
-  vehicleInputSchema,
+  vehicleUnitInputSchema,
   type Product,
-  type Vehicle,
+  type VehicleUnit,
 } from "@marketplaceindo/shared";
 import EditorField from "./EditorField.vue";
 
@@ -28,7 +28,7 @@ const busy = ref(false);
 const formError = ref("");
 
 const schema = computed(() =>
-  props.kind === "vehicles" ? vehicleInputSchema : productInputSchema,
+  props.kind === "vehicles" ? vehicleUnitInputSchema : productInputSchema,
 );
 const fields = computed(() => describeSchemaFields(schema.value));
 const noun = computed(() => (props.kind === "vehicles" ? "unit" : "produk"));
@@ -36,7 +36,7 @@ const noun = computed(() => (props.kind === "vehicles" ? "unit" : "produk"));
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
 /** Muatan awal ikut SSR (cookie sesi diteruskan useRequestFetch di useEditor). */
-const { data, refresh } = await useAsyncData<(Vehicle | Product)[]>(
+const { data, refresh } = await useAsyncData<(VehicleUnit | Product)[]>(
   () => `editor-collection:${props.tenantId}:${props.kind}`,
   () => {
     const query = q.value.trim() ? { q: q.value.trim() } : {};
@@ -51,7 +51,7 @@ const { data, refresh } = await useAsyncData<(Vehicle | Product)[]>(
   },
   { watch: [() => props.kind] },
 );
-const items = computed<(Vehicle | Product)[]>(() => data.value ?? []);
+const items = computed<(VehicleUnit | Product)[]>(() => data.value ?? []);
 
 async function load() {
   loading.value = true;
@@ -78,7 +78,7 @@ function startCreate() {
   formError.value = "";
 }
 
-function startEdit(item: Vehicle | Product) {
+function startEdit(item: VehicleUnit | Product) {
   const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = item as Record<string, unknown> & {
     id: string;
     createdAt: string;
@@ -134,7 +134,7 @@ async function save() {
   }
 }
 
-async function remove(item: Vehicle | Product) {
+async function remove(item: VehicleUnit | Product) {
   if (!confirm(`Hapus "${item.name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
   busy.value = true;
   try {

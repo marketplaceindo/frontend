@@ -9,7 +9,7 @@ import type {
   TemplateDetailResponse,
   Tenant,
   TenantTheme,
-  Vehicle,
+  VehicleUnit,
 } from "@marketplaceindo/shared";
 
 interface Paginated<T> {
@@ -64,19 +64,19 @@ export function useEditor() {
 
   // --- Koleksi ---------------------------------------------------------
   const listVehicles = (tenantId: string, query: Record<string, unknown> = {}) =>
-    fetchApi<Paginated<Vehicle>>(`/api/tenants/${tenantId}/vehicles`, { query });
+    fetchApi<Paginated<VehicleUnit>>(`/api/tenants/${tenantId}/vehicles`, { query });
 
   const listProducts = (tenantId: string, query: Record<string, unknown> = {}) =>
     fetchApi<Paginated<Product>>(`/api/tenants/${tenantId}/products`, { query });
 
   const createVehicle = (tenantId: string, body: Record<string, unknown>) =>
-    fetchApi<Vehicle>(`/api/tenants/${tenantId}/vehicles`, { method: "POST", body });
+    fetchApi<VehicleUnit>(`/api/tenants/${tenantId}/vehicles`, { method: "POST", body });
 
   const createProduct = (tenantId: string, body: Record<string, unknown>) =>
     fetchApi<Product>(`/api/tenants/${tenantId}/products`, { method: "POST", body });
 
   const updateVehicle = (id: string, body: Record<string, unknown>) =>
-    fetchApi<Vehicle>(`/api/vehicles/${id}`, { method: "PATCH", body });
+    fetchApi<VehicleUnit>(`/api/vehicles/${id}`, { method: "PATCH", body });
 
   const updateProduct = (id: string, body: Record<string, unknown>) =>
     fetchApi<Product>(`/api/products/${id}`, { method: "PATCH", body });

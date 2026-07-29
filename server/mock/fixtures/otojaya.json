@@ -134,25 +134,32 @@
               "type": "featured_vehicles",
               "data": {
                 "heading": "Unit Pilihan Minggu Ini",
-                "vehicleSlugs": [
-                  "honda-brio-2023",
-                  "toyota-avanza-2022"
+                "items": [
+                  {
+                    "modelSlug": "xpander",
+                    "variantSlug": "ultimate-cvt"
+                  },
+                  {
+                    "modelSlug": "brio",
+                    "variantSlug": "rs-cvt"
+                  }
                 ]
               }
             }
           ]
         },
         {
-          "sectionKey": "vehicle_grid",
+          "sectionKey": "model_grid",
           "order": 3,
           "styleJson": {},
           "blocks": [
             {
-              "type": "vehicle_grid",
+              "type": "model_grid",
               "data": {
-                "heading": "Semua Unit",
+                "heading": "Mobil Baru",
                 "limit": 12,
-                "sort": "price_asc"
+                "sort": "order",
+                "tampilkanFilter": true
               }
             }
           ]
@@ -165,16 +172,41 @@
             {
               "type": "simulasi_kredit",
               "data": {
-                "bungaDefault": 6.5,
-                "tenorOptions": [
+                "heading": "Simulasi Kredit",
+                "metodeDefault": "flat",
+                "tampilkanKeduaMetode": true,
+                "bungaPerTahunDefault": 6.5,
+                "tenorOptionsBulan": [
                   12,
                   24,
                   36,
                   48,
                   60
                 ],
-                "metodeDefault": "flat",
-                "dpMin": 20
+                "dpMinPersen": 20,
+                "dpDefaultPersen": 25,
+                "asuransi": {
+                  "aktif": true,
+                  "tipeDefault": "all_risk",
+                  "ratePersenPerTahun": {
+                    "tlo": 1.2,
+                    "all_risk": 2.5
+                  }
+                },
+                "biayaTambahan": {
+                  "adminRp": 1500000,
+                  "provisiPersen": 1,
+                  "fidusiaRp": 500000
+                },
+                "leasingPartners": [
+                  {
+                    "nama": "Adira Finance"
+                  },
+                  {
+                    "nama": "BCA Finance"
+                  }
+                ],
+                "disclaimer": "Angka di atas adalah simulasi, belum termasuk biaya yang bisa berbeda per leasing. Persetujuan kredit sepenuhnya ada di pihak perusahaan pembiayaan."
               }
             }
           ]
@@ -188,7 +220,20 @@
               "type": "test_drive",
               "data": {
                 "heading": "Jadwalkan Test Drive",
-                "description": "Isi form ini — tim kami akan menghubungi untuk mengatur jadwal."
+                "description": "Isi form ini — tim kami akan menghubungi untuk mengatur jadwal.",
+                "aktif": true,
+                "butuhTanggal": true,
+                "slotWaktu": [
+                  "09:00-12:00",
+                  "12:00-15:00",
+                  "15:00-18:00"
+                ],
+                "lokasiOptions": [
+                  "Showroom Otojaya Bandung"
+                ],
+                "minLeadTimeHari": 1,
+                "pesanSukses": "Terima kasih! Sales kami akan menghubungi via WhatsApp untuk konfirmasi jadwal.",
+                "fallbackWhatsApp": true
               }
             }
           ]
@@ -196,7 +241,7 @@
       ]
     }
   },
-  "vehicles": [
+  "units": [
     {
       "id": "00000000-0000-4000-8000-000000000001",
       "slug": "toyota-avanza-2022",
@@ -284,6 +329,340 @@
       "updatedAt": "2026-07-16T04:00:00Z",
       "sold": true,
       "color": "Abu-abu"
+    }
+  ],
+  "models": [
+    {
+      "id": "553fbed3-69cd-5787-9d13-5ed42f9d9049",
+      "slug": "xpander",
+      "brand": "Mitsubishi",
+      "name": "Xpander",
+      "modelYear": 2026,
+      "bodyType": "mpv",
+      "images": [
+        {
+          "url": "https://cdn.marketindonesia.co.id/otojaya/xpander.jpg",
+          "alt": "Mitsubishi Xpander"
+        }
+      ],
+      "summary": "MPV keluarga dengan ground clearance tinggi dan kabin 7 penumpang yang lega.",
+      "description": "Xpander dirancang untuk jalanan Indonesia: ground clearance 225 mm, kabin tiga baris, dan konsumsi bahan bakar irit.",
+      "isPublished": true,
+      "order": 0,
+      "createdAt": "2026-07-01T00:00:00Z",
+      "updatedAt": "2026-07-01T00:00:00Z",
+      "variants": [
+        {
+          "id": "3a16a666-c6ec-5bfa-8d49-544f0a6c72fa",
+          "slug": "gls-mt",
+          "name": "GLS MT",
+          "trimRank": 0,
+          "priceOtr": [
+            {
+              "cityCode": "JKT",
+              "cityName": "Jakarta",
+              "price": 272000000
+            },
+            {
+              "cityCode": "BDG",
+              "cityName": "Bandung",
+              "price": 270500000
+            }
+          ],
+          "colors": [
+            {
+              "name": "Putih Mutiara",
+              "hex": "#f5f5f5",
+              "additionalPrice": 0
+            },
+            {
+              "name": "Hitam Metalik",
+              "hex": "#1a1a1a",
+              "additionalPrice": 0
+            }
+          ],
+          "specs": {
+            "mesin.kapasitas_cc": 1499,
+            "mesin.tenaga_ps": 105,
+            "mesin.torsi_nm": 141,
+            "mesin.bahan_bakar": "bensin",
+            "dimensi.panjang_mm": 4595,
+            "dimensi.jarak_sumbu_mm": 2775,
+            "dimensi.ground_clearance_mm": 225,
+            "dimensi.kapasitas_penumpang": 7,
+            "keselamatan.abs_ebd": true,
+            "transmisi.tipe": "manual",
+            "transmisi.jumlah_gigi": 5,
+            "fitur.head_unit_inch": 8,
+            "keselamatan.jumlah_airbag": 2,
+            "fitur.keyless": false,
+            "fitur.cruise_control": false,
+            "fitur.kamera_360": false,
+            "keselamatan.vsc": false,
+            "keselamatan.hill_start": false
+          },
+          "specsCustom": [],
+          "highlights": [
+            "Transmisi manual 5 percepatan",
+            "Head unit 8 inci"
+          ],
+          "stockStatus": "ready",
+          "isFeatured": false
+        },
+        {
+          "id": "b569681b-82b9-5743-a107-605ac3d98f05",
+          "slug": "exceed-cvt",
+          "name": "Exceed CVT",
+          "trimRank": 1,
+          "priceOtr": [
+            {
+              "cityCode": "JKT",
+              "cityName": "Jakarta",
+              "price": 296500000
+            },
+            {
+              "cityCode": "BDG",
+              "cityName": "Bandung",
+              "price": 295000000
+            }
+          ],
+          "colors": [
+            {
+              "name": "Putih Mutiara",
+              "hex": "#f5f5f5",
+              "additionalPrice": 0
+            },
+            {
+              "name": "Hitam Metalik",
+              "hex": "#1a1a1a",
+              "additionalPrice": 0
+            }
+          ],
+          "specs": {
+            "mesin.kapasitas_cc": 1499,
+            "mesin.tenaga_ps": 105,
+            "mesin.torsi_nm": 141,
+            "mesin.bahan_bakar": "bensin",
+            "dimensi.panjang_mm": 4595,
+            "dimensi.jarak_sumbu_mm": 2775,
+            "dimensi.ground_clearance_mm": 225,
+            "dimensi.kapasitas_penumpang": 7,
+            "keselamatan.abs_ebd": true,
+            "transmisi.tipe": "cvt",
+            "transmisi.jumlah_gigi": 8,
+            "fitur.head_unit_inch": 8,
+            "keselamatan.jumlah_airbag": 4,
+            "fitur.keyless": true,
+            "fitur.cruise_control": false,
+            "fitur.kamera_360": false,
+            "keselamatan.vsc": true,
+            "keselamatan.hill_start": true
+          },
+          "specsCustom": [],
+          "highlights": [
+            "Transmisi CVT",
+            "Keyless entry",
+            "Stability control"
+          ],
+          "stockStatus": "ready",
+          "isFeatured": false
+        },
+        {
+          "id": "58868573-a662-5354-a05c-39e770091503",
+          "slug": "ultimate-cvt",
+          "name": "Ultimate CVT",
+          "trimRank": 2,
+          "priceOtr": [
+            {
+              "cityCode": "JKT",
+              "cityName": "Jakarta",
+              "price": 318000000
+            },
+            {
+              "cityCode": "BDG",
+              "cityName": "Bandung",
+              "price": 316500000
+            }
+          ],
+          "colors": [
+            {
+              "name": "Putih Mutiara",
+              "hex": "#f5f5f5",
+              "additionalPrice": 0
+            },
+            {
+              "name": "Hitam Metalik",
+              "hex": "#1a1a1a",
+              "additionalPrice": 0
+            }
+          ],
+          "specs": {
+            "mesin.kapasitas_cc": 1499,
+            "mesin.tenaga_ps": 105,
+            "mesin.torsi_nm": 141,
+            "mesin.bahan_bakar": "bensin",
+            "dimensi.panjang_mm": 4595,
+            "dimensi.jarak_sumbu_mm": 2775,
+            "dimensi.ground_clearance_mm": 225,
+            "dimensi.kapasitas_penumpang": 7,
+            "keselamatan.abs_ebd": true,
+            "transmisi.tipe": "cvt",
+            "transmisi.jumlah_gigi": 8,
+            "fitur.head_unit_inch": 10,
+            "keselamatan.jumlah_airbag": 6,
+            "fitur.keyless": true,
+            "fitur.cruise_control": true,
+            "fitur.kamera_360": true,
+            "keselamatan.vsc": true,
+            "keselamatan.hill_start": true
+          },
+          "specsCustom": [],
+          "highlights": [
+            "Kamera 360°",
+            "Cruise control",
+            "6 airbag",
+            "Head unit 10 inci"
+          ],
+          "stockStatus": "ready",
+          "isFeatured": true
+        }
+      ]
+    },
+    {
+      "id": "fc57a7d4-74fa-5b1d-82ee-7ce19c8d6c1f",
+      "slug": "brio",
+      "brand": "Honda",
+      "name": "Brio",
+      "modelYear": 2026,
+      "bodyType": "hatchback",
+      "images": [
+        {
+          "url": "https://cdn.marketindonesia.co.id/otojaya/brio.jpg",
+          "alt": "Honda Brio"
+        }
+      ],
+      "summary": "Hatchback kompak yang lincah di kota, irit, dan mudah diparkir.",
+      "isPublished": true,
+      "order": 1,
+      "createdAt": "2026-07-01T00:00:00Z",
+      "updatedAt": "2026-07-01T00:00:00Z",
+      "variants": [
+        {
+          "id": "33ad9c58-84e9-5198-a54a-930934ceee88",
+          "slug": "satya-e-mt",
+          "name": "Satya E MT",
+          "trimRank": 0,
+          "priceOtr": [
+            {
+              "cityCode": "JKT",
+              "cityName": "Jakarta",
+              "price": 167900000
+            },
+            {
+              "cityCode": "BDG",
+              "cityName": "Bandung",
+              "price": 166800000
+            }
+          ],
+          "colors": [
+            {
+              "name": "Putih Mutiara",
+              "hex": "#f5f5f5",
+              "additionalPrice": 0
+            },
+            {
+              "name": "Hitam Metalik",
+              "hex": "#1a1a1a",
+              "additionalPrice": 0
+            }
+          ],
+          "specs": {
+            "mesin.kapasitas_cc": 1199,
+            "mesin.tenaga_ps": 90,
+            "mesin.torsi_nm": 110,
+            "mesin.bahan_bakar": "bensin",
+            "dimensi.panjang_mm": 3990,
+            "dimensi.jarak_sumbu_mm": 2405,
+            "dimensi.ground_clearance_mm": 169,
+            "dimensi.kapasitas_penumpang": 5,
+            "keselamatan.abs_ebd": true,
+            "transmisi.tipe": "manual",
+            "transmisi.jumlah_gigi": 5,
+            "fitur.head_unit_inch": 7,
+            "keselamatan.jumlah_airbag": 2,
+            "fitur.keyless": false,
+            "fitur.cruise_control": false,
+            "fitur.kamera_360": false,
+            "keselamatan.vsc": false,
+            "keselamatan.hill_start": false
+          },
+          "specsCustom": [],
+          "highlights": [
+            "Paling irit di kelasnya",
+            "Transmisi manual"
+          ],
+          "stockStatus": "ready",
+          "isFeatured": false
+        },
+        {
+          "id": "4a4ecd18-9162-5b72-920e-97eb337150b9",
+          "slug": "rs-cvt",
+          "name": "RS CVT",
+          "trimRank": 1,
+          "priceOtr": [
+            {
+              "cityCode": "JKT",
+              "cityName": "Jakarta",
+              "price": 212400000
+            },
+            {
+              "cityCode": "BDG",
+              "cityName": "Bandung",
+              "price": 211000000
+            }
+          ],
+          "colors": [
+            {
+              "name": "Putih Mutiara",
+              "hex": "#f5f5f5",
+              "additionalPrice": 0
+            },
+            {
+              "name": "Hitam Metalik",
+              "hex": "#1a1a1a",
+              "additionalPrice": 0
+            }
+          ],
+          "specs": {
+            "mesin.kapasitas_cc": 1199,
+            "mesin.tenaga_ps": 90,
+            "mesin.torsi_nm": 110,
+            "mesin.bahan_bakar": "bensin",
+            "dimensi.panjang_mm": 3990,
+            "dimensi.jarak_sumbu_mm": 2405,
+            "dimensi.ground_clearance_mm": 169,
+            "dimensi.kapasitas_penumpang": 5,
+            "keselamatan.abs_ebd": true,
+            "transmisi.tipe": "cvt",
+            "transmisi.jumlah_gigi": 7,
+            "fitur.head_unit_inch": 7,
+            "keselamatan.jumlah_airbag": 4,
+            "fitur.keyless": true,
+            "fitur.cruise_control": false,
+            "fitur.kamera_360": false,
+            "keselamatan.vsc": true,
+            "keselamatan.hill_start": false
+          },
+          "specsCustom": [],
+          "highlights": [
+            "Body kit RS",
+            "Transmisi CVT",
+            "Keyless entry"
+          ],
+          "stockStatus": "indent",
+          "isFeatured": true
+        }
+      ]
     }
   ]
 }

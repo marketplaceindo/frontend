@@ -12,11 +12,11 @@ import {
   productInputSchema,
   productQuerySchema,
   productUpdateSchema,
-  vehicleInputSchema,
-  vehicleQuerySchema,
-  vehicleUpdateSchema,
+  vehicleUnitInputSchema,
+  vehicleUnitQuerySchema,
+  vehicleUnitUpdateSchema,
   type Product,
-  type Vehicle,
+  type VehicleUnit,
 } from "@marketplaceindo/shared";
 import { TenantApiError } from "./api-error";
 import { normalizeSubdomain } from "../../shared/utils/subdomain";
@@ -26,7 +26,7 @@ interface Paginated<T> {
   nextCursor: string | null;
 }
 
-const vehicles = new Map<string, Vehicle[]>();
+const vehicles = new Map<string, VehicleUnit[]>();
 const products = new Map<string, Product[]>();
 /** Indeks itemId → tenantId (kontrak §7 memakai /vehicles/:id tanpa tenant). */
 const itemOwner = new Map<string, string>();
@@ -73,8 +73,8 @@ export function tenantIdOfItem(itemId: string): string {
 // Vehicles
 // ---------------------------------------------------------------------------
 
-export function listVehicles(tenantId: string, rawQuery: unknown = {}): Paginated<Vehicle> {
-  const query = vehicleQuerySchema.parse(rawQuery);
+export function listVehicles(tenantId: string, rawQuery: unknown = {}): Paginated<VehicleUnit> {
+  const query = vehicleUnitQuerySchema.parse(rawQuery);
   let items = vehicles.get(tenantId) ?? [];
   if (query.q) items = items.filter((v) => contains(`${v.name} ${v.brand} ${v.model ?? ""}`, query.q!));
   if (query.brand) items = items.filter((v) => v.brand.toLowerCase() === query.brand!.toLowerCase());
@@ -86,15 +86,15 @@ export function listVehicles(tenantId: string, rawQuery: unknown = {}): Paginate
   return paginate(items, query.limit, query.cursor);
 }
 
-export function createVehicle(tenantId: string, raw: unknown): Vehicle {
-  const input = vehicleInputSchema.parse(raw);
+export function createVehicle(tenantId: string, raw: unknown): VehicleUnit {
+  const input = vehicleUnitInputSchema.parse(raw);
   const list = vehicles.get(tenantId) ?? [];
   if (list.length >= MAX_ITEMS) {
     throw new TenantApiError(409, "PLAN_LIMIT_REACHED", `Maksimal ${MAX_ITEMS} unit di paket ini`);
   }
   const id = crypto.randomUUID();
   const now = nowIso();
-  const vehicle: Vehicle = {
+  const vehicle: VehicleUnit = {
     ...input,
     id,
     slug: uniqueSlug(list, input.slug ? slugify(input.slug) : slugify(input.name)),
@@ -107,8 +107,8 @@ export function createVehicle(tenantId: string, raw: unknown): Vehicle {
   return vehicle;
 }
 
-export function updateVehicle(tenantId: string, vehicleId: string, raw: unknown): Vehicle {
-  const patch = vehicleUpdateSchema.parse(raw);
+export function updateVehicle(tenantId: string, vehicleId: string, raw: unknown): VehicleUnit {
+  const patch = vehicleUnitUpdateSchema.parse(raw);
   const list = vehicles.get(tenantId) ?? [];
   const vehicle = list.find((v) => v.id === vehicleId);
   if (!vehicle) throw new TenantApiError(404, "NOT_FOUND", "Unit tidak ditemukan");
@@ -187,6 +187,6 @@ export function deleteProduct(tenantId: string, productId: string): void {
 }
 
 /** Koleksi tenant untuk disusun ke dalam fixture render (block grid & VDP/PDP). */
-export function collectionsOf(tenantId: string): { vehicles: Vehicle[]; products: Product[] } {
+export function collectionsOf(tenantId: string): { vehicles: VehicleUnit[]; products: Product[] } {
   return { vehicles: vehicles.get(tenantId) ?? [], products: products.get(tenantId) ?? [] };
 }

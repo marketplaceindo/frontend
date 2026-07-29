@@ -1,37 +1,41 @@
 <script setup lang="ts">
-import type {
-  RenderTenantResponse,
-  Transmission,
-  Vehicle,
-} from "@marketplaceindo/shared";
-import { TRANSMISSIONS } from "@marketplaceindo/shared";
-import VehicleCard from "../../components/blocks/VehicleCard.vue";
+/**
+ * Listing model mobil baru (`/mobil`, addendum §Fase 5). Filter lewat query
+ * param SSR supaya tiap kombinasi punya URL unik yang crawlable & shareable.
+ */
+import type { RenderModelsResponse, RenderTenantResponse } from "@marketplaceindo/shared";
+import ModelCard from "../../components/blocks/ModelCard.vue";
+import BlockCompareTray from "../../components/blocks/BlockCompareTray.vue";
 
 definePageMeta({ layout: false });
 
-/**
- * Listing kendaraan (/mobil) — filter via query params supaya URL shareable
- * & crawlable; hasil filter di-render SSR (tetap ter-index).
- */
 const route = useRoute();
 const routing = useTenantRouting();
 const requestFetch = useRequestFetch();
+const kota = useKotaAktif();
 
 const isPreview = computed(() => route.query.preview === "1");
 
-const FILTER_KEYS = ["q", "brand", "priceMin", "priceMax", "year", "transmission", "cursor"] as const;
-const apiQuery = computed(() => {
-  const q: Record<string, string> = { limit: "12" };
-  for (const key of FILTER_KEYS) {
-    const value = route.query[key];
-    if (typeof value === "string" && value !== "") q[key] = value;
-  }
-  if (isPreview.value) q.preview = "1";
-  return q;
-});
+const BODY_TYPES = [
+  ["mpv", "MPV"],
+  ["suv", "SUV"],
+  ["sedan", "Sedan"],
+  ["hatchback", "Hatchback"],
+  ["pickup", "Pikap"],
+  ["lcgc", "LCGC"],
+] as const;
+
+const query = computed(() => ({
+  ...(route.query.body ? { body: String(route.query.body) } : {}),
+  ...(route.query.brand ? { brand: String(route.query.brand) } : {}),
+  ...(route.query.hargaMax ? { hargaMax: String(route.query.hargaMax) } : {}),
+  ...(route.query.sort ? { sort: String(route.query.sort) } : {}),
+  ...(kota.value ? { city: kota.value } : {}),
+  ...(isPreview.value ? { preview: "1" } : {}),
+}));
 
 const { data, error } = await useAsyncData(
-  () => `mobil-list:${JSON.stringify(apiQuery.value)}`,
+  () => `mobil-listing:${JSON.stringify(query.value)}`,
   async () => {
     if (routing.value.mode !== "tenant") {
       throw createError({ statusCode: 404, message: "Halaman tidak ditemukan" });
@@ -40,111 +44,77 @@ const { data, error } = await useAsyncData(
       requestFetch<RenderTenantResponse>("/api/_render/site", {
         query: isPreview.value ? { preview: "1" } : {},
       }),
-      requestFetch<{ items: Vehicle[]; nextCursor: string | null }>("/api/_render/vehicles", {
-        query: apiQuery.value,
-      }),
+      requestFetch<RenderModelsResponse>("/api/_render/models", { query: query.value }),
     ]);
     return { site, list };
   },
 );
 if (error.value) rethrowRenderError(error.value);
 
-const site = computed(() => data.value?.site);
 const tenantSite = useTenantSite();
 watchEffect(() => {
   tenantSite.value = data.value?.site ?? null;
 });
 
-const TRANSMISSION_LABELS: Record<Transmission, string> = {
-  manual: "Manual",
-  automatic: "Matic",
-  cvt: "CVT",
-};
-
-// Link pagination membawa filter aktif → tiap halaman punya URL unik.
-const nextPageTo = computed(() => {
-  const nextCursor = data.value?.list.nextCursor;
-  if (!nextCursor) return null;
-  return { path: "/mobil", query: { ...route.query, cursor: nextCursor } };
-});
-
-const noindex = computed(() => isPreview.value || site.value?.tenant.status !== "active");
 useTenantSeo({
-  title: () => `Semua Mobil — ${site.value?.tenant.subdomain ?? ""}`,
-  description: () => "Daftar mobil bekas yang tersedia — filter merk, harga, tahun, dan transmisi.",
-  noindex: () => noindex.value,
+  title: () => "Mobil Baru",
+  description: () =>
+    `Daftar mobil baru beserta harga OTR ${data.value?.list.city?.name ?? ""}.`,
+  noindex: () => isPreview.value || data.value?.site.tenant.status !== "active",
 });
 </script>
 
 <template>
-  <NuxtLayout v-if="data && site" name="tenant" :site="site" :preview="isPreview">
-    <div class="section-inner py-8 md:py-12">
-      <h1 class="text-2xl font-bold md:text-3xl">Semua Mobil</h1>
+  <NuxtLayout v-if="data" name="tenant" :site="data.site" :preview="isPreview">
+    <div class="section-shell">
+      <div class="section-inner py-8 md:py-12">
+        <h1 class="text-2xl font-bold md:text-3xl">Mobil Baru</h1>
+        <p class="mt-1 text-sm opacity-70">Harga OTR {{ data.list.city?.name ?? "kota utama" }}</p>
 
-      <!-- Form GET native: submit menghasilkan URL filter yang shareable. -->
-      <form method="get" class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-6" action="/mobil">
-        <input
-          type="text"
-          name="brand"
-          placeholder="Merk (mis. Toyota)"
-          :value="route.query.brand ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          name="priceMin"
-          placeholder="Harga min"
-          :value="route.query.priceMin ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          name="priceMax"
-          placeholder="Harga maks"
-          :value="route.query.priceMax ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          name="year"
-          placeholder="Tahun"
-          :value="route.query.year ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
-        />
-        <select
-          name="transmission"
-          :value="route.query.transmission ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
-        >
-          <option value="">Semua transmisi</option>
-          <option v-for="t in TRANSMISSIONS" :key="t" :value="t">
-            {{ TRANSMISSION_LABELS[t] }}
-          </option>
-        </select>
-        <button type="submit" :class="ctaClass('primary')">Terapkan</button>
-      </form>
+        <!-- Form GET native: setiap filter menghasilkan URL sendiri -->
+        <form method="get" class="mt-6 flex flex-wrap gap-2">
+          <select
+            name="body"
+            :value="route.query.body ?? ''"
+            class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+            aria-label="Tipe bodi"
+          >
+            <option value="">Semua tipe</option>
+            <option v-for="[value, label] in BODY_TYPES" :key="value" :value="value">
+              {{ label }}
+            </option>
+          </select>
+          <input
+            name="hargaMax"
+            type="number"
+            step="10000000"
+            placeholder="Harga maksimal"
+            :value="route.query.hargaMax ?? ''"
+            class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+            aria-label="Harga maksimal"
+          />
+          <select
+            name="sort"
+            :value="route.query.sort ?? ''"
+            class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+            aria-label="Urutkan"
+          >
+            <option value="">Urutan default</option>
+            <option value="harga_asc">Harga termurah</option>
+            <option value="harga_desc">Harga tertinggi</option>
+          </select>
+          <button type="submit" :class="ctaClass('primary')">Terapkan</button>
+        </form>
 
-      <p class="mt-4 text-sm opacity-70" data-testid="jumlah-hasil">
-        {{ data.list.items.length }} unit ditampilkan
-        <NuxtLink
-          v-if="Object.keys(route.query).length"
-          to="/mobil"
-          class="ml-2 font-medium"
-        >
-          Hapus filter
-        </NuxtLink>
-      </p>
-
-      <ul v-if="data.list.items.length" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <VehicleCard v-for="vehicle in data.list.items" :key="vehicle.id" :vehicle="vehicle" />
-      </ul>
-      <p v-else class="mt-6 text-sm opacity-70">
-        Tidak ada unit yang cocok dengan filter ini.
-      </p>
-
-      <p v-if="nextPageTo" class="mt-6">
-        <NuxtLink :to="nextPageTo" :class="ctaClass('outline')">Muat unit berikutnya »</NuxtLink>
-      </p>
+        <ul v-if="data.list.items.length" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ModelCard v-for="model in data.list.items" :key="model.slug" :model="model" />
+        </ul>
+        <p v-else class="mt-8 text-sm opacity-70">
+          Tidak ada model yang cocok dengan filter ini.
+        </p>
+      </div>
     </div>
+
+    <BlockCompareTray :data="{ label: 'Bandingkan', posisi: 'bottom' }" />
   </NuxtLayout>
 </template>

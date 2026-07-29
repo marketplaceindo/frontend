@@ -2,7 +2,7 @@
  * Fase 6 — builder JSON-LD structured data (fungsi murni).
  */
 import { describe, expect, it } from "vitest";
-import type { Product, Vehicle } from "@marketplaceindo/shared";
+import type { Product, VehicleUnit } from "@marketplaceindo/shared";
 import {
   businessName,
   carJsonLd,
@@ -61,7 +61,7 @@ describe("restaurantJsonLd", () => {
   });
 });
 
-const vehicle: Vehicle = {
+const vehicle: VehicleUnit = {
   id: "00000000-0000-4000-8000-000000000002",
   slug: "honda-brio-2023",
   name: "Honda Brio RS",

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { RenderTenantResponse, Vehicle } from "@marketplaceindo/shared";
+import type { RenderTenantResponse, VehicleUnit } from "@marketplaceindo/shared";
 import BlockSimulasiKredit from "../../components/blocks/BlockSimulasiKredit.vue";
 import BlockTestDrive from "../../components/blocks/BlockTestDrive.vue";
 
 definePageMeta({ layout: false });
 
 /**
- * VDP (/mobil/[slug]) — template halaman tetap: galeri, spesifikasi, harga,
+ * VDP unit bekas (/mobil-bekas/[slug]) — template halaman tetap: galeri, spesifikasi, harga,
  * CTA (hubungi sales / test drive / simulasi kredit ter-prefill harga unit).
  */
 const route = useRoute();
@@ -17,7 +17,7 @@ const isPreview = computed(() => route.query.preview === "1");
 const slug = computed(() => String(route.params.slug ?? ""));
 
 const { data, error } = await useAsyncData(
-  () => `mobil-detail:${slug.value}:${isPreview.value ? "p" : "l"}`,
+  () => `unit-detail:${slug.value}:${isPreview.value ? "p" : "l"}`,
   async () => {
     if (routing.value.mode !== "tenant") {
       throw createError({ statusCode: 404, message: "Halaman tidak ditemukan" });
@@ -25,7 +25,7 @@ const { data, error } = await useAsyncData(
     const query = isPreview.value ? { preview: "1" } : {};
     const [site, vehicle] = await Promise.all([
       requestFetch<RenderTenantResponse>("/api/_render/site", { query }),
-      requestFetch<Vehicle>(`/api/_render/vehicles/${slug.value}`, { query }),
+      requestFetch<VehicleUnit>(`/api/_render/units/${slug.value}`, { query }),
     ]);
     return { site, vehicle };
   },
@@ -74,11 +74,21 @@ const waHref = computed(() => {
 });
 
 // Konfigurasi kalkulator default VDP; harga unit ter-prefill dari data unit.
+/**
+ * Konfigurasi kalkulator untuk VDP unit bekas. Tenant belum bisa mengaturnya
+ * per-halaman (block `simulasi_kredit` di editor yang mengatur), jadi di sini
+ * dipakai default wajar; disclaimer tetap wajib tampil.
+ */
 const kreditConfig = {
-  bungaDefault: 6.5,
-  tenorOptions: [12, 24, 36, 48, 60],
   metodeDefault: "flat" as const,
-  dpMin: 20,
+  tampilkanKeduaMetode: true,
+  bungaPerTahunDefault: 6.5,
+  tenorOptionsBulan: [12, 24, 36, 48, 60],
+  dpMinPersen: 20,
+  dpDefaultPersen: 25,
+  leasingPartners: [],
+  disclaimer:
+    "Angka di atas adalah simulasi, belum termasuk biaya yang bisa berbeda per leasing. Persetujuan kredit sepenuhnya ada di pihak perusahaan pembiayaan.",
 };
 
 const noindex = computed(() => isPreview.value || site.value?.tenant.status !== "active");
@@ -174,8 +184,17 @@ useHead({
         :data="{
           heading: 'Jadwalkan Test Drive',
           description: `Coba langsung ${vehicle.name} — isi form ini dan tim kami akan mengatur jadwalnya.`,
-          vehicleSlug: vehicle.slug,
+          aktif: true,
+          butuhTanggal: true,
+          slotWaktu: ['09:00-12:00', '12:00-15:00', '15:00-18:00'],
+          lokasiOptions: [],
+          minLeadTimeHari: 1,
+          pesanSukses: 'Terima kasih! Sales kami akan menghubungi via WhatsApp.',
+          fallbackWhatsApp: true,
         }"
+        ref-type="unit"
+        :ref-slug="vehicle.slug"
+        :ref-label="vehicle.name"
       />
     </section>
   </NuxtLayout>

@@ -1,28 +1,48 @@
 <script setup lang="ts">
-import type { Block, Vehicle } from "@marketplaceindo/shared";
-import VehicleCard from "./VehicleCard.vue";
+/**
+ * Unit pilihan (addendum §Fase 4). Sejak D-01 block ini menunjuk **model**
+ * (opsional varian tertentu), bukan unit fisik — `items: {modelSlug, variantSlug?}`.
+ * Harga yang tampil adalah "mulai dari" di kota aktif.
+ */
+import type { Block, RenderModelCard, RenderModelsResponse } from "@marketplaceindo/shared";
+import ModelCard from "./ModelCard.vue";
 
 type Data = Extract<Block, { type: "featured_vehicles" }>["data"];
 const props = defineProps<{ data: Data }>();
 
 const requestFetch = useRequestFetch();
 const route = useRoute();
+const kota = useKotaAktif();
 
-// Render API belum punya endpoint multi-slug — ambil list lalu saring
-// (fixture mock kecil; Fase 5 beralih ke fetch per-slug VDP bila perlu).
+// Render API belum punya endpoint multi-slug — ambil daftar lalu saring
+// mengikuti urutan yang ditulis tenant di block.
 const { data: result } = await useAsyncData(
-  () => `featured-vehicles:${props.data.vehicleSlugs.join(",")}`,
+  () => `featured-models:${props.data.items.map((i) => i.modelSlug).join(",")}:${kota.value}`,
   () =>
-    requestFetch<{ items: Vehicle[]; nextCursor: string | null }>("/api/_render/vehicles", {
-      query: { limit: "100", ...(route.query.preview === "1" ? { preview: "1" } : {}) },
+    requestFetch<RenderModelsResponse>("/api/_render/models", {
+      query: {
+        limit: "100",
+        ...(kota.value ? { city: kota.value } : {}),
+        ...(route.query.preview === "1" ? { preview: "1" } : {}),
+      },
     }),
 );
 
-const items = computed(() => {
-  const bySlug = new Map((result.value?.items ?? []).map((v) => [v.slug, v]));
-  return props.data.vehicleSlugs
-    .map((slug) => bySlug.get(slug))
-    .filter((v): v is Vehicle => v !== undefined);
+interface Entry {
+  model: RenderModelCard;
+  variantSlug?: string;
+}
+
+const items = computed<Entry[]>(() => {
+  const bySlug = new Map((result.value?.items ?? []).map((m) => [m.slug, m]));
+  const out: Entry[] = [];
+  for (const ref of props.data.items) {
+    const model = bySlug.get(ref.modelSlug);
+    if (!model) continue;
+    // Varian eksplisit → kartu menautkan langsung ke VDP varian itu.
+    out.push(ref.variantSlug ? { model, variantSlug: ref.variantSlug } : { model });
+  }
+  return out;
 });
 </script>
 
@@ -32,11 +52,11 @@ const items = computed(() => {
       {{ data.heading }}
     </h2>
     <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <VehicleCard
-        v-for="vehicle in items"
-        :key="vehicle.id"
-        :vehicle="vehicle"
-
+      <ModelCard
+        v-for="entry in items"
+        :key="entry.model.slug"
+        :model="entry.model"
+        :variant-slug="entry.variantSlug"
       />
     </ul>
   </div>

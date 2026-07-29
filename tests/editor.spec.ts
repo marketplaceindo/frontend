@@ -226,7 +226,7 @@ describe("block & aturan slot template (kontrak §4/§5)", () => {
 
   it("slot highlights menerima block yang sesuai jenis usaha", () => {
     expect(allowedBlockTypes(TEMPLATE_IDS.kuliner, "home", "highlights")).toContain("featured_menu");
-    expect(allowedBlockTypes(TEMPLATE_IDS.otomotif, "home", "highlights")).toContain("vehicle_grid");
+    expect(allowedBlockTypes(TEMPLATE_IDS.otomotif, "home", "highlights")).toContain("model_grid");
     expect(allowedBlockTypes(TEMPLATE_IDS.kuliner, "home", "highlights")).not.toContain("vehicle_grid");
   });
 
