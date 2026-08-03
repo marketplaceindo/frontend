@@ -11,10 +11,17 @@
  */
 import {
   BUSINESS_TYPES,
+  POPULAR_RANK_MAX,
+  MAX_SEED_MODELS,
   wizardAnswersSchema,
   type BusinessType,
+  type CatalogBrandPublic,
+  type CatalogCityPublic,
+  type CatalogModelCard,
   type CheckSubdomainResponse,
+  type SeedInventoryResult,
   type Tenant,
+  type VehicleVertical,
   type WizardAnswers,
 } from "@marketplaceindo/shared";
 import { MIN_SUBDOMAIN_LENGTH, normalizeSubdomain } from "~~/shared/utils/subdomain";
@@ -40,7 +47,36 @@ const BUSINESS_LABELS: Record<BusinessType, { label: string; example: string; ic
   otomotif: { label: "Otomotif", example: "dealer mobil/motor, showroom", icon: "🚗" },
 };
 
-const TOTAL_STEPS = 6;
+/**
+ * Step wizard sebagai daftar ber-ID, bukan angka mati: jalur otomotif menyisipkan
+ * empat step katalog di tengah (D-13), dan jalur non-otomotif harus melewatinya
+ * tanpa meninggalkan lubang di indikator progres.
+ */
+type StepId =
+  | "nama"
+  | "jenis"
+  | "jual-apa"
+  | "merk"
+  | "kota"
+  | "model"
+  | "kontak"
+  | "jam"
+  | "andalan"
+  | "subdomain";
+
+const STEP_TITLES: Record<StepId, string> = {
+  nama: "Apa nama usahamu?",
+  jenis: "Jenis usahanya apa?",
+  "jual-apa": "Kamu jual apa?",
+  merk: "Merk apa yang kamu jual?",
+  kota: "Kamu jualan di kota mana?",
+  model: "Model apa saja yang kamu jual?",
+  kontak: "Di mana dan ke mana pelanggan menghubungi?",
+  jam: "Kapan kamu buka?",
+  andalan: "Apa 3 andalanmu?",
+  subdomain: "Mau pakai alamat apa?",
+};
+
 const step = ref(0);
 const tenant = ref<Tenant | null>(null);
 const bootError = ref("");
@@ -63,6 +99,170 @@ const subdomain = ref("");
 const subdomainState = ref<"idle" | "checking" | "ok" | "bad">("idle");
 const subdomainCheck = ref<CheckSubdomainResponse | null>(null);
 const previewUrl = ref("");
+/** `true` setelah situs jadi — layar hasil menggantikan form wizard. */
+const selesai = ref(false);
+const seedWarningError = ref("");
+
+// --- Katalog seed kendaraan baru (D-13) -----------------------------------
+
+const { brands, cities, models, seedInventory } = useCatalog();
+
+/** "Jual apa" menurunkan `salesMode` (D-01) sekaligus vertikal katalog. */
+type JualApa = "mobil" | "motor" | "bekas" | "keduanya";
+
+const JUAL_APA: { id: JualApa; label: string; hint: string; icon: string }[] = [
+  { id: "mobil", label: "Mobil baru", hint: "dealer resmi, sales ATPM", icon: "🚗" },
+  { id: "motor", label: "Motor baru", hint: "dealer motor", icon: "🏍️" },
+  { id: "bekas", label: "Mobil bekas", hint: "showroom unit bekas", icon: "🔑" },
+  { id: "keduanya", label: "Baru dan bekas", hint: "keduanya sekaligus", icon: "🚙" },
+];
+
+const jualApa = ref<JualApa | "">("");
+const brandList = ref<CatalogBrandPublic[]>([]);
+const cityList = ref<CatalogCityPublic[]>([]);
+const modelList = ref<CatalogModelCard[]>([]);
+const brandId = ref("");
+const cityCode = ref("");
+const modelDipilih = ref<string[]>([]);
+const katalogBusy = ref(false);
+const seedResult = ref<SeedInventoryResult | null>(null);
+
+/**
+ * Jalur `bekas` melewati SELURUH step katalog — showroom unit bekas tidak punya
+ * padanan di katalog kendaraan baru, dan memaksanya lewat step merk/kota hanya
+ * menambah waktu wizard tanpa menghasilkan satu record pun.
+ */
+const pakaiKatalog = computed(
+  () => form.businessType === "otomotif" && (jualApa.value === "mobil" || jualApa.value === "motor"),
+);
+
+const vertical = computed<VehicleVertical>(() => (jualApa.value === "motor" ? "motor" : "mobil"));
+
+const steps = computed<StepId[]>(() => {
+  const dasar: StepId[] = ["nama", "jenis"];
+  if (form.businessType === "otomotif") dasar.push("jual-apa");
+  if (pakaiKatalog.value) dasar.push("merk", "kota", "model");
+  return [...dasar, "kontak", "jam", "andalan", "subdomain"];
+});
+
+const stepId = computed<StepId>(() => steps.value[step.value] ?? "nama");
+const langkahTerakhir = computed(() => step.value === steps.value.length - 1);
+
+const kotaTerpilih = computed(() => cityList.value.find((c) => c.code === cityCode.value) ?? null);
+
+/** Kota fallback yang akan dipakai bila kota pilihan tidak punya OTR sendiri. */
+const kotaFallback = computed(() => {
+  const kota = kotaTerpilih.value;
+  if (!kota || kota.hasExactPrice) return null;
+  const ibukota = cityList.value.find(
+    (c) => c.provinceCode === kota.provinceCode && c.hasExactPrice && c.code !== kota.code,
+  );
+  return ibukota?.name ?? "harga nasional";
+});
+
+const modelTerpilih = computed(() =>
+  modelList.value.filter((m) => modelDipilih.value.includes(m.id)),
+);
+const varianAkanDibuat = computed(() =>
+  modelTerpilih.value.reduce((n, m) => n + m.variantCount, 0),
+);
+const terlaluBanyakModel = computed(() => modelDipilih.value.length > MAX_SEED_MODELS);
+
+async function muatMerk() {
+  katalogBusy.value = true;
+  try {
+    brandList.value = (await brands(vertical.value)).brands;
+  } catch (err) {
+    errors.value = { _: apiErrorOf(err).message };
+  } finally {
+    katalogBusy.value = false;
+  }
+}
+
+async function muatKota() {
+  katalogBusy.value = true;
+  try {
+    cityList.value = (await cities(vertical.value)).cities;
+  } catch (err) {
+    errors.value = { _: apiErrorOf(err).message };
+  } finally {
+    katalogBusy.value = false;
+  }
+}
+
+/**
+ * Prefetch begitu kota dipilih, jangan tunggu klik "lanjut" — keempat step
+ * katalog punya anggaran ≤60 detik dari total wizard <5 menit.
+ */
+async function muatModel() {
+  if (!brandId.value || !cityCode.value) return;
+  katalogBusy.value = true;
+  try {
+    modelList.value = (await models(brandId.value, cityCode.value)).models;
+    // Model populer tercentang otomatis: tanpa ini step pemilih model jadi
+    // pekerjaan, bukan konfirmasi — dan itu drop-off terbesar wizard.
+    modelDipilih.value = modelList.value
+      .filter((m) => m.popularityRank <= POPULAR_RANK_MAX)
+      .map((m) => m.id);
+  } catch (err) {
+    errors.value = { _: apiErrorOf(err).message };
+  } finally {
+    katalogBusy.value = false;
+  }
+}
+
+function pilihJualApa(id: JualApa) {
+  jualApa.value = id;
+  trackEvent({ name: "wizard_vertical_selected", vertical: id });
+}
+
+function pilihMerk(brand: CatalogBrandPublic) {
+  brandId.value = brand.id;
+  trackEvent({ name: "wizard_brand_selected", brandSlug: brand.slug });
+}
+
+function pilihKota(kota: CatalogCityPublic) {
+  cityCode.value = kota.code;
+  trackEvent({
+    name: "wizard_city_selected",
+    cityCode: kota.code,
+    hasExactPrice: kota.hasExactPrice,
+  });
+  void muatModel();
+}
+
+function toggleModel(id: string) {
+  const i = modelDipilih.value.indexOf(id);
+  if (i === -1) modelDipilih.value.push(id);
+  else modelDipilih.value.splice(i, 1);
+}
+
+const semuaTercentang = computed(
+  () => modelList.value.length > 0 && modelDipilih.value.length === modelList.value.length,
+);
+
+function toggleSemuaModel() {
+  modelDipilih.value = semuaTercentang.value ? [] : modelList.value.map((m) => m.id);
+}
+
+/** Label warning seed dalam bahasa yang dimengerti sales, bukan istilah sistem. */
+function labelWarning(w: NonNullable<SeedInventoryResult["warnings"]>[number]): string {
+  switch (w.kind) {
+    case "price_estimated":
+      return `Harga ${w.modelSlug} kami isi dengan estimasi dari ${w.fromCity}. Periksa sebelum publikasi.`;
+    case "variant_skipped_no_price":
+      return `Varian ${w.variantSlug} (${w.modelSlug}) dilewati karena belum ada harganya.`;
+    case "model_skipped_no_price":
+      return `Model ${w.modelSlug} dilewati karena belum ada harganya sama sekali.`;
+  }
+}
+
+/** Estimasi selalu jadi baris pertama — itu yang paling berisiko bila terlewat. */
+const warningTerurut = computed(() =>
+  [...(seedResult.value?.warnings ?? [])].sort(
+    (a, b) => Number(b.kind === "price_estimated") - Number(a.kind === "price_estimated"),
+  ),
+);
 
 /**
  * Siapkan draft tenant begitu wizard dibuka. Draft yang belum jadi dipakai ulang
@@ -114,14 +314,15 @@ const answers = computed<WizardAnswers>(() => ({
   ...(form.tagline.trim() ? { tagline: form.tagline.trim() } : {}),
 }));
 
-function nextStep() {
+async function nextStep() {
   errors.value = {};
   const a = answers.value;
-  switch (step.value) {
-    case 0:
+
+  switch (stepId.value) {
+    case "nama":
       if (!validate({ businessName: true, tagline: true }, a)) return;
       break;
-    case 1:
+    case "jenis":
       if (!form.businessType) {
         errors.value = { businessType: "Pilih jenis usahamu" };
         return;
@@ -129,19 +330,61 @@ function nextStep() {
       // Kuliner hampir selalu perlu jam buka — nyalakan sebagai default cerdas.
       form.showHours = form.businessType === "kuliner";
       break;
-    case 2:
+    case "jual-apa":
+      if (!jualApa.value) {
+        errors.value = { jualApa: "Pilih dulu apa yang kamu jual" };
+        return;
+      }
+      break;
+    case "merk":
+      if (!brandId.value) {
+        errors.value = { brandId: "Pilih satu merk" };
+        return;
+      }
+      break;
+    case "kota":
+      if (!cityCode.value) {
+        errors.value = { cityCode: "Pilih kota tempatmu berjualan" };
+        return;
+      }
+      break;
+    case "model":
+      if (modelDipilih.value.length === 0) {
+        errors.value = { model: "Pilih minimal satu model" };
+        return;
+      }
+      if (terlaluBanyakModel.value) {
+        errors.value = { model: `Maksimal ${MAX_SEED_MODELS} model sekali jalan` };
+        return;
+      }
+      trackEvent({
+        name: "wizard_models_selected",
+        count: modelDipilih.value.length,
+        variantCount: varianAkanDibuat.value,
+      });
+      break;
+    case "kontak":
       form.whatsapp = normalizeWhatsapp(form.whatsapp);
       if (!validate({ address: true, whatsapp: true }, a)) return;
       break;
-    case 3:
+    case "jam":
       if (form.showHours && !validate({ openingHours: true }, a)) return;
       break;
-    case 4:
+    case "andalan":
       if (!validate({ highlights: true }, a)) return;
       break;
   }
+
   step.value++;
-  if (step.value === 5 && !subdomain.value) {
+  await siapkanStep();
+}
+
+/** Muatan data yang dibutuhkan step berikutnya, dijalankan setelah pindah. */
+async function siapkanStep() {
+  if (stepId.value === "merk" && brandList.value.length === 0) await muatMerk();
+  if (stepId.value === "kota" && cityList.value.length === 0) await muatKota();
+  if (stepId.value === "model" && modelList.value.length === 0) await muatModel();
+  if (stepId.value === "subdomain" && !subdomain.value) {
     subdomain.value = normalizeSubdomain(form.businessName);
     void checkNow();
   }
@@ -208,7 +451,31 @@ async function buildSite() {
     const result = await runWizard(tenant.value.id, answers.value);
     tenant.value = result.tenant;
     previewUrl.value = result.previewUrl;
-    step.value = TOTAL_STEPS; // layar hasil: preview + publish
+
+    // Materialisasi katalog SETELAH situs jadi: seed menulis ke inventaris
+    // tenant, jadi tenant dan template-nya harus sudah ada. Kegagalan di sini
+    // tidak membatalkan situs yang sudah berhasil dibuat — user tetap masuk ke
+    // layar hasil, dengan inventaris kosong yang bisa diisi manual.
+    if (pakaiKatalog.value && modelDipilih.value.length > 0) {
+      try {
+        const seed = await seedInventory(tenant.value.id, {
+          vertical: vertical.value,
+          brandId: brandId.value,
+          cityCode: cityCode.value,
+          modelIds: modelDipilih.value,
+        });
+        seedResult.value = seed;
+        trackEvent({
+          name: "seed_inventory_done",
+          createdVariants: seed.createdVariants,
+          warningCount: seed.warnings.length,
+        });
+      } catch (err) {
+        seedWarningError.value = apiErrorOf(err).message;
+      }
+    }
+
+    selesai.value = true; // layar hasil: ringkasan seed → preview + publish
   } catch (err) {
     const e = apiErrorOf(err);
     errors.value = e.fieldErrors
@@ -234,26 +501,69 @@ function addHours() {
 const inputClass =
   "w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600";
 
-const STEP_TITLES = [
-  "Apa nama usahamu?",
-  "Jenis usahanya apa?",
-  "Di mana dan ke mana pelanggan menghubungi?",
-  "Kapan kamu buka?",
-  "Apa 3 andalanmu?",
-  "Mau pakai alamat apa?",
-];
 </script>
 
 <template>
   <DashboardShell>
-    <!-- Layar hasil: situs sudah jadi → preview + publish (paywall di sini) -->
-    <DashboardPublish
-      v-if="step === TOTAL_STEPS && tenant"
-      :tenant="tenant"
-      :preview-url="previewUrl"
-      :business-name="form.businessName"
-      @updated="tenant = $event"
-    />
+    <!-- Layar hasil: situs sudah jadi → ringkasan seed, lalu preview + publish -->
+    <template v-if="selesai && tenant">
+      <!--
+        Ringkasan seed tampil SEBELUM preview. Kalau ada harga estimasi, itu
+        baris pertama: harga salah yang terlihat pasti membuat sales kehilangan
+        deal, dan satu-satunya cara mencegahnya adalah menaruhnya di jalan.
+      -->
+      <section
+        v-if="seedResult || seedWarningError"
+        class="mb-6 rounded-xl border border-slate-200 bg-white p-4"
+      >
+        <h2 class="text-base font-semibold text-slate-900">Unit dari katalog sudah disiapkan</h2>
+
+        <p v-if="seedWarningError" class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {{ seedWarningError }} — kamu tetap bisa menambahkan unit secara manual.
+        </p>
+
+        <template v-if="seedResult">
+          <p class="mt-1 text-sm text-slate-600">
+            {{ seedResult.createdModels }} model ·
+            {{ seedResult.createdVariants }} varian dibuat.
+          </p>
+
+          <ul v-if="warningTerurut.length" class="mt-3 space-y-2">
+            <li
+              v-for="(w, i) in warningTerurut"
+              :key="i"
+              class="rounded-lg px-3 py-2 text-sm"
+              :class="
+                w.kind === 'price_estimated'
+                  ? 'bg-amber-50 text-amber-900'
+                  : 'bg-slate-50 text-slate-600'
+              "
+            >
+              {{ labelWarning(w) }}
+            </li>
+          </ul>
+
+          <p class="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            Semua unit masih <strong>belum dipublikasikan</strong>. Periksa harganya, lalu
+            publikasikan satu per satu.
+          </p>
+
+          <NuxtLink
+            :to="`/dashboard/unit`"
+            class="mt-3 inline-block w-full rounded-lg bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white"
+          >
+            Periksa harga unit
+          </NuxtLink>
+        </template>
+      </section>
+
+      <DashboardPublish
+        :tenant="tenant"
+        :preview-url="previewUrl"
+        :business-name="form.businessName"
+        @updated="tenant = $event"
+      />
+    </template>
 
     <template v-else>
       <div class="mb-6">
@@ -269,14 +579,14 @@ const STEP_TITLES = [
 
         <div class="mt-3 flex items-center gap-2">
           <div
-            v-for="i in TOTAL_STEPS"
+            v-for="i in steps.length"
             :key="i"
             class="h-1.5 flex-1 rounded-full"
             :class="i - 1 <= step ? 'bg-teal-600' : 'bg-slate-200'"
           />
         </div>
-        <p class="mt-2 text-xs text-slate-500">Langkah {{ step + 1 }} dari {{ TOTAL_STEPS }}</p>
-        <h1 class="mt-3 text-xl font-bold text-slate-900">{{ STEP_TITLES[step] }}</h1>
+        <p class="mt-2 text-xs text-slate-500">Langkah {{ step + 1 }} dari {{ steps.length }}</p>
+        <h1 class="mt-3 text-xl font-bold text-slate-900">{{ STEP_TITLES[stepId] }}</h1>
       </div>
 
       <p v-if="bootError" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -286,9 +596,9 @@ const STEP_TITLES = [
         {{ errors._ }}
       </p>
 
-      <form class="space-y-5" novalidate @submit.prevent="step === 5 ? buildSite() : nextStep()">
+      <form class="space-y-5" novalidate @submit.prevent="langkahTerakhir ? buildSite() : nextStep()">
         <!-- 1. Nama usaha -->
-        <template v-if="step === 0">
+        <template v-if="stepId === 'nama'">
           <WizardField label="Nama usaha" :error="errors.businessName">
             <input
               v-model="form.businessName"
@@ -314,7 +624,7 @@ const STEP_TITLES = [
         </template>
 
         <!-- 2. Jenis usaha → menentukan template -->
-        <template v-else-if="step === 1">
+        <template v-else-if="stepId === 'jenis'">
           <p v-if="errors.businessType" class="text-sm text-red-600">{{ errors.businessType }}</p>
           <div class="grid gap-3">
             <button
@@ -343,8 +653,149 @@ const STEP_TITLES = [
           </div>
         </template>
 
+        <!-- Otomotif: jual apa (menurunkan salesMode D-01 + vertikal katalog) -->
+        <template v-else-if="stepId === 'jual-apa'">
+          <p v-if="errors.jualApa" class="text-sm text-red-600">{{ errors.jualApa }}</p>
+          <div class="grid gap-3">
+            <button
+              v-for="opsi in JUAL_APA"
+              :key="opsi.id"
+              type="button"
+              class="flex items-center gap-3 rounded-xl border-2 bg-white p-4 text-left"
+              :class="jualApa === opsi.id ? 'border-teal-600 ring-1 ring-teal-600' : 'border-slate-200'"
+              :aria-pressed="jualApa === opsi.id"
+              @click="pilihJualApa(opsi.id)"
+            >
+              <span class="text-2xl" aria-hidden="true">{{ opsi.icon }}</span>
+              <span>
+                <span class="block font-semibold text-slate-900">{{ opsi.label }}</span>
+                <span class="block text-sm text-slate-500">{{ opsi.hint }}</span>
+              </span>
+            </button>
+          </div>
+          <p class="text-xs text-slate-500">
+            Kalau kamu jual unit baru, kami siapkan daftar model dan harganya supaya kamu tidak
+            mengetik dari nol.
+          </p>
+        </template>
+
+        <!-- Otomotif: merk (satu saja; "tambah merk lain" ada di editor) -->
+        <template v-else-if="stepId === 'merk'">
+          <p v-if="errors.brandId" class="text-sm text-red-600">{{ errors.brandId }}</p>
+          <p v-if="katalogBusy" class="text-sm text-slate-500">Memuat daftar merk…</p>
+          <div v-else class="grid grid-cols-2 gap-3">
+            <button
+              v-for="brand in brandList"
+              :key="brand.id"
+              type="button"
+              class="rounded-xl border-2 bg-white px-4 py-5 text-center font-semibold text-slate-900"
+              :class="brandId === brand.id ? 'border-teal-600 ring-1 ring-teal-600' : 'border-slate-200'"
+              :aria-pressed="brandId === brand.id"
+              @click="pilihMerk(brand)"
+            >
+              {{ brand.name }}
+            </button>
+          </div>
+          <p class="text-xs text-slate-500">
+            Pilih satu dulu. Merk lain bisa ditambahkan kapan saja dari dashboard.
+          </p>
+        </template>
+
+        <!-- Otomotif: kota — menentukan harga OTR yang tampil di situs (D-03) -->
+        <template v-else-if="stepId === 'kota'">
+          <p v-if="errors.cityCode" class="text-sm text-red-600">{{ errors.cityCode }}</p>
+          <p v-if="katalogBusy && !cityList.length" class="text-sm text-slate-500">
+            Memuat daftar kota…
+          </p>
+          <div v-else class="grid gap-2">
+            <button
+              v-for="kota in cityList"
+              :key="kota.code"
+              type="button"
+              class="flex items-center justify-between rounded-xl border-2 bg-white px-4 py-3 text-left"
+              :class="cityCode === kota.code ? 'border-teal-600 ring-1 ring-teal-600' : 'border-slate-200'"
+              :aria-pressed="cityCode === kota.code"
+              @click="pilihKota(kota)"
+            >
+              <span class="font-medium text-slate-900">{{ kota.name }}</span>
+              <span v-if="!kota.hasExactPrice" class="text-xs text-amber-700">estimasi</span>
+            </button>
+          </div>
+
+          <!--
+            Kota tanpa OTR sendiri TIDAK diblokir — diberi peringatan. Lebih baik
+            tidak ada angka daripada angka salah tanpa penanda (D-14).
+          -->
+          <p
+            v-if="kotaTerpilih && !kotaTerpilih.hasExactPrice"
+            class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900"
+          >
+            OTR untuk {{ kotaTerpilih.name }} belum tersedia — kami pakai harga
+            {{ kotaFallback }} sebagai estimasi. Tolong periksa sebelum publish.
+          </p>
+        </template>
+
+        <!-- Otomotif: model yang dijual (D-13) -->
+        <template v-else-if="stepId === 'model'">
+          <p v-if="errors.model" class="text-sm text-red-600">{{ errors.model }}</p>
+          <p v-if="katalogBusy && !modelList.length" class="text-sm text-slate-500">
+            Memuat daftar model…
+          </p>
+
+          <template v-else>
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-medium text-slate-700">
+                {{ modelDipilih.length }} model · {{ varianAkanDibuat }} varian akan dibuat
+              </p>
+              <button type="button" class="text-sm font-semibold text-teal-700" @click="toggleSemuaModel">
+                {{ semuaTercentang ? "Kosongkan" : "Pilih semua" }}
+              </button>
+            </div>
+
+            <p v-if="terlaluBanyakModel" class="text-sm text-red-600">
+              Maksimal {{ MAX_SEED_MODELS }} model sekali jalan. Sisanya bisa ditambahkan nanti.
+            </p>
+
+            <div class="grid gap-3">
+              <button
+                v-for="m in modelList"
+                :key="m.id"
+                type="button"
+                class="flex items-center gap-3 rounded-xl border-2 bg-white p-3 text-left"
+                :class="
+                  modelDipilih.includes(m.id)
+                    ? 'border-teal-600 ring-1 ring-teal-600'
+                    : 'border-slate-200'
+                "
+                :aria-pressed="modelDipilih.includes(m.id)"
+                @click="toggleModel(m.id)"
+              >
+                <img
+                  :src="m.thumbnailUrl"
+                  :alt="m.name"
+                  class="size-16 shrink-0 rounded-lg bg-slate-100 object-cover"
+                  loading="lazy"
+                />
+                <span class="min-w-0">
+                  <span class="block font-semibold text-slate-900">{{ m.name }}</span>
+                  <span class="block text-sm text-slate-500">{{ m.variantCount }} varian</span>
+                  <span v-if="m.priceFrom !== null" class="block text-sm text-slate-700">
+                    mulai {{ formatRupiah(m.priceFrom) }}
+                    <span v-if="m.priceEstimated" class="text-amber-700">(estimasi)</span>
+                  </span>
+                </span>
+              </button>
+            </div>
+
+            <p class="text-xs text-slate-500">
+              Yang populer sudah dicentang. Hapus centang model yang tidak kamu jual — semuanya
+              tetap bisa diubah nanti.
+            </p>
+          </template>
+        </template>
+
         <!-- 3. Alamat + WhatsApp -->
-        <template v-else-if="step === 2">
+        <template v-else-if="stepId === 'kontak'">
           <WizardField label="Alamat usaha" :error="errors.address">
             <textarea
               v-model="form.address"
@@ -371,7 +822,7 @@ const STEP_TITLES = [
         </template>
 
         <!-- 4. Jam buka (opsional) -->
-        <template v-else-if="step === 3">
+        <template v-else-if="stepId === 'jam'">
           <label class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
             <input v-model="form.showHours" type="checkbox" class="size-5 accent-teal-600" />
             <span class="text-sm font-medium text-slate-700">Tampilkan jam buka di situs</span>
@@ -420,7 +871,7 @@ const STEP_TITLES = [
         </template>
 
         <!-- 5. 1–3 andalan -->
-        <template v-else-if="step === 4">
+        <template v-else-if="stepId === 'andalan'">
           <p class="text-sm text-slate-500">
             Isi produk, menu, atau layanan yang paling sering dicari pelanggan. Minimal satu.
           </p>
@@ -472,7 +923,7 @@ const STEP_TITLES = [
         </template>
 
         <!-- 6. Alamat situs (subdomain) -->
-        <template v-else-if="step === 5">
+        <template v-else-if="stepId === 'subdomain'">
           <WizardField label="Alamat situs" :error="errors.subdomain">
             <div class="flex items-center rounded-lg border border-slate-300 bg-white pr-3">
               <input
@@ -521,11 +972,11 @@ const STEP_TITLES = [
 
         <button
           type="submit"
-          :disabled="busy || !tenant || (step === 5 && subdomainState !== 'ok')"
+          :disabled="busy || !tenant || (langkahTerakhir && subdomainState !== 'ok')"
           class="w-full rounded-lg bg-teal-600 px-4 py-3.5 text-base font-semibold text-white disabled:opacity-50"
         >
           <template v-if="busy">Membuat situs…</template>
-          <template v-else-if="step === 5">Buat situs saya</template>
+          <template v-else-if="langkahTerakhir">Buat situs saya</template>
           <template v-else>Lanjut</template>
         </button>
       </form>
