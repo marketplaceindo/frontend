@@ -228,15 +228,28 @@ Setelah upload sukses, editor menyimpan `ImageRef` berisi **`mediaId` dan `url` 
 Koleksi kendaraan bercabang dua sejak v1.0.0 (keputusan D-01, `PLAN-FRONTEND.md` §Otomotif):
 
 ```
-VehicleModel (1) ──< VehicleVariant (n)     → dealer mobil BARU
+VehicleModel (1) ──< VehicleVariant (n)     → dealer mobil/motor BARU
 VehicleUnit  (1 record = 1 unit fisik)      → showroom mobil BEKAS
 ```
 
 Tenant memilih mode saat onboarding (`settingsJson.salesMode`: `baru` | `bekas` | `keduanya`); mode menentukan route, editor, dan block yang aktif. Semua tipe mengikuti schema shared; masing-masing punya `slug` unik per tenant (auto-generate dari nama, bisa dioverride). Slug varian unik dalam satu model.
 
-### 7.1 Vehicle Models (mobil baru)
+### 7.1 Vehicle Models (kendaraan baru — mobil & motor)
 
-`VehicleVariant` memuat harga OTR **per kota** (`priceOtr[]`, keputusan D-03), warna, `specs` berkunci `SPEC_REGISTRY` (§7.3), `specsCustom[]` bebas, `highlights[]`, `stockStatus`, `trimRank`, `isFeatured`.
+`VehicleVariant` memuat harga OTR **per kota** (`priceOtr[]`, keputusan D-03), warna, `specs` berkunci registry (§7.3), `specsCustom[]` bebas, `highlights[]`, `stockStatus`, `trimRank`, `isFeatured`.
+
+Sejak v1.1.0 `VehicleModel` punya discriminator **`vertical`** (`mobil` | `motor`, default `mobil` — keputusan D-12). Motor baru memakai bentuk data yang identik; yang berbeda hanya `bodyType` dan `specs` yang berlaku:
+
+| `vertical` | `bodyType` yang sah |
+|---|---|
+| `mobil` | `mpv` `suv` `sedan` `hatchback` `pickup` `lcgc` `van` `wagon` |
+| `motor` | `matic` `bebek` `sport` `naked` `trail` `listrik` `moge` |
+
+Kombinasi yang tidak konsisten ditolak schema dengan `422` — validasinya lintas-field di level model, bukan per-field.
+
+`VehicleVariant` juga membawa field **provenance** (keputusan D-11, semua opsional): `catalogVariantId`, `priceSource` (`catalog` | `manual` | `excel`, default `manual`), `priceUpdatedAt`, `priceEstimated`, `priceEstimatedFromCity`. `VehicleModel` membawa `catalogModelId`. Field-field ini **murni metadata** — tidak satu pun memicu perilaku backend; keberadaannya untuk round-trip Excel (§7.6) dan badge provenance di editor.
+
+`priceEstimated: true` berarti harga berasal dari fallback rantai kota (D-14) dan **wajib** dirender sebagai estimasi, bukan sebagai OTR pasti — lihat §10.
 
 ### GET /v1/tenants/:id/vehicle-models
 Query: `?limit&cursor&q&city&brand&body&hargaMin&hargaMax&transmisi&bahanBakar&sort` → `200 { items, nextCursor }`
@@ -266,13 +279,93 @@ Products: pola sama dengan segmen `products`; filter `?category&priceMin&priceMa
 
 ### 7.3 Spec registry (kunci kanonik spesifikasi)
 
-Spesifikasi yang dapat dibandingkan disimpan sebagai `Record<SpecKey, SpecValue>` dengan `SpecKey` dari registry tertutup di shared (`SPEC_REGISTRY`, 18 key awal). Setiap nilai wajib cocok dengan `valueType` definisinya — validasi ini dilakukan schema, bukan backend.
+Spesifikasi yang dapat dibandingkan disimpan sebagai `Record<SpecKey, SpecValue>` dengan `SpecKey` dari registry tertutup di shared (`SPEC_DEFS`). Setiap nilai wajib cocok dengan `valueType` definisinya — validasi ini dilakukan schema, bukan backend.
 
 ```jsonc
 "specs": { "mesin.kapasitas_cc": 1499, "transmisi.tipe": "cvt", "fitur.keyless": true }
 ```
 
-Registry **append-only**: menghapus atau mengubah `key` = breaking change untuk data tenant yang sudah ada. Field bebas tetap boleh diisi di `specsCustom[]`, tapi tidak ikut dibandingkan.
+Registry tetap **satu kamus flat**; yang di-namespace adalah *keberlakuan* tiap key per vertikal lewat field `verticals` (D-12). Key bersama seperti `mesin.kapasitas_cc` dan `transmisi.tipe` sengaja **tidak** diduplikasi, supaya tabel compare lintas key tetap sejajar.
+
+| Helper shared | Kegunaan |
+|---|---|
+| `specKeysFor(vertical)` | key yang boleh muncul di editor varian |
+| `specDefsFor(vertical)` / `specsByGroupFor(vertical)` | definisi & pengelompokan form |
+| `comparableSpecKeysFor(vertical)` | baris tabel compare |
+| `validateSpecsForVertical(vertical, specs)` | dipakai backend saat simpan & frontend saat submit |
+
+Menyimpan key yang tidak berlaku di vertikal model (mis. `kaki.tipe_rangka` pada mobil) ditolak `422`.
+
+Registry **append-only**: menghapus atau mengubah `key` = breaking change untuk data tenant yang sudah ada. Menambah key, atau menambah vertikal ke `verticals` key yang sudah ada, adalah minor. Field bebas tetap boleh diisi di `specsCustom[]`, tapi tidak ikut dibandingkan.
+
+`SPEC_REGISTRY` (array, 18 key mobil rilis 1.0.0) masih ter-ekspor sebagai **deprecated** agar backend & frontend bisa di-upgrade tidak serentak; dihapus di major berikutnya.
+
+---
+
+### 7.4 Katalog seed kendaraan baru (publik, read-only)
+
+Katalog adalah sumber **seed**, bukan sumber kebenaran berkelanjutan (keputusan D-10). Dibaca sekali saat onboarding (atau saat "tambah merk" di editor), hasilnya di-materialize sebagai `VehicleModel` milik tenant. **Setelah itu tidak ada sinkronisasi apa pun** — perubahan harga di katalog tidak pernah mengalir ke situs tenant yang sudah jadi. Karena itu tidak ada tabel referensi lintas-tenant, tidak ada purge fan-out ISR, dan endpoint `/render/*` tidak berubah sama sekali.
+
+Endpoint di bawah ini **tanpa auth** (dipakai wizard sebelum tenant punya apa pun), tapi **rate-limited** dan hanya mengembalikan data katalog global. Tidak satu pun boleh membocorkan `tenantId`, data owner, atau status langganan (aturan §1.5 & §13).
+
+#### GET /v1/catalog/brands?vertical=mobil|motor
+→ `200 { brands: [{ id, slug, name }] }` — urut `order`, hanya `isActive`.
+
+#### GET /v1/catalog/cities?vertical=mobil|motor
+→ `200 { cities: [{ code, name, provinceCode, hasExactPrice }] }`
+
+`hasExactPrice: false` → wizard **tetap boleh** memilih kota itu, tapi wajib menampilkan peringatan fallback (D-14). Jangan blokir pilihan.
+
+#### GET /v1/catalog/models?brandId=…&cityCode=…
+→ `200 { models: [{ id, slug, name, modelYear, bodyType, thumbnailUrl, popularityRank, variantCount, priceFrom, priceEstimated, priceEstimatedFromCity? }] }`
+
+`priceFrom` = harga terendah hasil resolusi rantai kota. Rantai fallback (D-14), dihitung `buildCityChain()` di shared:
+
+```
+kota exact  →  ibukota provinsi  →  harga nasional (NATIONAL)
+```
+
+Setiap harga hasil fallback membawa `priceEstimated: true` sampai ke renderer publik. Aturan yang tidak boleh dilanggar: **lebih baik tidak ada angka daripada angka salah tanpa penanda.**
+
+### 7.5 Materialize seed
+
+#### POST /v1/tenants/:id/seed-inventory  *(auth: tenant owner)*
+Body: `{ vertical, brandId, cityCode, modelIds: string[] }` — maks **30** `modelIds`
+→ `201 { createdModels, createdVariants, skipped: [{ modelSlug, reason }], warnings: SeedWarning[] }`
+
+`SeedWarning` (diteruskan apa adanya dari shared; frontend yang memformat):
+
+```jsonc
+{ "kind": "price_estimated",           "modelSlug": "avanza", "fromCity": "Semarang" }
+{ "kind": "variant_skipped_no_price",  "modelSlug": "rush",   "variantSlug": "trd-at" }
+{ "kind": "model_skipped_no_price",    "modelSlug": "hilux" }
+```
+
+Ketentuan:
+
+- Pemetaan katalog → `VehicleModel` seluruhnya dari fungsi murni `seedFromCatalog()` di shared. Backend **dilarang** menulis ulang logika ini.
+- `isPublished` hasil seed **selalu `false`**. Publikasi adalah tindakan sadar tenant, sekaligus menekan footprint duplicate content lintas subdomain.
+- **Idempoten**: unique partial index `(tenant_id, catalog_variant_id)` + `ON CONFLICT DO NOTHING` — memanggil dua kali tidak menduplikasi record.
+- Batas keras 30 model / 200 varian per panggilan; di atasnya `400 VALIDATION_ERROR`.
+- Dipakai juga oleh tombol "Tambah merk" di editor (tanpa syarat status `draft`).
+
+### 7.6 Round-trip harga lewat Excel
+
+Pencocokan baris dilakukan **by `variantId`**, bukan by nama (keputusan D-16) — nama varian boleh di-rename tenant kapan saja.
+
+#### GET /v1/tenants/:id/inventory/prices.xlsx  *(auth)* → binary xlsx
+Sheet: kolom A `variantId` **hidden**; kolom B–E (`modelName`, `variantName`, `cityCode`, `cityName`) terkunci; kolom F `price` satu-satunya sel tidak terkunci (`numFmt '#,##0'`). Baris 1 header, baris 2 catatan berbahasa Indonesia, data mulai baris 3.
+
+#### POST /v1/tenants/:id/inventory/prices.xlsx  *(auth, multipart)*
+→ `200 { updated, skipped, warnings: [{ row, kind, message }] }`
+
+`kind`: `name_mismatch` | `variant_not_found` | `price_invalid` | `no_change`
+
+- Varian milik tenant lain → `variant_not_found`; **jangan pernah** membocorkan keberadaannya.
+- Nama berbeda → `name_mismatch` sebagai **warning**, harga tetap diterapkan.
+- Harga sama → `no_change`, `priceUpdatedAt` tidak disentuh.
+- Setiap harga yang berubah men-set `priceSource: 'excel'`, `priceUpdatedAt: now`, `priceEstimated: false` (tenant sudah mengonfirmasi angkanya sendiri).
+- Purge ISR hanya untuk tenant tersebut, setelah transaksi commit.
 
 ---
 
@@ -348,10 +441,12 @@ Error: `404 TENANT_NOT_FOUND`, `410 TENANT_SUSPENDED`
 ### GET /v1/render/:subdomain/pages/:pageSlug
 → `200 { "page": { "slug", "title", "seoJson" }, "sections": [{ "sectionKey", "order", "styleJson", "blocks": Block[] }] }` — dari snapshot published (draft bila `?preview=1`).
 
-### GET /v1/render/:subdomain/models  *(mobil baru — listing)*
-Query: `?city&limit&cursor&q&brand&body&hargaMin&hargaMax&transmisi&bahanBakar&sort`
+### GET /v1/render/:subdomain/models  *(kendaraan baru — listing)*
+Query: `?city&limit&cursor&q&vertical&brand&body&hargaMin&hargaMax&transmisi&bahanBakar&sort`
 → `200 { "city": City|null, "items": RenderModelCard[], "nextCursor" }`
-`RenderModelCard`: `{ slug, brand, name, modelYear, bodyType, image, summary, priceFrom, variantCount, defaultVariantSlug }` — varian di-trim: hanya harga "mulai dari" di kota yang diminta.
+`RenderModelCard`: `{ slug, vertical, brand, name, modelYear, bodyType, image, summary, priceFrom, priceEstimated, priceEstimatedFromCity?, variantCount, defaultVariantSlug }` — varian di-trim: hanya harga "mulai dari" di kota yang diminta.
+
+`priceEstimated: true` → kartu **wajib** merender harga sebagai *"estimasi — hubungi untuk OTR {kota}"* (D-14), bukan sebagai OTR pasti. Sama berlakunya di halaman model dan varian, yang menerima `VehicleVariant` utuh berikut `priceEstimated`/`priceEstimatedFromCity`.
 
 ### GET /v1/render/:subdomain/models/:modelSlug
 Query: `?city` → `200 { "city", "model": RenderModelSummary, "variants": VehicleVariant[], "defaultVariantSlug", "updatedAt" }`
@@ -365,7 +460,7 @@ Query: `?city&v=model:varian,model:varian` (maks 4 item, kelebihan dipotong dari
 → `200 { "city", "variants": VariantCompareView[], "specRows": SpecRow[], "canonicalV": "a:b,c:d", "ignored": string[], "curated": boolean }`
 
 - **Backend yang menyusun matriks**, frontend hanya me-render — logika "spec mana yang muncul" harus identik di SSR & client (fungsi `susunSpecRows` di shared dipakai keduanya).
-- Baris = `SPEC_REGISTRY` yang `comparable`, urut sesuai registry; baris yang kosong di semua kolom dibuang.
+- Baris = spec `comparable` yang **berlaku di vertikal model** (`comparableSpecKeysFor`), urut sesuai registry; baris yang kosong di semua kolom dibuang.
 - `SpecRow.values[i] === null` berarti **sales belum mengisi** — berbeda dari `false` (fitur tidak ada). Perbedaan ini wajib terlihat berbeda di UI.
 - `SpecRow.winners` hanya terisi untuk `valueType: "number"` yang punya `higherIsBetter`.
 - Item `?v=` yang tidak valid/tidak ditemukan **diabaikan** dan dilaporkan di `ignored` — bukan error page.

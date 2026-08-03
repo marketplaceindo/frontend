@@ -229,6 +229,35 @@ Prinsip: **nilai dilihat dulu, dompet belakangan** — seluruh wizard berjalan T
 5. Paywall di tombol Publish: pilih plan — **tahunan Rp300rb sebagai hero plan**, bulanan Rp30rb sekunder (metode bayar QRIS/e-wallet saja) → invoice Xendit → poll status → publish otomatis saat paid.
 6. (Backlog fase produk 2) Generator copy hero/tentang-kami via LLM API dari jawaban wizard.
 
+### 7b-katalog — Step katalog seed kendaraan baru
+
+Prasyarat: `@marketplaceindo/shared` **v1.1.0** dan backend Fase 10 §10.3–§10.4.
+
+Disisipkan setelah step "jenis usaha" (yang sudah memilihkan template). Alur lengkap jalur otomotif:
+
+```
+Template: Sales/Otomotif
+  → Jual apa?         [ Mobil baru ] [ Motor baru ] [ Mobil bekas ] [ Baru dan bekas ]
+  → Merk              (grid tanpa logo, nama teks — GET /catalog/brands)
+  → Kota              (GET /catalog/cities)
+  → Model yang dijual (checkbox, popularityRank ≤ 5 pre-checked — GET /catalog/models)
+  → materialize       (POST /tenants/:id/seed-inventory, dipanggil SETELAH situs jadi)
+```
+
+Ketentuan implementasi:
+
+- Daftar step **dinamis** (`steps: StepId[]`), bukan indeks angka mati. Jalur `bekas` melewati ketiga step katalog seluruhnya dan tidak memanggil satu pun endpoint `/catalog/*`. Pilihan `salesMode` (D-01) diturunkan dari step "jual apa".
+- Step merk: satu merk saja, single-select, **tanpa logo** — nama merk teks saja (mitigasi risiko IP).
+- Step kota: `hasExactPrice === false` menampilkan peringatan inline *"OTR untuk {kota} belum tersedia — kami pakai harga {kotaFallback} sebagai estimasi. Tolong periksa sebelum publish."* **Jangan blokir pilihannya.**
+- Step model: kartu berisi thumbnail, nama, `variantCount`, `priceFrom`. Tercentang otomatis untuk `popularityRank <= POPULAR_RANK_MAX`. Ada "pilih semua"/"kosongkan" dan hitungan berjalan *"7 model · 29 varian akan dibuat"*. Blokir lanjut kalau nol tercentang atau > `MAX_SEED_MODELS`.
+- Seed dipanggil **setelah** `runWizard` berhasil (tenant + template harus sudah ada). Kegagalan seed **tidak** membatalkan situs yang sudah jadi — user tetap masuk layar hasil dengan inventaris kosong yang bisa diisi manual.
+- Layar hasil menampilkan ringkasan warning **sebelum** preview, dengan `price_estimated` sebagai baris pertama, ditutup banner *"Semua unit masih belum dipublikasikan"* dan CTA tunggal ke daftar unit.
+- Anggaran waktu keempat step ini ≤ 60 detik dari total < 5 menit. `/catalog/models` di-prefetch saat kota dipilih, tidak menunggu klik "lanjut".
+
+**Instrumentasi** (`app/utils/analytics.ts`) — lima event: `wizard_vertical_selected`, `wizard_brand_selected`, `wizard_city_selected`, `wizard_models_selected` (dengan `count` & `variantCount`), `seed_inventory_done` (dengan `createdVariants` & `warningCount`). Step pemilih model adalah kandidat drop-off terbesar di seluruh wizard; tanpa event ini kita tidak akan tahu, dan itu memblokir keputusan menambah merk kedua.
+
+---
+
 ### 7c — Editor konten (slot editor)
 Prinsip non-negotiable: **mobile-first** — mayoritas user mengelola situs dari HP Android, bukan laptop. Desain editor untuk layar sempit sejak awal (bukan responsive afterthought); perangkat uji utama = Android Chrome.
 1. Daftar halaman + section per halaman (sesuai slot template), toggle aktif/nonaktif section, reorder (drag sederhana → update `order`).
@@ -244,6 +273,11 @@ Prinsip non-negotiable: **mobile-first** — mayoritas user mengelola situs dari
    - **Preview compare** dari dalam editor.
    - **Editor unit bekas & produk** — CRUD `VehicleUnit`/`Product`, daftar + pencarian.
    - *(Backlog, jangan blokir MVP)* Import CSV/paste tabel spesifikasi dari brosur → mapping ke spec key. Nilai tinggi untuk onboarding.
+4b. **Indikator provenance & harga massal** (§4.2–§4.3 addendum katalog seed). Ini yang menentukan apakah tenant memercayai data seed atau menghapus semuanya — nadanya netral dan informatif, bukan peringatan, kecuali untuk dua hal yang memang berisiko.
+   - `ProvenanceBadge.vue`: badge *"Dari katalog {merk}"* pada varian bersumber katalog; `priceUpdatedAt` dalam bentuk relatif (*"harga diperbarui 3 hari lalu"*), berubah warna peringatan setelah 90 hari; `priceEstimated: true` → badge *"Estimasi (harga {kota})"*. Mengedit harga secara manual mematikan flag itu.
+   - `PriceEstimatedNote.vue` di situs publik: *"≈ Estimasi (harga {kota}) — hubungi kami untuk OTR {kota}"* pada kartu model dan halaman varian (D-14). Warnanya lewat token theme (`text-accent`), dan penandanya **tidak** boleh bergantung pada warna — kalimatnya eksplisit supaya tetap terbaca sebagai peringatan pada palet tenant mana pun.
+   - Editor varian memfilter field spesifikasi lewat `specKeysFor(model.vertical)` — `kaki.tipe_rangka` tidak boleh pernah tampil pada mobil. Spesifikasi kosong tetap dirender `—`, bukan ✕.
+   - `BulkPriceModal.vue`: tombol "Perbarui harga lewat Excel" di daftar unit → modal dua langkah (unduh → unggah) lalu tabel hasil per baris. `name_mismatch` ditampilkan sebagai info, bukan error merah — rename varian adalah hal wajar dan harganya tetap diterapkan.
 5. Panel theme: pemilih warna + font global (Level 2) dan per-section (Level 3), live preview.
 6. Preview mode: iframe ke subdomain dengan query `?preview=1` (render draft, noindex).
 7. Tombol Publish → panggil API publish → tampilkan status.
