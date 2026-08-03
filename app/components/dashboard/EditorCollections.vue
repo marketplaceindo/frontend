@@ -12,6 +12,7 @@ import {
   type VehicleUnit,
 } from "@marketplaceindo/shared";
 import EditorField from "./EditorField.vue";
+import BulkPriceModal from "./BulkPriceModal.vue";
 
 const props = defineProps<{ tenantId: string; kind: "vehicles" | "products" }>();
 
@@ -34,6 +35,10 @@ const fields = computed(() => describeSchemaFields(schema.value));
 const noun = computed(() => (props.kind === "vehicles" ? "unit" : "produk"));
 
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
+
+// --- Harga massal lewat Excel (§4.3, D-16) --------------------------------
+const bulkPriceOpen = ref(false);
+const bulkPriceRingkasan = ref("");
 
 /** Muatan awal ikut SSR (cookie sesi diteruskan useRequestFetch di useEditor). */
 const { data, refresh } = await useAsyncData<(VehicleUnit | Product)[]>(
@@ -194,6 +199,36 @@ async function remove(item: VehicleUnit | Product) {
 
     <!-- Daftar -->
     <template v-else>
+      <!--
+        Perbarui harga massal hanya masuk akal untuk kendaraan baru: harganya
+        hidup per (varian × kota), dan mengetiknya satu-satu dari HP adalah
+        alasan nomor satu tenant berhenti memperbarui harga.
+      -->
+      <div v-if="kind === 'vehicles'" class="mb-3">
+        <button
+          type="button"
+          class="w-full rounded-lg border border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700"
+          @click="bulkPriceOpen = true"
+        >
+          Perbarui harga lewat Excel
+        </button>
+        <p v-if="bulkPriceRingkasan" class="mt-2 text-sm text-slate-600">
+          {{ bulkPriceRingkasan }}
+        </p>
+      </div>
+
+      <BulkPriceModal
+        v-if="bulkPriceOpen"
+        :tenant-id="tenantId"
+        @tutup="bulkPriceOpen = false"
+        @selesai="
+          (r) => {
+            bulkPriceRingkasan = `${r.updated} harga diperbarui, ${r.skipped} dilewati.`;
+            void load();
+          }
+        "
+      />
+
       <div class="flex gap-2">
         <input
           :value="q"
