@@ -7,11 +7,13 @@
  * Model draft: semua perubahan di sini masuk ke draft; pengunjung situs baru
  * melihatnya setelah Publish (kontrak §5).
  */
-import type { PageDetailResponse, Tenant, TenantTheme } from "@marketplaceindo/shared";
+import type { City, PageDetailResponse, Tenant, TenantTheme } from "@marketplaceindo/shared";
+import { salesModeIncludes } from "@marketplaceindo/shared";
 import DashboardShell from "./DashboardShell.vue";
 import EditorSection from "./EditorSection.vue";
 import EditorTheme from "./EditorTheme.vue";
 import EditorCollections from "./EditorCollections.vue";
+import EditorVehicleModels from "./EditorVehicleModels.vue";
 import EditorPreview from "./EditorPreview.vue";
 
 const route = useRoute();
@@ -148,11 +150,21 @@ async function onPublish() {
   }
 }
 
-const TABS = [
+const TABS = computed(() => [
   { id: "halaman", label: "Halaman" },
   { id: "tampilan", label: "Tampilan" },
-  { id: "koleksi", label: "Koleksi" },
-] as const;
+  // Tab "Unit baru" hanya relevan bagi tenant yang menjual kendaraan baru.
+  ...(salesModeBaru.value ? [{ id: "unit-baru", label: "Unit baru" }] : []),
+  { id: "koleksi", label: collectionKind.value === "vehicles" ? "Mobil bekas" : "Produk" },
+]);
+
+/** Tenant menjual kendaraan baru? (settingsJson.salesMode, keputusan D-01) */
+const salesModeBaru = computed(() =>
+  salesModeIncludes(tenant.value?.settingsJson?.salesMode ?? "baru", "baru"),
+);
+
+/** Daftar kota tenant untuk harga OTR — dari settings, bukan katalog (D-03). */
+const cities = computed<City[]>(() => tenant.value?.settingsJson?.cities ?? []);
 
 /** Koleksi mana yang relevan mengikuti template tenant. */
 const collectionKind = computed<"vehicles" | "products">(() =>
@@ -370,6 +382,11 @@ function themeSaved(theme: TenantTheme) {
         <template v-else-if="tab === 'tampilan'">
           <EditorTheme :tenant-id="tenant.id" :theme="tenant.themeJson" @saved="themeSaved" />
           <EditorPreview v-if="previewUrl" :key="`theme-${previewKey}`" :url="previewUrl" class="mt-4" />
+        </template>
+
+        <!-- UNIT BARU (model + varian) -->
+        <template v-else-if="tab === 'unit-baru'">
+          <EditorVehicleModels :tenant-id="tenant.id" :cities="cities" />
         </template>
 
         <!-- KOLEKSI -->

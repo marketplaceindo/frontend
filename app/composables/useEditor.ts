@@ -9,6 +9,7 @@ import type {
   TemplateDetailResponse,
   Tenant,
   TenantTheme,
+  VehicleModel,
   VehicleUnit,
 } from "@marketplaceindo/shared";
 
@@ -81,6 +82,19 @@ export function useEditor() {
   const updateProduct = (id: string, body: Record<string, unknown>) =>
     fetchApi<Product>(`/api/products/${id}`, { method: "PATCH", body });
 
+  // --- Model kendaraan baru (kontrak §7.1) -----------------------------
+  const listVehicleModels = (tenantId: string, query: Record<string, unknown> = {}) =>
+    fetchApi<Paginated<VehicleModel>>(`/api/tenants/${tenantId}/vehicle-models`, { query });
+
+  const createVehicleModel = (tenantId: string, body: Record<string, unknown>) =>
+    fetchApi<VehicleModel>(`/api/tenants/${tenantId}/vehicle-models`, { method: "POST", body });
+
+  const updateVehicleModel = (modelId: string, body: Record<string, unknown>) =>
+    fetchApi<VehicleModel>(`/api/vehicle-models/${modelId}`, { method: "PATCH", body });
+
+  const deleteVehicleModel = (modelId: string) =>
+    fetchApi(`/api/vehicle-models/${modelId}`, { method: "DELETE" });
+
   const deleteVehicle = (id: string) => fetchApi(`/api/vehicles/${id}`, { method: "DELETE" });
   const deleteProduct = (id: string) => fetchApi(`/api/products/${id}`, { method: "DELETE" });
 
@@ -119,6 +133,10 @@ export function useEditor() {
     updateProduct,
     deleteVehicle,
     deleteProduct,
+    listVehicleModels,
+    createVehicleModel,
+    updateVehicleModel,
+    deleteVehicleModel,
     uploadImage,
   };
 }
