@@ -6,6 +6,7 @@
  */
 import type { RenderModelCard } from "@marketplaceindo/shared";
 import BlockImage from "./BlockImage.vue";
+import PriceEstimatedNote from "./PriceEstimatedNote.vue";
 
 const props = defineProps<{
   model: RenderModelCard;
@@ -45,6 +46,11 @@ const dipilih = computed(() => compare.has(refVarian.value));
           <span class="text-xs font-normal opacity-70">Mulai dari</span>
           {{ formatRupiah(model.priceFrom) }}
         </p>
+        <PriceEstimatedNote
+          v-if="model.priceFrom !== null && model.priceEstimated"
+          ringkas
+          :from-city="model.priceEstimatedFromCity"
+        />
         <p v-else class="mt-2 text-sm opacity-70">Harga belum tersedia di kota ini</p>
         <p class="mt-1 text-xs opacity-70">{{ model.variantCount }} varian</p>
       </div>

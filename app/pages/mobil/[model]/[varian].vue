@@ -172,6 +172,11 @@ useHead({
           {{ formatRupiah(data.detail.price.price) }}
           <span class="text-sm font-normal opacity-70">OTR {{ data.detail.price.cityName }}</span>
         </p>
+        <PriceEstimatedNote
+          v-if="data.detail.price && data.detail.variant.priceEstimated"
+          :city-name="data.detail.price.cityName"
+          :from-city="data.detail.variant.priceEstimatedFromCity"
+        />
         <p v-else class="mt-2 text-sm opacity-70">Harga belum tersedia untuk kota ini.</p>
         <p class="mt-1 text-sm opacity-70">
           Status stok:

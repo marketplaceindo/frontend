@@ -359,18 +359,31 @@ export function getMockModels(
   const page = paginate(items, query.limit, query.cursor);
   return {
     city,
-    items: page.items.map((m) => ({
-      slug: m.slug,
-      brand: m.brand,
-      name: m.name,
-      modelYear: m.modelYear,
-      bodyType: m.bodyType,
-      image: m.images[0]!,
-      summary: m.summary,
-      priceFrom: hargaMulaiDari(m.variants, city.code) ?? null,
-      variantCount: m.variants.length,
-      defaultVariantSlug: varianDefault(m.variants)?.slug ?? m.variants[0]!.slug,
-    })),
+    items: page.items.map((m) => {
+      const priceFrom = hargaMulaiDari(m.variants, city.code) ?? null;
+      // Penanda estimasi (D-14) diambil dari varian yang angkanya ditampilkan —
+      // kartu harus jujur tentang harga yang ADA di kartu itu, bukan rata-rata.
+      const termurah = m.variants.find(
+        (v) => hargaOtrDiKota(v, city.code)?.price === priceFrom,
+      );
+      return {
+        slug: m.slug,
+        vertical: m.vertical,
+        brand: m.brand,
+        name: m.name,
+        modelYear: m.modelYear,
+        bodyType: m.bodyType,
+        image: m.images[0]!,
+        summary: m.summary,
+        priceFrom,
+        priceEstimated: termurah?.priceEstimated ?? false,
+        ...(termurah?.priceEstimatedFromCity !== undefined
+          ? { priceEstimatedFromCity: termurah.priceEstimatedFromCity }
+          : {}),
+        variantCount: m.variants.length,
+        defaultVariantSlug: varianDefault(m.variants)?.slug ?? m.variants[0]!.slug,
+      };
+    }),
     nextCursor: page.nextCursor,
   };
 }
