@@ -25,8 +25,15 @@ import type {
   Tenant,
   TemplatesResponse,
   User,
+  VehicleModel,
   VehicleUnit,
   WizardResponse,
+  CatalogBrandsResponse,
+  CatalogCitiesResponse,
+  CatalogModelsResponse,
+  InventoryPriceImportResult,
+  SeedInventoryResult,
+  VehicleVertical,
 } from "@marketplaceindo/shared";
 import { TenantApiError } from "../mock/api-error";
 import {
@@ -61,7 +68,21 @@ import {
   updateProduct,
   updateVehicle,
 } from "../mock/collection-store";
+import {
+  catalogBrands,
+  catalogCities,
+  catalogModels,
+  seedInventory,
+} from "../mock/catalog-store";
+import { exportPrices, importPrices } from "../mock/inventory-price-store";
 import { mediaBelongsTo, presignUpload, readUpload, storeUpload } from "../mock/media-store";
+import {
+  createVehicleModel,
+  deleteVehicleModel,
+  listVehicleModels,
+  tenantIdOfModel,
+  updateVehicleModel,
+} from "../mock/vehicle-model-store";
 import { templateDetail, templateSummaries } from "../mock/templates";
 import {
   billingStatus,
@@ -593,6 +614,88 @@ export async function apiDeleteCollectionItem(
 }
 
 // ---------------------------------------------------------------------------
+// Vehicle models — kendaraan baru (kontrak §7.1)
+// ---------------------------------------------------------------------------
+
+/** Kontrak §7.1 memakai `/vehicle-models/:modelId` tanpa segmen tenant. */
+function ownedTenantOfModel(event: H3Event, modelId: string): string {
+  const user = requireUser(event);
+  const tenantId = tenantIdOfModel(modelId);
+  getTenant(user.id, tenantId);
+  return tenantId;
+}
+
+export async function apiListVehicleModels(
+  event: H3Event,
+  tenantId: string,
+  query: Record<string, unknown>,
+) {
+  const user = requireUser(event);
+  try {
+    if (isMock(event)) {
+      getTenant(user.id, tenantId);
+      return listVehicleModels(tenantId, query);
+    }
+    return await proxy(event, "GET", `/tenants/${tenantId}/vehicle-models`, { query });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+export async function apiCreateVehicleModel(
+  event: H3Event,
+  tenantId: string,
+  body: unknown,
+): Promise<VehicleModel> {
+  const user = requireUser(event);
+  try {
+    if (isMock(event)) {
+      getTenant(user.id, tenantId);
+      const model = createVehicleModel(tenantId, body);
+      syncDraftSite(tenantId);
+      return model;
+    }
+    return await proxy<VehicleModel>(event, "POST", `/tenants/${tenantId}/vehicle-models`, { body });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+export async function apiUpdateVehicleModel(
+  event: H3Event,
+  modelId: string,
+  body: unknown,
+): Promise<VehicleModel> {
+  requireUser(event);
+  try {
+    if (isMock(event)) {
+      const tenantId = ownedTenantOfModel(event, modelId);
+      const model = updateVehicleModel(tenantId, modelId, body);
+      syncDraftSite(tenantId);
+      return model;
+    }
+    return await proxy<VehicleModel>(event, "PATCH", `/vehicle-models/${modelId}`, { body });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+export async function apiDeleteVehicleModel(event: H3Event, modelId: string): Promise<void> {
+  requireUser(event);
+  try {
+    if (isMock(event)) {
+      const tenantId = ownedTenantOfModel(event, modelId);
+      deleteVehicleModel(tenantId, modelId);
+      syncDraftSite(tenantId);
+      return;
+    }
+    await proxy<void>(event, "DELETE", `/vehicle-models/${modelId}`);
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Billing (kontrak §9)
 // ---------------------------------------------------------------------------
 
@@ -673,6 +776,147 @@ export function apiMockPay(event: H3Event, invoiceId: string): { paid: true } {
   }
   try {
     return payMockInvoice(user.id, invoiceId);
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Katalog seed kendaraan baru (kontrak §7.4–§7.6)
+// ---------------------------------------------------------------------------
+
+/**
+ * `/catalog/*` adalah endpoint **publik** di backend — wizard memanggilnya
+ * sebelum tenant punya apa pun. Route Nitro-nya tetap butuh sesi dashboard
+ * karena hanya dipakai dari dalam dashboard; itu pengetatan, bukan pelonggaran.
+ */
+export async function apiCatalogBrands(
+  event: H3Event,
+  vertical: VehicleVertical,
+): Promise<CatalogBrandsResponse> {
+  requireUser(event);
+  try {
+    if (isMock(event)) return catalogBrands(vertical);
+    return await proxy<CatalogBrandsResponse>(event, "GET", "/catalog/brands", {
+      query: { vertical },
+    });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+export async function apiCatalogCities(
+  event: H3Event,
+  vertical: VehicleVertical,
+): Promise<CatalogCitiesResponse> {
+  requireUser(event);
+  try {
+    if (isMock(event)) return catalogCities(vertical);
+    return await proxy<CatalogCitiesResponse>(event, "GET", "/catalog/cities", {
+      query: { vertical },
+    });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+export async function apiCatalogModels(
+  event: H3Event,
+  brandId: string,
+  cityCode: string,
+): Promise<CatalogModelsResponse> {
+  requireUser(event);
+  try {
+    if (isMock(event)) return catalogModels(brandId, cityCode);
+    return await proxy<CatalogModelsResponse>(event, "GET", "/catalog/models", {
+      query: { brandId, cityCode },
+    });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+export async function apiSeedInventory(
+  event: H3Event,
+  tenantId: string,
+  body: unknown,
+): Promise<SeedInventoryResult> {
+  const user = requireUser(event);
+  try {
+    if (isMock(event)) {
+      getTenant(user.id, tenantId);
+      const result = seedInventory(tenantId, body);
+      syncDraftSite(tenantId);
+      return result;
+    }
+    return await proxy<SeedInventoryResult>(event, "POST", `/tenants/${tenantId}/seed-inventory`, {
+      body,
+    });
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+/** Unduhan file harga. Mock mengembalikan CSV; backend mengembalikan .xlsx. */
+export async function apiExportPrices(
+  event: H3Event,
+  tenantId: string,
+): Promise<{ body: string | ArrayBuffer; contentType: string; filename: string }> {
+  const user = requireUser(event);
+  try {
+    if (isMock(event)) {
+      getTenant(user.id, tenantId);
+      return {
+        body: exportPrices(tenantId),
+        contentType: "text/csv; charset=utf-8",
+        filename: "harga.csv",
+      };
+    }
+    const config = useRuntimeConfig(event);
+    const token = currentAccessToken(event);
+    const buffer = await fetchExternal<ArrayBuffer>(
+      `${config.dashboardApiBase}/tenants/${tenantId}/inventory/prices.xlsx`,
+      {
+        method: "GET",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        responseType: "arrayBuffer",
+      },
+    );
+    return {
+      body: buffer,
+      contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      filename: "harga.xlsx",
+    };
+  } catch (err) {
+    toH3Error(err);
+  }
+}
+
+export async function apiImportPrices(
+  event: H3Event,
+  tenantId: string,
+  file: { data: Uint8Array; filename: string },
+): Promise<InventoryPriceImportResult> {
+  const user = requireUser(event);
+  try {
+    if (isMock(event)) {
+      getTenant(user.id, tenantId);
+      const result = importPrices(tenantId, new TextDecoder().decode(file.data));
+      syncDraftSite(tenantId);
+      return result;
+    }
+    const config = useRuntimeConfig(event);
+    const token = currentAccessToken(event);
+    const form = new FormData();
+    form.append("file", new Blob([file.data as BlobPart]), file.filename);
+    return await fetchExternal<InventoryPriceImportResult>(
+      `${config.dashboardApiBase}/tenants/${tenantId}/inventory/prices.xlsx`,
+      {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+      },
+    );
   } catch (err) {
     toH3Error(err);
   }
