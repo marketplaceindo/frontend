@@ -73,6 +73,15 @@ function structureFor(type: BusinessType): TemplateStructure {
       { sectionKey: "navbar", allowedBlockTypes: ["navbar"] as BlockType[], required: true },
       { sectionKey: "hero", allowedBlockTypes: ["hero"] as BlockType[], required: true },
       { sectionKey: "highlights", allowedBlockTypes: HIGHLIGHT_BLOCKS[type] },
+      // Etalase unit di beranda — hanya untuk otomotif.
+      ...(type === "otomotif"
+        ? [
+            {
+              sectionKey: "model_grid",
+              allowedBlockTypes: ["model_grid", "unit_grid", "featured_vehicles"] as BlockType[],
+            },
+          ]
+        : []),
       { sectionKey: "about", allowedBlockTypes: ["about", "features"] as BlockType[] },
       { sectionKey: "opening_hours", allowedBlockTypes: ["opening_hours"] as BlockType[] },
       { sectionKey: "cta_band", allowedBlockTypes: ["cta_band", "promo_banner"] as BlockType[] },

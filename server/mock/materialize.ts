@@ -258,6 +258,30 @@ export function materializeWizard(
     ]),
   );
   home.push(section("highlights", order++, [highlightBlock(answers, preset, mediaUrl)]));
+
+  /*
+   * Otomotif: daftar unit yang benar-benar dijual, langsung di beranda.
+   *
+   * Slot "highlights" hanya memuat 1–3 andalan berupa teks dari wizard; itu
+   * bukan etalase. Tanpa section ini, seluruh model hasil seed katalog hanya
+   * bisa ditemukan lewat /mobil — padahal beranda adalah halaman yang dibagikan
+   * sales ke calon pembeli. Tiap kartu menautkan ke halaman model.
+   */
+  if (answers.businessType === "otomotif") {
+    home.push(
+      section("model_grid", order++, [
+        {
+          type: "model_grid",
+          data: {
+            heading: "Mobil yang Kami Jual",
+            limit: 6,
+            sort: "order",
+            tampilkanFilter: false,
+          },
+        },
+      ]),
+    );
+  }
   home.push(
     section("about", order++, [
       { type: "about", data: { heading: "Tentang Kami", body: aboutBody(answers, preset) } },
