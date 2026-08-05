@@ -7,6 +7,7 @@
  *
  * Bebas dependensi Nitro/h3 → bisa diuji unit murni.
  */
+import { base64ToBytes, bytesToBase64, registerStore } from "./persist";
 import {
   ALLOWED_MEDIA_MIME_TYPES,
   presignRequestSchema,
@@ -91,3 +92,20 @@ export function readUpload(mediaId: string): { bytes: Uint8Array; mimeType: stri
 export function mediaBelongsTo(mediaId: string, tenantId: string): boolean {
   return media.get(mediaId)?.tenantId === tenantId;
 }
+
+// --- Persistensi dev (lihat persist.ts) ------------------------------------
+// Byte gambar ikut disimpan sebagai base64: tanpa itu foto yang baru diunggah
+// user jadi tautan mati setiap dev server restart.
+registerStore("media", {
+  dump: () =>
+    [...media.entries()].map(([id, m]) => [
+      id,
+      { ...m, bytes: m.bytes ? bytesToBase64(m.bytes) : null },
+    ]),
+  restore: (d: [string, Omit<StoredMedia, "bytes"> & { bytes: string | null }][]) => {
+    media.clear();
+    for (const [id, m] of d) {
+      media.set(id, { ...m, bytes: m.bytes ? base64ToBytes(m.bytes) : null });
+    }
+  },
+});

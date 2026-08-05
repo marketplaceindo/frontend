@@ -11,6 +11,7 @@
  *
  * Bebas dependensi Nitro/h3 → bisa diuji unit murni.
  */
+import { registerStore } from "./persist";
 import {
   hargaMulaiDari,
   vehicleModelInputSchema,
@@ -182,3 +183,14 @@ export function deleteVehicleModel(tenantId: string, modelId: string): void {
   );
   modelOwner.delete(modelId);
 }
+
+// --- Persistensi dev (lihat persist.ts) ------------------------------------
+registerStore("vehicleModels", {
+  dump: () => ({ models: [...modelsByTenant.entries()], owner: [...modelOwner.entries()] }),
+  restore: (d: { models: [string, VehicleModel[]][]; owner: [string, string][] }) => {
+    modelsByTenant.clear();
+    for (const [k, v] of d.models) modelsByTenant.set(k, v);
+    modelOwner.clear();
+    for (const [k, v] of d.owner) modelOwner.set(k, v);
+  },
+});

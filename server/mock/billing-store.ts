@@ -10,6 +10,7 @@
  *
  * Bebas dependensi Nitro/h3 → bisa diuji unit murni.
  */
+import { registerStore } from "./persist";
 import {
   PLANS,
   subscribeRequestSchema,
@@ -153,3 +154,17 @@ export function payMockInvoice(ownerId: string, invoiceId: string): { paid: true
   activateTenantAfterPayment(invoice.tenantId);
   return { paid: true };
 }
+
+// --- Persistensi dev (lihat persist.ts) ------------------------------------
+registerStore("billing", {
+  dump: () => ({ invoices: [...invoices.entries()], subs: [...subscriptions.entries()] }),
+  restore: (d: {
+    invoices: [string, StoredInvoice][];
+    subs: [string, StoredSubscription][];
+  }) => {
+    invoices.clear();
+    for (const [k, v] of d.invoices) invoices.set(k, v);
+    subscriptions.clear();
+    for (const [k, v] of d.subs) subscriptions.set(k, v);
+  },
+});

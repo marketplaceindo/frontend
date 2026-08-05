@@ -9,6 +9,7 @@
  *
  * Bebas dependensi Nitro/h3 → bisa diuji unit murni.
  */
+import { registerStore } from "./persist";
 import { ZodError } from "zod";
 import {
   blockSchema,
@@ -390,3 +391,14 @@ export function replaceBlocks(
   page.updatedAt = nowIso();
   return { blocks };
 }
+
+// --- Persistensi dev (lihat persist.ts) ------------------------------------
+registerStore("content", {
+  dump: () => ({ contents: [...contents.entries()], owner: [...pageOwner.entries()] }),
+  restore: (d: { contents: [string, TenantContent][]; owner: [string, string][] }) => {
+    contents.clear();
+    for (const [k, v] of d.contents) contents.set(k, v);
+    pageOwner.clear();
+    for (const [k, v] of d.owner) pageOwner.set(k, v);
+  },
+});

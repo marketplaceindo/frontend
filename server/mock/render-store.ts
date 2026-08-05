@@ -10,6 +10,7 @@
  *
  * Modul ini sengaja bebas dependensi Nitro/h3 supaya bisa diuji unit murni.
  */
+import { registerStore } from "./persist";
 import { z } from "zod";
 import {
   canonicalCompareParam,
@@ -602,3 +603,12 @@ export function createMockLead(subdomain: string, request: CreateLeadRequest): C
     waDeepLink: `https://wa.me/${wa}?text=${encodeURIComponent(baris.join("\n"))}`,
   };
 }
+
+// --- Persistensi dev (lihat persist.ts) ------------------------------------
+registerStore("renderSites", {
+  dump: () => [...managed.entries()],
+  restore: (d: [string, TenantSiteEntry][]) => {
+    managed.clear();
+    for (const [k, v] of d) managed.set(k, v);
+  },
+});

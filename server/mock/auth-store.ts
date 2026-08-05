@@ -5,6 +5,7 @@
  *
  * Bebas dependensi Nitro/h3 → bisa diuji unit murni.
  */
+import { registerStore } from "./persist";
 import {
   loginRequestSchema,
   registerRequestSchema,
@@ -107,3 +108,24 @@ export function mockResolveAccess(token: string): User | null {
   for (const u of usersByEmail.values()) if (u.id === userId) return publicUser(u);
   return null;
 }
+
+// --- Persistensi dev (lihat persist.ts) ------------------------------------
+registerStore("auth", {
+  dump: () => ({
+    users: [...usersByEmail.entries()],
+    access: [...accessTokens.entries()],
+    refresh: [...refreshTokens.entries()],
+  }),
+  restore: (d: {
+    users: [string, StoredUser][];
+    access: [string, string][];
+    refresh: [string, string][];
+  }) => {
+    usersByEmail.clear();
+    for (const [k, v] of d.users) usersByEmail.set(k, v);
+    accessTokens.clear();
+    for (const [k, v] of d.access) accessTokens.set(k, v);
+    refreshTokens.clear();
+    for (const [k, v] of d.refresh) refreshTokens.set(k, v);
+  },
+});

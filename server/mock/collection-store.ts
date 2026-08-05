@@ -8,6 +8,7 @@
  *
  * Bebas dependensi Nitro/h3 → bisa diuji unit murni.
  */
+import { registerStore } from "./persist";
 import {
   productInputSchema,
   productQuerySchema,
@@ -190,3 +191,24 @@ export function deleteProduct(tenantId: string, productId: string): void {
 export function collectionsOf(tenantId: string): { vehicles: VehicleUnit[]; products: Product[] } {
   return { vehicles: vehicles.get(tenantId) ?? [], products: products.get(tenantId) ?? [] };
 }
+
+// --- Persistensi dev (lihat persist.ts) ------------------------------------
+registerStore("collections", {
+  dump: () => ({
+    vehicles: [...vehicles.entries()],
+    products: [...products.entries()],
+    owner: [...itemOwner.entries()],
+  }),
+  restore: (d: {
+    vehicles: [string, VehicleUnit[]][];
+    products: [string, Product[]][];
+    owner: [string, string][];
+  }) => {
+    vehicles.clear();
+    for (const [k, v] of d.vehicles) vehicles.set(k, v);
+    products.clear();
+    for (const [k, v] of d.products) products.set(k, v);
+    itemOwner.clear();
+    for (const [k, v] of d.owner) itemOwner.set(k, v);
+  },
+});

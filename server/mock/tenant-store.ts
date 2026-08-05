@@ -9,6 +9,7 @@
  *
  * Bebas dependensi Nitro/h3 → bisa diuji unit murni.
  */
+import { registerStore } from "./persist";
 import {
   MAX_DRAFT_TENANTS_PER_USER,
   PLANS,
@@ -322,3 +323,12 @@ export function deleteDraftTenant(ownerId: string, tenantId: string): void {
   if (tenant.subdomain) unregisterTenantSite(tenant.subdomain);
   tenants.delete(tenantId);
 }
+
+// --- Persistensi dev (lihat persist.ts) ------------------------------------
+registerStore("tenants", {
+  dump: () => [...tenants.entries()],
+  restore: (d: [string, StoredTenant][]) => {
+    tenants.clear();
+    for (const [k, v] of d) tenants.set(k, v);
+  },
+});
