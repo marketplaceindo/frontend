@@ -148,11 +148,24 @@ function aboutBody(answers: WizardAnswers, preset: Preset): string {
   );
 }
 
-/** 1–3 andalan wizard → item block (nama, harga opsional). */
-function highlightItems(answers: WizardAnswers): MenuItem[] {
+/**
+ * Resolusi `mediaId` → URL yang bisa dirender.
+ *
+ * `wizardHighlightSchema` hanya menyimpan `mediaId` (kontrak), sedangkan
+ * `BlockImage` butuh `url`. Resolusinya adalah tugas backend saat materialisasi,
+ * jadi di mock ia di-inject pemanggil — bukan ditebak di sini, dan schema shared
+ * tidak perlu diubah.
+ */
+export type MediaUrlResolver = (mediaId: string) => string;
+
+/** 1–3 andalan wizard → item block (nama, harga & foto opsional). */
+function highlightItems(answers: WizardAnswers, mediaUrl?: MediaUrlResolver): MenuItem[] {
   return answers.highlights.map((h) => ({
     name: h.name,
     ...(h.price !== undefined ? { price: h.price } : {}),
+    ...(h.mediaId
+      ? { image: { mediaId: h.mediaId, ...(mediaUrl ? { url: mediaUrl(h.mediaId) } : {}), alt: h.name } }
+      : {}),
   }));
 }
 
@@ -161,8 +174,8 @@ function highlightItems(answers: WizardAnswers): MenuItem[] {
  * `featured_menu`; sisanya `services` (grid kartu nama + harga opsional).
  * Keduanya menerima harga opsional, jadi user tak wajib mengisi harga.
  */
-function highlightBlock(answers: WizardAnswers, preset: Preset): Block {
-  const items = highlightItems(answers);
+function highlightBlock(answers: WizardAnswers, preset: Preset, mediaUrl?: MediaUrlResolver): Block {
+  const items = highlightItems(answers, mediaUrl);
   if (answers.businessType === "kuliner") {
     return { type: "featured_menu", data: { heading: preset.highlightHeading, items } };
   }
@@ -184,6 +197,7 @@ export function materializeWizard(
   answers: WizardAnswers,
   status: TenantStatus = "draft",
   publishedAt: string | null = null,
+  mediaUrl?: MediaUrlResolver,
 ): TenantFixture {
   const preset = PRESETS[answers.businessType];
   const isKuliner = answers.businessType === "kuliner";
@@ -243,7 +257,7 @@ export function materializeWizard(
       },
     ]),
   );
-  home.push(section("highlights", order++, [highlightBlock(answers, preset)]));
+  home.push(section("highlights", order++, [highlightBlock(answers, preset, mediaUrl)]));
   home.push(
     section("about", order++, [
       { type: "about", data: { heading: "Tentang Kami", body: aboutBody(answers, preset) } },
@@ -323,7 +337,7 @@ export function materializeWizard(
             type: "menu",
             data: {
               heading: "Menu Kami",
-              groups: [{ title: preset.highlightHeading, items: highlightItems(answers) }],
+              groups: [{ title: preset.highlightHeading, items: highlightItems(answers, mediaUrl) }],
             },
           },
         ]),

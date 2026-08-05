@@ -20,6 +20,7 @@ import {
   type CatalogModelCard,
   type CheckSubdomainResponse,
   type SeedInventoryResult,
+  type ImageRef,
   type Tenant,
   type VehicleVertical,
   type WizardAnswers,
@@ -28,6 +29,7 @@ import { MIN_SUBDOMAIN_LENGTH, normalizeSubdomain } from "~~/shared/utils/subdom
 import DashboardShell from "./DashboardShell.vue";
 import WizardField from "./WizardField.vue";
 import DashboardPublish from "./DashboardPublish.vue";
+import EditorImageInput from "./EditorImageInput.vue";
 
 const {
   listTenants,
@@ -80,6 +82,13 @@ const STEP_TITLES: Record<StepId, string> = {
   subdomain: "Mau pakai alamat apa?",
 };
 
+/** Draft satu andalan; `image` hasil upload, `mediaId`-nya yang dikirim ke API. */
+interface HighlightDraft {
+  name: string;
+  price: string;
+  image?: ImageRef;
+}
+
 const step = ref(0);
 const tenant = ref<Tenant | null>(null);
 const bootError = ref("");
@@ -95,7 +104,7 @@ const form = reactive({
   whatsapp: "",
   showHours: false,
   openingHours: [{ days: "Senin–Minggu", open: "08:00", close: "21:00" }],
-  highlights: [{ name: "", price: "" }] as { name: string; price: string }[],
+  highlights: [{ name: "", price: "" }] as HighlightDraft[],
 });
 
 const subdomain = ref("");
@@ -304,6 +313,8 @@ const highlightsPayload = computed(() =>
     .map((h) => ({
       name: h.name.trim(),
       ...(h.price.trim() ? { price: Number(h.price.replace(/\D/g, "")) } : {}),
+      // Kontrak hanya menyimpan mediaId; URL-nya di-resolve saat materialisasi.
+      ...(h.image?.mediaId ? { mediaId: h.image.mediaId } : {}),
     })),
 );
 
@@ -911,6 +922,20 @@ const inputClass =
                     :class="inputClass"
                   />
                 </div>
+              </WizardField>
+            </div>
+
+            <!-- Foto langsung di sini: mengunggah belakangan lewat editor
+                 adalah langkah yang paling sering tidak pernah dikerjakan. -->
+            <div class="mt-3">
+              <WizardField label="Foto" optional>
+                <EditorImageInput
+                  v-if="tenant"
+                  :tenant-id="tenant.id"
+                  :model-value="item.image"
+                  @update:model-value="item.image = $event"
+                />
+                <p v-else class="text-xs text-slate-500">Menyiapkan…</p>
               </WizardField>
             </div>
             <button

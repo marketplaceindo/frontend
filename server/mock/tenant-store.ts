@@ -215,6 +215,8 @@ export function runWizard(
   tenantId: string,
   raw: unknown,
   previewOrigin: (subdomain: string) => string,
+  /** Resolusi mediaId → URL untuk foto andalan (di-inject route, lihat materialize). */
+  mediaUrl?: (mediaId: string) => string,
 ): WizardResponse {
   const answers = wizardAnswersSchema.parse(raw);
   const tenant = ownedTenant(ownerId, tenantId);
@@ -234,7 +236,10 @@ export function runWizard(
 
   tenant.templateId = templateIdForBusinessType(answers.businessType);
   tenant.themeJson = themeForBusinessType(answers.businessType);
-  seedContentFromFixture(tenantId, materializeWizard(tenant.subdomain, answers, tenant.status));
+  seedContentFromFixture(
+    tenantId,
+    materializeWizard(tenant.subdomain, answers, tenant.status, null, mediaUrl),
+  );
   syncDraftSite(tenantId);
 
   return {

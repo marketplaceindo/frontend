@@ -255,7 +255,14 @@ export async function apiRunWizard(
   const user = requireUser(event);
   try {
     if (isMock(event)) {
-      return runWizard(user.id, tenantId, body, (sub) => tenantOrigin(event, sub));
+      const origin = requestOrigin(event);
+      return runWizard(
+        user.id,
+        tenantId,
+        body,
+        (sub) => tenantOrigin(event, sub),
+        (mediaId) => `${origin}/api/media/${mediaId}`,
+      );
     }
     return await proxy<WizardResponse>(event, "POST", `/tenants/${tenantId}/wizard`, { body });
   } catch (err) {
