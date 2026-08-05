@@ -32,6 +32,7 @@ import {
 } from "@marketplaceindo/shared";
 import { TenantApiError } from "./api-error";
 import { collectionsOf } from "./collection-store";
+import { modelsOf } from "./vehicle-model-store";
 import { allowedBlockTypes } from "./templates";
 import type { TenantFixture } from "./render-store";
 
@@ -190,6 +191,13 @@ export function contentToFixture(tenantId: string, meta: FixtureMeta): TenantFix
 
   // Koleksi ikut dibekukan bersama konten → snapshot publish konsisten.
   const { vehicles, products } = collectionsOf(tenantId);
+  /*
+   * Model kendaraan BARU datang dari store terpisah (hasil seed katalog maupun
+   * input manual di editor). Tanpa baris ini halaman /mobil tenant kosong meski
+   * datanya ada di dashboard — penyaringan `isPublished` dilakukan render-store,
+   * bukan di sini, supaya preview tetap bisa melihat model yang belum terbit.
+   */
+  const models = modelsOf(tenantId);
 
   return {
     site: {
@@ -204,7 +212,10 @@ export function contentToFixture(tenantId: string, meta: FixtureMeta): TenantFix
       contact: c.contact,
     },
     pages,
-    ...(vehicles.length ? { vehicles } : {}),
+    // Kunci HARUS `units` — `tenantFixtureSchema` memakai nama itu sejak
+    // Vehicle→VehicleUnit, dan Zod membuang kunci asing tanpa bersuara.
+    ...(vehicles.length ? { units: vehicles } : {}),
+    ...(models.length ? { models } : {}),
     ...(products.length ? { products } : {}),
   };
 }
