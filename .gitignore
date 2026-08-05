@@ -5,3 +5,6 @@ dist/
 .env
 .env.*
 *.log
+
+# State mock dev (persistensi lokal, bukan data produksi)
+.mock-state.json
