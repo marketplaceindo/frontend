@@ -16,6 +16,7 @@ import {
   updateVehicleModel,
 } from "../server/mock/vehicle-model-store";
 import {
+  catalogBrands,
   catalogModels,
   listSeededModels,
   resetCatalogSeed,
@@ -23,7 +24,14 @@ import {
 } from "../server/mock/catalog-store";
 
 const TENANT = "11111111-1111-4111-8111-111111111111";
-const BRAND_TOYOTA = "b1000000-0000-4000-8000-000000000001";
+
+/** ID merk diturunkan dari katalog — sejak katalog disalin dari YAML backend,
+ *  id-nya hash dari slug dan tidak boleh ditulis ulang di test. */
+function brandToyota(): string {
+  const b = catalogBrands("mobil").brands.find((x) => x.slug === "toyota");
+  if (!b) throw new Error("merk toyota tidak ada di katalog");
+  return b.id;
+}
 
 function modelBaru(over: Record<string, unknown> = {}) {
   return {
@@ -157,10 +165,10 @@ describe("satu penyimpanan untuk seed katalog dan model manual", () => {
     const t = `${TENANT}-h`;
     resetCatalogSeed(t);
 
-    const katalog = catalogModels(BRAND_TOYOTA, "JKT").models;
+    const katalog = catalogModels(brandToyota(), "JKT").models;
     const hasil = seedInventory(t, {
       vertical: "mobil",
-      brandId: BRAND_TOYOTA,
+      brandId: brandToyota(),
       cityCode: "JKT",
       modelIds: [katalog[0]!.id],
     });
@@ -183,10 +191,10 @@ describe("satu penyimpanan untuk seed katalog dan model manual", () => {
     const t = `${TENANT}-j`;
     resetCatalogSeed(t);
 
-    const katalog = catalogModels(BRAND_TOYOTA, "JKT").models;
+    const katalog = catalogModels(brandToyota(), "JKT").models;
     seedInventory(t, {
       vertical: "mobil",
-      brandId: BRAND_TOYOTA,
+      brandId: brandToyota(),
       cityCode: "JKT",
       modelIds: [katalog[0]!.id],
     });

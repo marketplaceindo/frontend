@@ -26,6 +26,24 @@ function toyota() {
   return brand;
 }
 
+/** Model termurah Toyota di kota tertentu — diturunkan, bukan di-hardcode. */
+function modelToyota(slug: string, cityCode = "JKT") {
+  const m = catalogModels(toyota().id, cityCode).models.find((x) => x.slug === slug);
+  if (!m) throw new Error(`model ${slug} tidak ada di katalog`);
+  return m;
+}
+
+/**
+ * Harga varian termurah model, dipakai menyusun berkas Excel uji. Katalog kini
+ * disalin dari YAML backend (scripts/sync-catalog.mjs), jadi angkanya berubah
+ * setiap pricelist diperbarui — test tidak boleh menuliskannya ulang.
+ */
+function hargaTermurah(slug: string): number {
+  const harga = modelToyota(slug).priceFrom;
+  if (harga === null) throw new Error(`model ${slug} tanpa harga`);
+  return harga;
+}
+
 beforeEach(() => {
   resetCatalogSeed(TENANT);
   resetCatalogSeed(TENANT_LAIN);
@@ -33,8 +51,13 @@ beforeEach(() => {
 
 describe("GET /catalog/brands", () => {
   it("memisahkan merk per vertikal", () => {
-    expect(catalogBrands("mobil").brands.map((b) => b.slug)).toEqual(["toyota"]);
-    expect(catalogBrands("motor").brands.map((b) => b.slug)).toEqual(["honda"]);
+    // Katalog mobil disalin dari YAML backend; jumlah merk tumbuh seiring
+    // pricelist ditambahkan, jadi yang dijaga adalah pemisahan vertikalnya.
+    const mobil = catalogBrands("mobil").brands.map((b) => b.slug);
+    expect(mobil).toContain("toyota");
+    expect(mobil.length).toBeGreaterThan(1);
+    expect(mobil).not.toContain("honda"); // honda hanya ada di vertikal motor
+    expect(catalogBrands("motor").brands.map((b) => b.slug)).not.toContain("toyota");
   });
 
   it("tidak membocorkan field selain id/slug/name", () => {
@@ -50,37 +73,40 @@ describe("GET /catalog/cities", () => {
     const jkt = cities.find((c) => c.code === "JKT");
     const pwt = cities.find((c) => c.code === "PWT");
 
-    expect(jkt?.hasExactPrice).toBe(true);
+    // Katalog nyata baru memuat harga NATIONAL (selisih BBN per provinsi belum
+    // diverifikasi), jadi BELUM ada kota ber-OTR exact. Yang dijaga: kota tanpa
+    // harga exact tetap muncul di daftar, tidak dibuang diam-diam.
+    expect(jkt).toBeDefined();
     expect(pwt).toBeDefined();
     expect(pwt?.hasExactPrice).toBe(false);
   });
 });
 
 describe("GET /catalog/models", () => {
-  it("kota exact → priceFrom tanpa penanda estimasi", () => {
-    const avanza = catalogModels(toyota().id, "JKT").models.find((m) => m.slug === "avanza");
-    expect(avanza?.priceFrom).toBe(242_000_000);
-    expect(avanza?.priceEstimated).toBe(false);
+  it("katalog NATIONAL-only → setiap kota ditandai estimasi (D-14)", () => {
+    // Selama pricelist per kota belum diverifikasi, SETIAP harga yang sampai ke
+    // tenant adalah hasil fallback. Menandainya adalah inti D-14: sales harus
+    // tahu angka itu bukan OTR kotanya.
+    for (const kota of ["JKT", "PWT", "MDN"]) {
+      const avanza = modelToyota("avanza", kota);
+      expect(avanza.priceFrom).not.toBeNull();
+      expect(avanza.priceEstimated, `${kota} seharusnya estimasi`).toBe(true);
+      expect(avanza.priceEstimatedFromCity).toBe("Nasional");
+    }
   });
 
-  it("kota tanpa OTR → fallback ibukota provinsi + penanda estimasi (D-14)", () => {
-    const avanza = catalogModels(toyota().id, "PWT").models.find((m) => m.slug === "avanza");
-    expect(avanza?.priceFrom).toBe(241_000_000); // harga Semarang
-    expect(avanza?.priceEstimated).toBe(true);
-    expect(avanza?.priceEstimatedFromCity).toBe("Semarang");
-  });
-
-  it("provinsi tanpa ibukota berharga → jatuh ke harga nasional", () => {
-    const avanza = catalogModels(toyota().id, "MDN").models.find((m) => m.slug === "avanza");
-    expect(avanza?.priceFrom).toBe(240_000_000);
-    expect(avanza?.priceEstimatedFromCity).toBe("Nasional");
+  it("harga sama di semua kota selama hanya ada harga nasional", () => {
+    const kota = ["JKT", "PWT", "MDN"].map((c) => modelToyota("avanza", c).priceFrom);
+    expect(new Set(kota).size).toBe(1);
   });
 
   it("urut popularitas, dan model tidak populer ada di luar ambang pre-check", () => {
     const models = catalogModels(toyota().id, "JKT").models;
-    expect(models[0]?.slug).toBe("avanza");
-    const fortuner = models.find((m) => m.slug === "fortuner");
-    expect(fortuner!.popularityRank).toBeGreaterThan(POPULAR_RANK_MAX);
+    // Terurut menaik menurut popularityRank.
+    const rank = models.map((m) => m.popularityRank);
+    expect([...rank].sort((a, b) => a - b)).toEqual(rank);
+    // Katalog nyata memuat model di luar ambang pre-check wizard.
+    expect(models.some((m) => m.popularityRank > POPULAR_RANK_MAX)).toBe(true);
   });
 
   it("menolak kota di luar katalog", () => {
@@ -103,7 +129,8 @@ describe("POST /seed-inventory", () => {
   it("membuat model + varian, dan hasilnya lolos vehicleModelSchema", () => {
     const hasil = seedAvanza();
     expect(hasil.createdModels).toBe(1);
-    expect(hasil.createdVariants).toBe(2);
+    // Jumlah varian mengikuti katalog backend, bukan angka tetap.
+    expect(hasil.createdVariants).toBe(modelToyota("avanza").variantCount);
     for (const model of listSeededModels(TENANT)) {
       expect(() => vehicleModelSchema.parse(model)).not.toThrow();
     }
@@ -129,14 +156,17 @@ describe("POST /seed-inventory", () => {
 
   it("kota fallback → warning price_estimated + harga memakai kota yang DIMINTA", () => {
     const hasil = seedAvanza("PWT");
+    // Katalog nyata hanya berharga NATIONAL, jadi rantai D-14 berhenti di
+    // "Nasional" — yang penting: fallback-nya DITANDAI, dan baris harganya
+    // tetap memakai kota yang diminta user (bukan kota asal harga).
     expect(hasil.warnings).toContainEqual({
       kind: "price_estimated",
       modelSlug: "avanza",
-      fromCity: "Semarang",
+      fromCity: "Nasional",
     });
     const varian = listSeededModels(TENANT)[0]!.variants[0]!;
     expect(varian.priceEstimated).toBe(true);
-    expect(varian.priceEstimatedFromCity).toBe("Semarang");
+    expect(varian.priceEstimatedFromCity).toBe("Nasional");
     expect(varian.priceOtr[0]!.cityCode).toBe("PWT");
     expect(varian.priceOtr[0]!.cityName).toBe("Purwokerto");
   });
@@ -181,7 +211,7 @@ describe("POST /seed-inventory", () => {
 describe("round-trip harga (D-16)", () => {
   function siapkan() {
     const brand = toyota();
-    const avanza = catalogModels(brand.id, "JKT").models.find((m) => m.slug === "avanza")!;
+    const avanza = modelToyota("avanza");
     seedInventory(TENANT, {
       vertical: "mobil",
       brandId: brand.id,
@@ -195,12 +225,12 @@ describe("round-trip harga (D-16)", () => {
     const baris = siapkan().trim().split("\n");
     expect(baris[0]).toContain("ID Varian");
     expect(baris[1]).toContain("Ubah hanya kolom Harga");
-    expect(baris).toHaveLength(2 + 2); // header + catatan + 2 varian × 1 kota
+    expect(baris.length).toBeGreaterThanOrEqual(3); // header + catatan + ≥1 varian
   });
 
   it("mengubah harga → updated, priceSource excel, estimasi dimatikan", () => {
     const file = siapkan();
-    const diubah = file.replace("242000000", "Rp 245.000.000");
+    const diubah = file.replace(String(hargaTermurah("avanza")), "Rp 245.000.000");
 
     const hasil = importPrices(TENANT, diubah);
     expect(hasil.updated).toBe(1);
@@ -221,7 +251,12 @@ describe("round-trip harga (D-16)", () => {
 
   it("nama varian di-rename → name_mismatch sebagai warning, harga tetap masuk", () => {
     const file = siapkan();
-    const diubah = file.replace("1.3 E MT", "1.3 E Manual").replace("242000000", "245000000");
+    // Ambil nama varian dari berkas ekspor itu sendiri, lalu ubah namanya —
+    // pencocokan tetap by ID, jadi harganya harus tetap masuk.
+    const namaVarian = listSeededModels(TENANT)[0]!.variants[0]!.name;
+    const diubah = file
+      .replace(namaVarian, `${namaVarian} (rename)`)
+      .replace(String(hargaTermurah("avanza")), "245000000");
 
     const hasil = importPrices(TENANT, diubah);
     expect(hasil.updated).toBe(1);
@@ -230,14 +265,14 @@ describe("round-trip harga (D-16)", () => {
 
   it("harga tak terbaca → price_invalid, baris dilewati", () => {
     const file = siapkan();
-    const hasil = importPrices(TENANT, file.replace("242000000", "hubungi sales"));
+    const hasil = importPrices(TENANT, file.replace(String(hargaTermurah("avanza")), "hubungi sales"));
     expect(hasil.updated).toBe(0);
     expect(hasil.warnings.some((w) => w.kind === "price_invalid")).toBe(true);
   });
 
   it("file milik tenant lain → semua variant_not_found, nol perubahan", () => {
     const file = siapkan();
-    const hasil = importPrices(TENANT_LAIN, file.replace("242000000", "245000000"));
+    const hasil = importPrices(TENANT_LAIN, file.replace(String(hargaTermurah("avanza")), "245000000"));
 
     expect(hasil.updated).toBe(0);
     expect(hasil.warnings.every((w) => w.kind === "variant_not_found")).toBe(true);
