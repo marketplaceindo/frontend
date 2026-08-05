@@ -85,7 +85,15 @@ export default defineNuxtConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()],
+    /*
+     * Cast tipe-saja. `@tailwindcss/vite` mendeklarasikan `Plugin` terhadap tipe
+     * Vite yang ia resolve sendiri, sedangkan `PluginOption` di config Nuxt
+     * datang dari resolusi @nuxt/schema — nominalnya beda meski runtime-nya sama
+     * (hanya ada satu vite terpasang, 7.3.6). Tanpa cast, typecheck gagal pada
+     * baris yang perilakunya sudah benar.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    plugins: [tailwindcss() as any],
     server: {
       // Dev multi-subdomain: izinkan *.lvh.me (wildcard DNS → 127.0.0.1)
       // dan *.localhost menembus proteksi host-check Vite.
