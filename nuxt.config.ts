@@ -44,9 +44,23 @@ export default defineNuxtConfig({
    * dengan `host` ikut jadi kunci agar tenant tidak saling tertukar.
    */
   routeRules: {
-    "/mobil/**": { swr: 300, cache: { varies: ["host", "x-forwarded-host"] } },
-    "/mobil-bekas/**": { swr: 300, cache: { varies: ["host", "x-forwarded-host"] } },
-    "/produk/**": { swr: 300, cache: { varies: ["host", "x-forwarded-host"] } },
+    /*
+     * ISR TIDAK dipasang di level HTML.
+     *
+     * `routeRules` hanya bisa membedakan path, sementara halaman yang sama
+     * punya dua wajah: publik dan `?preview=1` (draft milik owner). Dengan
+     * `swr` di sini, owner yang baru menyimpan editan melihat halaman lama
+     * hingga 5 menit dan menyimpulkan editornya rusak — persis kebingungan
+     * yang pernah terjadi.
+     *
+     * Cache-nya hidup satu lapis lebih dalam di `/api/_render/*`
+     * (server/utils/render-cache.ts): kuncinya memuat subdomain DAN melewati
+     * permintaan preview sepenuhnya. Render HTML-nya sendiri murah begitu
+     * datanya sudah panas.
+     */
+    "/mobil/**": { cache: false },
+    "/mobil-bekas/**": { cache: false },
+    "/produk/**": { cache: false },
 
     /*
      * `/bandingkan` sengaja TANPA cache (addendum §Fase 8): kombinasi varian
