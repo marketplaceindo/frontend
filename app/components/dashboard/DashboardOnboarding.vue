@@ -64,6 +64,9 @@ type StepId =
   | "andalan"
   | "subdomain";
 
+/** Salinan teks step andalan — lihat app/utils/wizard-copy.ts. */
+const andalanCopy = computed(() => andalanCopyFor(form.businessType));
+
 const STEP_TITLES: Record<StepId, string> = {
   nama: "Apa nama usahamu?",
   jenis: "Jenis usahanya apa?",
@@ -586,7 +589,9 @@ const inputClass =
           />
         </div>
         <p class="mt-2 text-xs text-slate-500">Langkah {{ step + 1 }} dari {{ steps.length }}</p>
-        <h1 class="mt-3 text-xl font-bold text-slate-900">{{ STEP_TITLES[stepId] }}</h1>
+        <h1 class="mt-3 text-xl font-bold text-slate-900">
+          {{ stepId === "andalan" ? andalanCopy.judul : STEP_TITLES[stepId] }}
+        </h1>
       </div>
 
       <p v-if="bootError" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -872,32 +877,37 @@ const inputClass =
 
         <!-- 5. 1–3 andalan -->
         <template v-else-if="stepId === 'andalan'">
-          <p class="text-sm text-slate-500">
-            Isi produk, menu, atau layanan yang paling sering dicari pelanggan. Minimal satu.
-          </p>
+          <p class="text-sm text-slate-500">{{ andalanCopy.petunjuk }}</p>
           <p v-if="errors.highlights" class="text-sm text-red-600">{{ errors.highlights }}</p>
           <div
             v-for="(item, i) in form.highlights"
             :key="i"
             class="rounded-xl border border-slate-200 bg-white p-4"
           >
-            <WizardField :label="`Andalan ${i + 1}`" :error="errors[`highlights.${i}.name`]">
+            <WizardField
+              :label="`${andalanCopy.label} ${i + 1}`"
+              :error="errors[`highlights.${i}.name`]"
+            >
               <input
                 v-model="item.name"
                 type="text"
-                placeholder="Nasi Goreng Spesial"
+                :placeholder="andalanCopy.placeholder"
                 :class="inputClass"
               />
             </WizardField>
             <div class="mt-3">
-              <WizardField label="Harga" optional :error="errors[`highlights.${i}.price`]">
+              <WizardField
+                :label="andalanCopy.labelHarga"
+                optional
+                :error="errors[`highlights.${i}.price`]"
+              >
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-slate-500">Rp</span>
                   <input
                     v-model="item.price"
                     type="text"
                     inputmode="numeric"
-                    placeholder="25000"
+                    :placeholder="andalanCopy.placeholderHarga"
                     :class="inputClass"
                   />
                 </div>
@@ -918,7 +928,7 @@ const inputClass =
             class="w-full rounded-lg border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-600"
             @click="addHighlight"
           >
-            + Tambah andalan
+            {{ andalanCopy.tambah }}
           </button>
         </template>
 
