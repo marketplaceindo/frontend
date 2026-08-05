@@ -14,6 +14,7 @@ import BlockImage from "../../../components/blocks/BlockImage.vue";
 definePageMeta({ layout: false });
 
 const route = useRoute();
+const { tautan } = useTenantLink();
 const routing = useTenantRouting();
 const requestFetch = useRequestFetch();
 const kota = useKotaAktif();
@@ -155,9 +156,9 @@ useHead({
     <article class="section-shell pb-24 md:pb-8">
       <div class="section-inner py-6 md:py-10">
         <nav class="text-xs opacity-70" aria-label="Breadcrumb">
-          <NuxtLink to="/">Beranda</NuxtLink> ›
-          <NuxtLink to="/mobil">Mobil</NuxtLink> ›
-          <NuxtLink :to="`/mobil/${data.detail.model.slug}`">{{ data.detail.model.name }}</NuxtLink>
+          <NuxtLink :to="tautan('/')">Beranda</NuxtLink> ›
+          <NuxtLink :to="tautan('/mobil')">Mobil</NuxtLink> ›
+          <NuxtLink :to="tautan(`/mobil/${data.detail.model.slug}`)">{{ data.detail.model.name }}</NuxtLink>
           › <span>{{ data.detail.variant.name }}</span>
         </nav>
 

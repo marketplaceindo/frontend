@@ -5,6 +5,7 @@ definePageMeta({ layout: false });
 
 /** PDP (/produk/[slug]) — galeri, harga, deskripsi, CTA pesan via WhatsApp. */
 const route = useRoute();
+const { tautan } = useTenantLink();
 const routing = useTenantRouting();
 const requestFetch = useRequestFetch();
 
@@ -67,7 +68,7 @@ useHead({
   <NuxtLayout v-if="data && site && product" name="tenant" :site="site" :preview="isPreview">
     <article class="section-inner py-8 md:py-12">
       <nav class="text-sm opacity-70" aria-label="Breadcrumb">
-        <NuxtLink to="/produk">Semua Produk</NuxtLink>
+        <NuxtLink :to="tautan('/produk')">Semua Produk</NuxtLink>
         <span aria-hidden="true"> / </span>
         <span>{{ product.name }}</span>
       </nav>

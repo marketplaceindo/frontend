@@ -10,6 +10,7 @@ definePageMeta({ layout: false });
  * CTA (hubungi sales / test drive / simulasi kredit ter-prefill harga unit).
  */
 const route = useRoute();
+const { tautan } = useTenantLink();
 const routing = useTenantRouting();
 const requestFetch = useRequestFetch();
 
@@ -116,7 +117,7 @@ useHead({
   <NuxtLayout v-if="data && site && vehicle" name="tenant" :site="site" :preview="isPreview">
     <article class="section-inner py-8 md:py-12">
       <nav class="text-sm opacity-70" aria-label="Breadcrumb">
-        <NuxtLink to="/mobil">Semua Mobil</NuxtLink>
+        <NuxtLink :to="tautan('/mobil')">Semua Mobil</NuxtLink>
         <span aria-hidden="true"> / </span>
         <span>{{ vehicle.name }}</span>
       </nav>

@@ -12,6 +12,7 @@ import { defaultHanyaPerbedaan } from "@marketplaceindo/shared";
 definePageMeta({ layout: false });
 
 const route = useRoute();
+const { tautan } = useTenantLink();
 const routing = useTenantRouting();
 const requestFetch = useRequestFetch();
 const kota = useKotaAktif();
@@ -110,7 +111,7 @@ useTenantSeo({
           <p class="mt-1 text-sm opacity-70">
             Pilih varian lewat tombol “Bandingkan” di daftar mobil.
           </p>
-          <NuxtLink to="/mobil" :class="ctaClass('primary')" class="mt-4">Lihat mobil</NuxtLink>
+          <NuxtLink :to="tautan('/mobil')" :class="ctaClass('primary')" class="mt-4">Lihat mobil</NuxtLink>
         </div>
 
         <template v-else>
@@ -173,7 +174,7 @@ useTenantSeo({
                   <td class="sticky left-0 z-10 bg-bg p-3"></td>
                   <td v-for="k in kolom" :key="`cta-${k.variantSlug}`" class="p-3">
                     <NuxtLink
-                      :to="`/mobil/${k.modelSlug}/${k.variantSlug}`"
+                      :to="tautan(`/mobil/${k.modelSlug}/${k.variantSlug}`)"
                       class="block text-sm font-semibold text-primary"
                     >
                       Lihat varian →

@@ -3,11 +3,13 @@ import type { Product } from "@marketplaceindo/shared";
 
 /** Kartu produk dipakai product_grid dan listing /produk. */
 defineProps<{ product: Product }>();
+
+const { tautan } = useTenantLink();
 </script>
 
 <template>
   <li class="overflow-hidden rounded-theme border border-text/10" :data-product="product.slug">
-    <NuxtLink :to="`/produk/${product.slug}`" class="block">
+    <NuxtLink :to="tautan(`/produk/${product.slug}`)" class="block">
       <!-- Foto produk butuh resolusi mediaId → URL (backend media, Fase 7). -->
       <div class="aspect-square bg-text/5" />
       <div class="p-3">

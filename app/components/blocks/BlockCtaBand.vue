@@ -3,6 +3,8 @@ import type { Block } from "@marketplaceindo/shared";
 
 type Data = Extract<Block, { type: "cta_band" }>["data"];
 defineProps<{ data: Data }>();
+
+const { tautan } = useTenantLink();
 </script>
 
 <template>
@@ -12,7 +14,7 @@ defineProps<{ data: Data }>();
       <p v-if="data.subheading" class="mt-3 opacity-90">{{ data.subheading }}</p>
       <!-- Band sudah ber-bg primary → tombol dibalik (bg putih, teks primary). -->
       <a
-        :href="data.cta.href"
+        :href="tautan(data.cta.href)"
         class="mt-6 inline-block rounded-theme bg-white px-6 py-3 text-sm font-semibold text-primary transition-opacity hover:opacity-85"
       >
         {{ data.cta.label }}

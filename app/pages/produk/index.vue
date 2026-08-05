@@ -6,6 +6,7 @@ definePageMeta({ layout: false });
 
 /** Listing produk (/produk) — filter §7: q, category, priceMin, priceMax. */
 const route = useRoute();
+const { tautan } = useTenantLink();
 const routing = useTenantRouting();
 const requestFetch = useRequestFetch();
 
@@ -100,7 +101,7 @@ useTenantSeo({
 
       <p class="mt-4 text-sm opacity-70" data-testid="jumlah-hasil">
         {{ data.list.items.length }} produk ditampilkan
-        <NuxtLink v-if="Object.keys(route.query).length" to="/produk" class="ml-2 font-medium">
+        <NuxtLink v-if="Object.keys(route.query).length" :to="tautan('/produk')" class="ml-2 font-medium">
           Hapus filter
         </NuxtLink>
       </p>

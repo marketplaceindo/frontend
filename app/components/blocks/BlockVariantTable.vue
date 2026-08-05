@@ -8,9 +8,12 @@ import type { Block, RenderModelResponse } from "@marketplaceindo/shared";
 type Data = Extract<Block, { type: "variant_table" }>["data"];
 const props = defineProps<{
   data: Data;
+
   /** Halaman model mengoper slug-nya; block bisa juga dikonfigurasi manual. */
   modelSlug?: string;
 }>();
+
+const { tautan } = useTenantLink();
 
 const requestFetch = useRequestFetch();
 const route = useRoute();
@@ -70,7 +73,7 @@ const STOK_LABEL = { ready: "Ready", indent: "Indent", habis: "Habis" } as const
 
         <div class="mt-3 flex flex-wrap gap-3">
           <NuxtLink
-            :to="`/mobil/${model.model.slug}/${variant.slug}`"
+            :to="tautan(`/mobil/${model.model.slug}/${variant.slug}`)"
             class="text-sm font-semibold text-primary"
           >
             Lihat detail →

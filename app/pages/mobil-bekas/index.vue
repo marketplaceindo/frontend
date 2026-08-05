@@ -14,6 +14,7 @@ definePageMeta({ layout: false });
  * & crawlable; hasil filter di-render SSR (tetap ter-index).
  */
 const route = useRoute();
+const { tautan } = useTenantLink();
 const routing = useTenantRouting();
 const requestFetch = useRequestFetch();
 
@@ -128,7 +129,7 @@ useTenantSeo({
         {{ data.list.items.length }} unit ditampilkan
         <NuxtLink
           v-if="Object.keys(route.query).length"
-          to="/mobil"
+          :to="tautan('/mobil')"
           class="ml-2 font-medium"
         >
           Hapus filter

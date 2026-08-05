@@ -10,11 +10,14 @@ import PriceEstimatedNote from "./PriceEstimatedNote.vue";
 
 const props = defineProps<{
   model: RenderModelCard;
+
   /** Varian spesifik (dari featured_vehicles) — kalau ada, tautkan ke VDP-nya. */
   variantSlug?: string;
   /** Sembunyikan tombol bandingkan (mis. di grid pendek). */
   tanpaBandingkan?: boolean;
 }>();
+
+const { tautan } = useTenantLink();
 
 const compare = useCompare();
 
@@ -34,7 +37,7 @@ const dipilih = computed(() => compare.has(refVarian.value));
 
 <template>
   <li class="overflow-hidden rounded-theme border border-text/10" :data-model="model.slug">
-    <NuxtLink :to="href" class="block">
+    <NuxtLink :to="tautan(href)" class="block">
       <div class="aspect-video bg-text/5">
         <BlockImage :image="model.image" />
       </div>

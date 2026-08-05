@@ -3,6 +3,8 @@ import type { Block } from "@marketplaceindo/shared";
 
 type Data = Extract<Block, { type: "navbar" }>["data"];
 defineProps<{ data: Data }>();
+
+const { tautan } = useTenantLink();
 </script>
 
 <template>
@@ -15,7 +17,7 @@ defineProps<{ data: Data }>();
       <a
         v-for="link in data.links"
         :key="link.href"
-        :href="link.href"
+        :href="tautan(link.href)"
         class="text-sm font-medium"
       >
         {{ link.label }}

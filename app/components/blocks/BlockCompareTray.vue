@@ -11,6 +11,8 @@ import type { Block } from "@marketplaceindo/shared";
 type Data = Extract<Block, { type: "compare_tray" }>["data"];
 defineProps<{ data: Data }>();
 
+const { tautan } = useTenantLink();
+
 const compare = useCompare();
 
 // Duduk di atas whatsapp_float di mobile (bottom-20), lebih rapat di desktop.
@@ -54,7 +56,7 @@ const posisiKelas = "bottom-20 md:bottom-4";
         </li>
       </ul>
 
-      <NuxtLink :to="compare.href.value" :class="ctaClass('primary')" class="shrink-0">
+      <NuxtLink :to="tautan(compare.href.value)" :class="ctaClass('primary')" class="shrink-0">
         Bandingkan ({{ compare.items.value.length }})
       </NuxtLink>
     </div>

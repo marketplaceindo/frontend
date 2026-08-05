@@ -4,6 +4,8 @@ import type { Block } from "@marketplaceindo/shared";
 type Data = Extract<Block, { type: "footer" }>["data"];
 defineProps<{ data: Data }>();
 
+const { tautan } = useTenantLink();
+
 const SOCIAL_LABELS: Record<string, string> = {
   instagram: "Instagram",
   facebook: "Facebook",
@@ -19,7 +21,7 @@ const SOCIAL_LABELS: Record<string, string> = {
       <p v-if="data.text" class="opacity-90">{{ data.text }}</p>
       <ul v-if="data.links?.length" class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
         <li v-for="link in data.links" :key="link.href">
-          <a :href="link.href">{{ link.label }}</a>
+          <a :href="tautan(link.href)">{{ link.label }}</a>
         </li>
       </ul>
       <ul v-if="data.socials?.length" class="mt-4 flex flex-wrap gap-x-5 gap-y-2">

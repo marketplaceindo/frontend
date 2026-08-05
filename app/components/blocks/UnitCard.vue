@@ -4,6 +4,8 @@ import type { VehicleUnit } from "@marketplaceindo/shared";
 /** Kartu unit dipakai unit_grid dan listing /mobil-bekas. */
 defineProps<{ unit: VehicleUnit }>();
 
+const { tautan } = useTenantLink();
+
 const TRANSMISSION_LABELS: Record<string, string> = {
   manual: "Manual",
   automatic: "Matic",
@@ -13,7 +15,7 @@ const TRANSMISSION_LABELS: Record<string, string> = {
 
 <template>
   <li class="overflow-hidden rounded-theme border border-text/10" :data-unit="unit.slug">
-    <NuxtLink :to="`/mobil-bekas/${unit.slug}`" class="block">
+    <NuxtLink :to="tautan(`/mobil-bekas/${unit.slug}`)" class="block">
       <!-- Foto unit butuh resolusi mediaId → URL (backend media, Fase 7). -->
       <div class="relative aspect-video bg-text/5">
         <span

@@ -5,6 +5,8 @@ import BlockImage from "./BlockImage.vue";
 type Data = Extract<Block, { type: "hero" }>["data"];
 const props = defineProps<{ data: Data }>();
 
+const { tautan } = useTenantLink();
+
 const alignClass = computed(() => {
   switch (props.data.align) {
     case "left": return "text-left items-start";
@@ -28,7 +30,7 @@ const alignClass = computed(() => {
         class="mt-6 flex flex-wrap gap-3"
         :class="data.align === 'right' ? 'justify-end' : data.align === 'left' ? 'justify-start' : 'justify-center'"
       >
-        <a v-for="cta in data.ctas" :key="cta.href" :href="cta.href" :class="ctaClass(cta.variant)">
+        <a v-for="cta in data.ctas" :key="cta.href" :href="tautan(cta.href)" :class="ctaClass(cta.variant)">
           {{ cta.label }}
         </a>
       </div>
