@@ -21,11 +21,18 @@ import type {
 import { TEMPLATE_IDS } from "./materialize";
 
 /** Block yang boleh mengisi slot "highlights" per jenis usaha. */
+/*
+ * `services` WAJIB ada di setiap daftar non-kuliner: itulah block yang ditaruh
+ * `materialize.ts` di slot "highlights" untuk 1–3 andalan hasil wizard. Kalau
+ * dihapus dari sini, situs tetap ter-render tapi user kena
+ * `422 BLOCK_NOT_ALLOWED_IN_SLOT` saat menyimpan konten yang dibuat sistem
+ * sendiri — dan tidak ada jalan keluar dari UI. Dijaga tests/materialize-slot.
+ */
 const HIGHLIGHT_BLOCKS: Record<BusinessType, BlockType[]> = {
   kuliner: ["featured_menu", "menu"],
   katalog: ["services", "price_list", "product_grid", "product_categories"],
   bisnis_jasa: ["services", "features", "process"],
-  otomotif: ["model_grid", "unit_grid", "featured_vehicles", "variant_table"],
+  otomotif: ["services", "model_grid", "unit_grid", "featured_vehicles", "variant_table"],
 };
 
 const TEMPLATE_NAMES: Record<BusinessType, { slug: string; name: string }> = {
