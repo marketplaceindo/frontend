@@ -56,8 +56,13 @@ const CITY_NAMES: Record<string, string> = Object.fromEntries(CITIES.map((c) => 
 // Merk & model
 // ---------------------------------------------------------------------------
 
-const BRAND_TOYOTA = "b1000000-0000-4000-8000-000000000001";
-const BRAND_HONDA_MOTOR = "b1000000-0000-4000-8000-000000000002";
+/*
+ * Merk & model datang dari `fixtures/catalog.json` — hasil `scripts/sync-catalog.mjs`
+ * yang menyalin YAML katalog di repo backend. Sebelumnya daftar ini ditulis
+ * tangan dan hanya memuat satu merk, sehingga merk yang ditambahkan di backend
+ * tidak pernah muncul di wizard.
+ */
+import katalogFixture from "./fixtures/catalog.json";
 
 interface MockBrand {
   id: string;
@@ -67,199 +72,78 @@ interface MockBrand {
   order: number;
 }
 
-const BRANDS: MockBrand[] = [
-  { id: BRAND_TOYOTA, vertical: "mobil", slug: "toyota", name: "Toyota", order: 1 },
-  { id: BRAND_HONDA_MOTOR, vertical: "motor", slug: "honda", name: "Honda", order: 1 },
-];
-
-let idSeq = 0;
-const nextId = (): string => {
-  idSeq += 1;
-  return `c0000000-0000-4000-8000-${String(idSeq).padStart(12, "0")}`;
-};
-
 interface MockModel extends CatalogVehicleModel {
   /** Harga per varian; `NATIONAL` selalu ada — invariant #1 import backend. */
   prices: CatalogPrice[];
 }
 
-function buatModel(input: {
-  brandId: string;
-  vertical: VehicleVertical;
-  slug: string;
-  name: string;
-  bodyType: string;
-  summary: string;
-  popularityRank: number;
-  variants: Array<{
-    slug: string;
-    name: string;
-    trimRank: number;
-    specs: Record<string, unknown>;
-    /** Harga NATIONAL; kota lain diturunkan dengan selisih tetap di bawah. */
-    national: number;
-  }>;
-}): MockModel {
-  const modelId = nextId();
-  const prices: CatalogPrice[] = [];
-  const variants = input.variants.map((v) => {
-    const variantId = nextId();
-    // Fixture: JKT +2jt, SMG +1jt, BDG +1,5jt terhadap harga nasional.
-    // BGR, PWT, SBY, MDN sengaja DIKOSONGKAN supaya jalur fallback terlewati.
-    const kota: Array<[string, number]> = [
-      [NATIONAL_CITY_CODE, v.national],
-      ["JKT", v.national + 2_000_000],
-      ["SMG", v.national + 1_000_000],
-      ["BDG", v.national + 1_500_000],
-    ];
-    for (const [cityCode, price] of kota) {
-      prices.push({
-        variantId,
-        cityCode,
-        price,
-        effectiveFrom: "2026-07-01",
-        source: "fixture-mock-frontend",
-      });
-    }
-    return {
-      id: variantId,
-      modelId,
-      slug: v.slug,
-      name: v.name,
-      trimRank: v.trimRank,
-      specs: v.specs as never,
+/*
+ * Cadangan vertikal motor. Repo backend belum punya `catalog/motor/`, sehingga
+ * hasil sync tidak memuat merk motor sama sekali. Tanpa cadangan ini seluruh
+ * jalur motor (wizard, spec per vertikal, seed) jadi mustahil dicoba di dev.
+ * Begitu katalog motor sungguhan ada, blok ini otomatis tidak terpakai.
+ */
+const MOTOR_CADANGAN_BRAND: MockBrand = {
+  id: "b1000000-0000-4000-8000-000000000002",
+  vertical: "motor",
+  slug: "honda",
+  name: "Honda",
+  order: 1,
+};
+
+const MOTOR_CADANGAN_MODEL = {
+  id: "c0000000-0000-4000-8000-000000000101",
+  brandId: MOTOR_CADANGAN_BRAND.id,
+  vertical: "motor" as const,
+  slug: "vario-160",
+  name: "Vario 160",
+  modelYear: 2026,
+  bodyType: "matic",
+  images: [
+    {
+      url: "https://cdn.marketindonesia.co.id/catalog/vario-160/01.jpg",
+      alt: "Honda Vario 160 2026 tampak depan",
+    },
+  ],
+  summary: "Skutik 160cc untuk harian.",
+  popularityRank: 0,
+  variants: [
+    {
+      id: "c0000000-0000-4000-8000-000000000102",
+      modelId: "c0000000-0000-4000-8000-000000000101",
+      slug: "cbs",
+      name: "CBS",
+      trimRank: 0,
+      specs: { "mesin.kapasitas_cc": 157, "keselamatan.pengereman": "cbs" },
       colors: [],
       highlights: [],
-    };
-  });
+    },
+    {
+      id: "c0000000-0000-4000-8000-000000000103",
+      modelId: "c0000000-0000-4000-8000-000000000101",
+      slug: "abs",
+      name: "ABS",
+      trimRank: 1,
+      specs: { "mesin.kapasitas_cc": 157, "keselamatan.pengereman": "abs" },
+      colors: [],
+      highlights: [],
+    },
+  ],
+  prices: [
+    { variantId: "c0000000-0000-4000-8000-000000000102", cityCode: NATIONAL_CITY_CODE, price: 27_000_000, effectiveFrom: "2026-07-01", source: "fixture-dev-frontend" },
+    { variantId: "c0000000-0000-4000-8000-000000000102", cityCode: "JKT", price: 29_000_000, effectiveFrom: "2026-07-01", source: "fixture-dev-frontend" },
+    { variantId: "c0000000-0000-4000-8000-000000000102", cityCode: "SMG", price: 28_000_000, effectiveFrom: "2026-07-01", source: "fixture-dev-frontend" },
+    { variantId: "c0000000-0000-4000-8000-000000000103", cityCode: NATIONAL_CITY_CODE, price: 30_000_000, effectiveFrom: "2026-07-01", source: "fixture-dev-frontend" },
+    { variantId: "c0000000-0000-4000-8000-000000000103", cityCode: "JKT", price: 32_000_000, effectiveFrom: "2026-07-01", source: "fixture-dev-frontend" },
+  ],
+} as unknown as MockModel;
 
-  return {
-    id: modelId,
-    brandId: input.brandId,
-    vertical: input.vertical,
-    slug: input.slug,
-    name: input.name,
-    modelYear: 2026,
-    bodyType: input.bodyType as never,
-    images: [
-      {
-        url: `https://cdn.marketindonesia.co.id/catalog/${input.slug}/01.jpg`,
-        alt: `${input.name} 2026 tampak depan`,
-      },
-    ],
-    summary: input.summary,
-    popularityRank: input.popularityRank,
-    variants,
-    prices,
-  };
-}
+const sinkronBrands = katalogFixture.brands as MockBrand[];
+const sinkronModels = katalogFixture.models as unknown as MockModel[];
+const adaMotor = sinkronBrands.some((b) => b.vertical === "motor");
 
-const MODELS: MockModel[] = [
-  buatModel({
-    brandId: BRAND_TOYOTA,
-    vertical: "mobil",
-    slug: "avanza",
-    name: "Avanza",
-    bodyType: "mpv",
-    summary: "MPV 7-penumpang paling laris di Indonesia.",
-    popularityRank: 0,
-    variants: [
-      {
-        slug: "1-3-e-mt",
-        name: "1.3 E MT",
-        trimRank: 0,
-        specs: { "mesin.kapasitas_cc": 1329, "transmisi.tipe": "manual" },
-        national: 240_000_000,
-      },
-      {
-        slug: "1-5-g-cvt",
-        name: "1.5 G CVT",
-        trimRank: 1,
-        specs: { "mesin.kapasitas_cc": 1496, "transmisi.tipe": "cvt", "fitur.keyless": true },
-        national: 290_000_000,
-      },
-    ],
-  }),
-  buatModel({
-    brandId: BRAND_TOYOTA,
-    vertical: "mobil",
-    slug: "innova-zenix",
-    name: "Kijang Innova Zenix",
-    bodyType: "mpv",
-    summary: "MPV keluarga dengan pilihan hybrid.",
-    popularityRank: 1,
-    variants: [
-      {
-        slug: "2-0-g-cvt",
-        name: "2.0 G CVT",
-        trimRank: 0,
-        specs: { "mesin.kapasitas_cc": 1987, "transmisi.tipe": "cvt" },
-        national: 430_000_000,
-      },
-    ],
-  }),
-  buatModel({
-    brandId: BRAND_TOYOTA,
-    vertical: "mobil",
-    slug: "rush",
-    name: "Rush",
-    bodyType: "suv",
-    summary: "SUV 7-penumpang bergaya sporty.",
-    popularityRank: 2,
-    variants: [
-      {
-        slug: "1-5-trd-sportivo-at",
-        name: "1.5 TRD Sportivo AT",
-        trimRank: 0,
-        specs: { "mesin.kapasitas_cc": 1496, "transmisi.tipe": "at" },
-        national: 300_000_000,
-      },
-    ],
-  }),
-  buatModel({
-    brandId: BRAND_TOYOTA,
-    vertical: "mobil",
-    slug: "fortuner",
-    name: "Fortuner",
-    bodyType: "suv",
-    summary: "SUV ladder-frame bermesin diesel.",
-    popularityRank: 8, // di atas ambang populer → TIDAK tercentang otomatis
-    variants: [
-      {
-        slug: "2-8-vrz-4x4-at",
-        name: "2.8 VRZ 4x4 AT",
-        trimRank: 0,
-        specs: { "mesin.kapasitas_cc": 2755, "transmisi.tipe": "at" },
-        national: 730_000_000,
-      },
-    ],
-  }),
-  buatModel({
-    brandId: BRAND_HONDA_MOTOR,
-    vertical: "motor",
-    slug: "vario-160",
-    name: "Vario 160",
-    bodyType: "matic",
-    summary: "Skutik 160cc untuk harian.",
-    popularityRank: 0,
-    variants: [
-      {
-        slug: "cbs",
-        name: "CBS",
-        trimRank: 0,
-        specs: { "mesin.kapasitas_cc": 157, "keselamatan.pengereman": "cbs" },
-        national: 27_000_000,
-      },
-      {
-        slug: "abs",
-        name: "ABS",
-        trimRank: 1,
-        specs: { "mesin.kapasitas_cc": 157, "keselamatan.pengereman": "abs" },
-        national: 30_000_000,
-      },
-    ],
-  }),
-];
+const BRANDS: MockBrand[] = adaMotor ? sinkronBrands : [...sinkronBrands, MOTOR_CADANGAN_BRAND];
+const MODELS: MockModel[] = adaMotor ? sinkronModels : [...sinkronModels, MOTOR_CADANGAN_MODEL];
 
 // ---------------------------------------------------------------------------
 // Model tenant hasil seed (mock penyimpanan)
