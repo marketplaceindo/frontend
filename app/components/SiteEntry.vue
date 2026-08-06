@@ -60,6 +60,13 @@ watchEffect(() => {
   tenantSite.value = data.value?.site ?? null;
 });
 
+/**
+ * Navbar/footer/float diangkat keluar dari aliran section supaya layout yang
+ * menempatkannya (sekali, di posisi benar) — sebelumnya block navbar dan
+ * <header> layout tampil bersamaan sebagai dua baris navigasi.
+ */
+const chrome = computed(() => splitChrome(data.value?.page.sections ?? []));
+
 const seo = computed(() => data.value?.page.page.seoJson);
 const pageTitle = computed(() =>
   routing.value.mode === "tenant"
@@ -126,8 +133,9 @@ useHead({
     name="tenant"
     :site="site"
     :preview="isPreview"
+    :chrome="chrome.chrome"
   >
-    <SectionRenderer :sections="data.page.sections" />
+    <SectionRenderer :sections="chrome.content" />
   </NuxtLayout>
 
   <NuxtLayout v-else name="dashboard">
