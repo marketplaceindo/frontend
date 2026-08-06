@@ -222,4 +222,552 @@
     text-align: var(--section-align, start);
     padding-block: var(--section-py, var(--section-py-md));
   }
+
+  /* -------------------------------------------------------------------
+   * Preset tampilan (theme.preset) — satu bundel nuansa.
+   * Kelasnya dipasang di .tenant-shell oleh layouts/tenant.vue.
+   * Preset HANYA menyetel knob bentuk/kedalaman; warnanya tetap milik
+   * tenant (dashboard menuliskan palet preset ke themeJson saat dipilih,
+   * jadi tenant masih bisa menimpanya satu per satu setelahnya).
+   * ------------------------------------------------------------------- */
+
+  /* Bersih — hairline, tanpa bayangan. Look lama, dirapikan. */
+  .mi-preset-clean {
+    --mi-card-shadow: none;
+    --mi-card-shadow-hover: none;
+    --mi-card-border-width: 1px;
+    --mi-card-bg: var(--color-bg);
+    --mi-lift: -1px;
+    --mi-heading-tracking: -0.01em;
+  }
+  .mi-preset-clean .mi-card:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  /* Lembut — permukaan bertint, bayangan besar & halus. */
+  .mi-preset-soft {
+    --mi-surface-mix: 4.5%;
+    --mi-border-mix: 9%;
+    --mi-radius-card: calc(var(--radius-theme) + 0.5rem);
+    --mi-card-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 6px 16px rgb(16 24 40 / 0.06);
+    --mi-card-shadow-hover: 0 2px 6px rgb(16 24 40 / 0.06), 0 16px 32px rgb(16 24 40 / 0.1);
+    --mi-lift: -4px;
+  }
+
+  /* Tegas — kontras tinggi, garis tebal, bayangan keras (tanpa blur). */
+  .mi-preset-bold {
+    --mi-border-mix: 100%;
+    --mi-border-strong-mix: 100%;
+    --mi-card-border-width: 2px;
+    --mi-radius-card: min(var(--radius-theme), 0.375rem);
+    --mi-heading-weight: 800;
+    --mi-heading-tracking: -0.03em;
+    --mi-card-shadow: 4px 4px 0 0 var(--color-text);
+    --mi-card-shadow-hover: 6px 6px 0 0 var(--color-primary);
+    --mi-lift: -2px;
+  }
+
+  /* Elegan — serif, lega, pembatas tipis, nyaris tanpa bayangan. */
+  .mi-preset-elegant {
+    --mi-surface-mix: 2.5%;
+    --mi-border-mix: 8%;
+    --mi-heading-weight: 600;
+    --mi-heading-tracking: 0;
+    --mi-card-shadow: none;
+    --mi-card-shadow-hover: 0 4px 20px rgb(16 24 40 / 0.07);
+    --mi-lift: -2px;
+    --mi-eyebrow-tracking: 0.16em;
+  }
+
+  /* Gelap — permukaan naik (bukan turun) + bayangan berupa cahaya aksen. */
+  .mi-preset-dark {
+    --mi-surface-mix: 7%;
+    --mi-surface-2-mix: 12%;
+    --mi-border-mix: 16%;
+    --mi-border-strong-mix: 30%;
+    --mi-primary-soft-mix: 18%;
+    --mi-muted-mix: 62%;
+    --mi-card-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    --mi-card-shadow-hover: 0 12px 28px rgb(0 0 0 / 0.5);
+    --mi-lift: -4px;
+  }
+
+  /* -------------------------------------------------------------------
+   * Kerapatan (theme.density) — mengubah SKALA padding section, bukan
+   * nilai akhirnya, supaya pilihan paddingY per section tetap dihormati.
+   * ------------------------------------------------------------------- */
+  .mi-density-compact {
+    --section-py-sm: 0.75rem;
+    --section-py-md: 1.5rem;
+    --section-py-lg: 3rem;
+    --mi-gap: 0.75rem;
+  }
+  .mi-density-normal {
+    --mi-gap: 1rem;
+  }
+  .mi-density-roomy {
+    --section-py-sm: 1.5rem;
+    --section-py-md: 4rem;
+    --section-py-lg: 7rem;
+    --mi-gap: 1.5rem;
+  }
+
+  /* -------------------------------------------------------------------
+   * Gaya kartu (theme.cardStyle) — override granular atas bawaan preset.
+   * ------------------------------------------------------------------- */
+  .mi-card-flat {
+    --mi-card-shadow: none;
+    --mi-card-shadow-hover: none;
+    --mi-card-border-width: 0;
+    --mi-card-bg: var(--color-surface);
+  }
+  .mi-card-soft {
+    --mi-card-border-width: 0;
+    --mi-card-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 6px 16px rgb(16 24 40 / 0.06);
+    --mi-card-shadow-hover: 0 2px 6px rgb(16 24 40 / 0.06), 0 16px 32px rgb(16 24 40 / 0.1);
+  }
+  .mi-card-elevated {
+    --mi-card-border-width: 0;
+    --mi-card-shadow: var(--shadow-card);
+    --mi-card-shadow-hover: var(--shadow-pop);
+  }
+  .mi-card-outlined {
+    --mi-card-shadow: none;
+    --mi-card-shadow-hover: none;
+    --mi-card-border-width: 1px;
+    --mi-card-bg: var(--color-bg);
+  }
+
+  /* -------------------------------------------------------------------
+   * Primitif — dipakai block supaya "look" dikendalikan satu tempat dan
+   * bisa ditukar preset sekaligus, bukan tersebar jadi utility per file.
+   * ------------------------------------------------------------------- */
+
+  .mi-card {
+    background-color: var(--mi-card-bg);
+    border: var(--mi-card-border-width) solid var(--color-border);
+    border-radius: var(--mi-radius-card);
+    box-shadow: var(--mi-card-shadow);
+    overflow: hidden;
+    transition:
+      transform var(--mi-speed) ease,
+      box-shadow var(--mi-speed) ease,
+      border-color var(--mi-speed) ease;
+  }
+  /* Kartu yang bisa diklik saja yang mengangkat diri — kartu statis tidak. */
+  .mi-card-link:hover,
+  .mi-card-link:focus-within {
+    transform: translateY(var(--mi-lift));
+    box-shadow: var(--mi-card-shadow-hover);
+  }
+  /* Zoom halus gambar di dalam kartu saat kartunya disentuh. */
+  .mi-card-media {
+    overflow: hidden;
+    background-color: var(--color-surface-2);
+  }
+  .mi-card-media :is(img, picture) {
+    transition: transform 320ms ease;
+  }
+  .mi-card-link:hover .mi-card-media :is(img, picture) {
+    transform: scale(1.04);
+  }
+
+  /* -------------------------------------------------------------------
+   * Navigasi utama (BlockNavbar).
+   * ------------------------------------------------------------------- */
+  .mi-nav {
+    background-color: color-mix(in oklab, var(--color-bg) 88%, transparent);
+    border-color: var(--color-border);
+    /* Latar semi-transparan hanya aman kalau backdrop-filter benar-benar
+       jalan; tanpa itu teks konten terbaca menembus navbar saat digulir. */
+    backdrop-filter: saturate(1.4) blur(10px);
+  }
+  @supports not (backdrop-filter: blur(10px)) {
+    .mi-nav {
+      background-color: var(--color-bg);
+    }
+  }
+  .mi-nav-link {
+    position: relative;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-theme);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--color-text);
+    text-decoration: none;
+    transition:
+      background-color var(--mi-speed) ease,
+      color var(--mi-speed) ease;
+  }
+  .mi-nav-link:hover {
+    background-color: var(--color-surface-2);
+  }
+  .mi-nav-link-active {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  /* Penanda halaman aktif: garis pendek di bawah label, bukan sekadar warna —
+     warna saja tidak terbaca oleh pengguna buta warna. */
+  .mi-nav-link-active::after {
+    content: "";
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.125rem;
+    height: 2px;
+    border-radius: 2px;
+    background-color: var(--color-primary);
+  }
+  .mi-nav-link-block {
+    display: block;
+    padding: 0.8125rem 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .mi-nav-link-block:last-child {
+    border-bottom: 0;
+  }
+  .mi-nav-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    padding: 0.5625rem 1rem;
+    border-radius: var(--radius-theme);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: filter var(--mi-speed) ease;
+  }
+  .mi-nav-cta:hover {
+    filter: brightness(1.08);
+  }
+  .mi-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* 44px — ambang target sentuh; ikon 20px saja terlalu kecil di mobil. */
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-right: -0.5rem;
+    border-radius: var(--radius-theme);
+    color: var(--color-text);
+  }
+  .mi-nav-toggle:hover {
+    background-color: var(--color-surface-2);
+  }
+  .mi-nav-panel {
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-bg);
+  }
+
+  /* Tombol CTA (utils/cta.ts). Angkat + cerah saat disentuh, bukan sekadar
+     memudar seperti sebelumnya — memudar membuat tombol terasa dinonaktifkan. */
+  .mi-cta {
+    text-decoration: none;
+    transition:
+      filter var(--mi-speed) ease,
+      transform var(--mi-speed) ease,
+      box-shadow var(--mi-speed) ease;
+  }
+  .mi-cta:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-card);
+  }
+  .mi-cta:active {
+    transform: translateY(0);
+  }
+  .mi-cta-outline:hover {
+    background-color: var(--color-primary-soft);
+    filter: none;
+  }
+
+  /* Bingkai gambar hero — radius lebih besar + bayangan, supaya foto mobil
+     terbaca sebagai objek di atas halaman, bukan tempelan persegi. */
+  .mi-hero-media {
+    border-radius: calc(var(--mi-radius-card) + 0.25rem);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Pita ajakan — gradien dari warna utama ke aksen tenant. */
+  .mi-cta-band {
+    border-radius: calc(var(--mi-radius-card) + 0.25rem);
+    background-color: var(--color-primary);
+    background-image: linear-gradient(
+      135deg,
+      var(--color-primary),
+      color-mix(in oklab, var(--color-accent) 45%, var(--color-primary))
+    );
+    color: var(--color-on-primary);
+  }
+  .mi-cta-band-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.8125rem 1.75rem;
+    border-radius: var(--radius-theme);
+    background-color: var(--color-on-primary);
+    color: var(--color-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  /* Kepala section — jarak ke isi mengikuti kerapatan tema. */
+  .mi-section-head {
+    margin-bottom: calc(var(--mi-gap, 1rem) * 1.75);
+  }
+  /* Section rata tengah (styleJson.align) — kepala ikut menyempit & memusat,
+     kalau tidak judulnya di tengah tapi paragrafnya melebar penuh. */
+  .section-shell[style*="center"] .mi-section-head {
+    max-width: 42rem;
+    margin-inline: auto;
+  }
+
+  /*
+   * Grid kartu. `auto-fill` + `minmax` menggantikan breakpoint tetap
+   * (sm:2 lg:3): jumlah kolom mengikuti lebar yang tersedia, jadi grid yang
+   * sama tetap benar di dalam pratinjau editor yang sempit maupun layar lebar.
+   */
+  .mi-grid {
+    display: grid;
+    gap: var(--mi-gap, 1rem);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.5rem), 1fr));
+  }
+  .mi-grid-sm {
+    display: grid;
+    gap: var(--mi-gap, 1rem);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+  }
+
+  /* Keadaan kosong — kotak bergaris putus, bukan sebaris teks pudar yang
+     mudah disangka halaman rusak. */
+  .mi-empty {
+    padding: 2.5rem 1.5rem;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--mi-radius-card);
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-muted);
+  }
+
+  /* Baris varian: garis kiri berwarna utama sebagai penanda kolom, bukan
+     kotak polos yang seragam dengan kartu lain. */
+  .mi-variant-row {
+    border-left: 3px solid var(--color-primary);
+  }
+
+  /* Status stok — hijau/kuning/merah lewat campuran dengan warna teks tema,
+     jadi tetap terbaca di latar gelap maupun terang. */
+  .mi-stok-ready {
+    background-color: color-mix(in oklab, #16a34a 16%, var(--color-bg));
+    color: color-mix(in oklab, #16a34a 70%, var(--color-text));
+  }
+  .mi-stok-indent {
+    background-color: color-mix(in oklab, #d97706 16%, var(--color-bg));
+    color: color-mix(in oklab, #d97706 70%, var(--color-text));
+  }
+  .mi-stok-habis {
+    background-color: var(--color-surface-2);
+    color: var(--color-muted);
+  }
+
+  /* Bar perbandingan melayang. */
+  .mi-tray {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in oklab, var(--color-bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-pop);
+  }
+  @supports not (backdrop-filter: blur(12px)) {
+    .mi-tray {
+      background-color: var(--color-bg);
+    }
+  }
+
+  /* Kaki situs — permukaan sedikit berbeda supaya terbaca sebagai penutup. */
+  .mi-footer {
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+  }
+  .mi-footer-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    margin-top: 1rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-theme);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color var(--mi-speed) ease;
+  }
+  .mi-footer-wa:hover {
+    border-color: var(--color-primary);
+  }
+
+  /* Unit terjual / stok habis: diredupkan, TIDAK disembunyikan — daftar yang
+     menyusut diam-diam membuat tenant mengira datanya hilang. Fotonya saja
+     yang pudar; harga & judul tetap kontras supaya tetap terbaca. */
+  .mi-card-sold .mi-card-media {
+    opacity: 0.55;
+    filter: grayscale(1);
+  }
+
+  /* Keterangan singkat berbentuk pil (tahun, transmisi, kilometer). */
+  .mi-spec-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1875rem 0.5rem;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface-2);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  /* Label kecil di atas judul — memberi hierarki tanpa menambah warna. */
+  .mi-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: var(--mi-eyebrow-tracking, 0.08em);
+    color: var(--color-muted);
+  }
+
+  .mi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.5;
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+    white-space: nowrap;
+  }
+  .mi-badge-accent {
+    background-color: var(--color-accent-soft);
+    color: color-mix(in oklab, var(--color-accent) 75%, var(--color-text));
+  }
+  .mi-badge-solid {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  /* Badge di atas foto — kontras sendiri, tidak bergantung latar foto. */
+  .mi-badge-overlay {
+    background-color: rgb(0 0 0 / 0.62);
+    color: #ffffff;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Pilihan berbentuk kapsul (filter tipe bodi, kota, dst). */
+  .mi-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4375rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
+    transition:
+      background-color var(--mi-speed) ease,
+      border-color var(--mi-speed) ease,
+      color var(--mi-speed) ease;
+  }
+  .mi-chip:hover {
+    border-color: var(--color-border-strong);
+  }
+  .mi-chip-active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  /* Kontrol form situs tenant — sebelumnya tiap block merakit kelasnya sendiri. */
+  .mi-field {
+    width: 100%;
+    padding: 0.5625rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-theme);
+    background-color: var(--color-surface);
+    color: inherit;
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+  .mi-field:focus {
+    border-color: var(--color-primary);
+  }
+
+  /* Pembatas yang meredup ke tepi — lebih halus dari garis penuh. */
+  .mi-divider {
+    height: 1px;
+    border: 0;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-border) 15%,
+      var(--color-border) 85%,
+      transparent
+    );
+  }
+
+  /* Sapuan warna lembut untuk section penekan (hero, CTA band). */
+  .mi-wash {
+    background-image:
+      radial-gradient(
+        70rem 30rem at 15% -10%,
+        color-mix(in oklab, var(--color-primary) 14%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        50rem 26rem at 95% 0%,
+        color-mix(in oklab, var(--color-accent) 12%, transparent),
+        transparent 55%
+      );
+  }
+
+  /* Placeholder saat data grid belum tiba — mencegah lompatan layout. */
+  .mi-skeleton {
+    background-color: var(--color-surface-2);
+    border-radius: var(--mi-radius-card);
+    animation: mi-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes mi-pulse {
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  /* Gerak adalah hiasan — pengguna yang memintanya berhenti harus dihormati. */
+  @media (prefers-reduced-motion: reduce) {
+    .tenant-shell * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .mi-card-link:hover,
+    .mi-card-link:focus-within {
+      transform: none;
+    }
+  }
 }
