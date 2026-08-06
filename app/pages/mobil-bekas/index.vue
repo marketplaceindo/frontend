@@ -80,42 +80,48 @@ useTenantSeo({
 <template>
   <NuxtLayout v-if="data && site" name="tenant" :site="site" :preview="isPreview">
     <div class="section-inner py-8 md:py-12">
-      <h1 class="text-2xl font-bold md:text-3xl">Semua Mobil</h1>
+      <div class="mi-section-head">
+        <p class="mi-eyebrow">Katalog</p>
+        <h1 class="mt-1.5 text-3xl font-bold md:text-4xl">Mobil Bekas</h1>
+      </div>
 
-      <!-- Form GET native: submit menghasilkan URL filter yang shareable. -->
-      <form method="get" class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-6" action="/mobil">
+      <!-- Form GET native: submit menghasilkan URL filter yang shareable.
+           `action` menunjuk halaman ini sendiri — sebelumnya "/mobil", yang
+           melempar filter unit bekas (tahun, transmisi, harga) ke listing
+           mobil BARU yang tidak mengenal satu pun param itu. -->
+      <form method="get" class="mb-7 grid grid-cols-2 gap-3 md:grid-cols-6" action="/mobil-bekas">
         <input
           type="text"
           name="brand"
           placeholder="Merk (mis. Toyota)"
           :value="route.query.brand ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         />
         <input
           type="number"
           name="priceMin"
           placeholder="Harga min"
           :value="route.query.priceMin ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         />
         <input
           type="number"
           name="priceMax"
           placeholder="Harga maks"
           :value="route.query.priceMax ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         />
         <input
           type="number"
           name="year"
           placeholder="Tahun"
           :value="route.query.year ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         />
         <select
           name="transmission"
           :value="route.query.transmission ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         >
           <option value="">Semua transmisi</option>
           <option v-for="t in TRANSMISSIONS" :key="t" :value="t">
@@ -125,21 +131,23 @@ useTenantSeo({
         <button type="submit" :class="ctaClass('primary')">Terapkan</button>
       </form>
 
-      <p class="mt-4 text-sm opacity-70" data-testid="jumlah-hasil">
-        {{ data.list.items.length }} unit ditampilkan
+      <p class="mb-4 flex flex-wrap items-center gap-3 text-sm" data-testid="jumlah-hasil">
+        <span style="color: var(--color-muted)">{{ data.list.items.length }} unit ditampilkan</span>
+        <!-- Menunjuk halaman ini, bukan "/mobil" — mereset filter tidak boleh
+             memindahkan user ke listing mobil baru. -->
         <NuxtLink
           v-if="Object.keys(route.query).length"
-          :to="tautan('/mobil')"
-          class="ml-2 font-medium"
+          :to="tautan('/mobil-bekas')"
+          class="mi-chip"
         >
           Hapus filter
         </NuxtLink>
       </p>
 
-      <ul v-if="data.list.items.length" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <ul v-if="data.list.items.length" class="mi-grid">
         <UnitCard v-for="vehicle in data.list.items" :key="vehicle.id" :unit="vehicle" />
       </ul>
-      <p v-else class="mt-6 text-sm opacity-70">
+      <p v-else class="mt-6 mi-empty">
         Tidak ada unit yang cocok dengan filter ini.
       </p>
 

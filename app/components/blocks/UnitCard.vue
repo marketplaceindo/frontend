@@ -14,26 +14,37 @@ const TRANSMISSION_LABELS: Record<string, string> = {
 </script>
 
 <template>
-  <li class="overflow-hidden rounded-theme border border-text/10" :data-unit="unit.slug">
-    <NuxtLink :to="tautan(`/mobil-bekas/${unit.slug}`)" class="block">
+  <li
+    class="mi-card mi-card-link flex flex-col"
+    :class="unit.sold ? 'mi-card-sold' : ''"
+    :data-unit="unit.slug"
+  >
+    <NuxtLink :to="tautan(`/mobil-bekas/${unit.slug}`)" class="flex flex-1 flex-col no-underline">
       <!-- Foto unit butuh resolusi mediaId → URL (backend media, Fase 7). -->
-      <div class="relative aspect-video bg-text/5">
-        <span
-          v-if="unit.sold"
-          class="absolute top-2 left-2 rounded-theme bg-secondary px-2 py-0.5 text-xs font-semibold text-white"
-        >
+      <div class="mi-card-media relative aspect-video">
+        <span v-if="unit.sold" class="mi-badge mi-badge-overlay absolute top-2.5 left-2.5">
           Terjual
         </span>
       </div>
-      <div class="p-4">
-        <h3 class="font-semibold">{{ unit.name }}</h3>
-        <p class="mt-0.5 text-xs opacity-70">
-          {{ unit.year }}
-          <template v-if="unit.transmission"> · {{ TRANSMISSION_LABELS[unit.transmission] }}</template>
-          <template v-if="unit.mileageKm !== undefined"> · {{ unit.mileageKm.toLocaleString("id-ID") }} km</template>
-        </p>
-        <p class="mt-2 font-bold text-primary">{{ formatRupiah(unit.price) }}</p>
-        <span class="mt-3 inline-block text-sm font-semibold text-primary">Lihat Detail →</span>
+      <div class="flex flex-1 flex-col p-4">
+        <h3 class="text-base font-semibold">{{ unit.name }}</h3>
+
+        <!-- Tahun/transmisi/kilometer jadi chip terpisah: di mobil bekas ini
+             kriteria saring utama, bukan keterangan tambahan. -->
+        <ul class="mt-2.5 flex flex-wrap gap-1.5">
+          <li class="mi-spec-pill">{{ unit.year }}</li>
+          <li v-if="unit.transmission" class="mi-spec-pill">
+            {{ TRANSMISSION_LABELS[unit.transmission] }}
+          </li>
+          <li v-if="unit.mileageKm !== undefined" class="mi-spec-pill">
+            {{ unit.mileageKm.toLocaleString("id-ID") }} km
+          </li>
+        </ul>
+
+        <div class="mt-auto pt-4">
+          <p class="text-lg font-bold text-primary">{{ formatRupiah(unit.price) }}</p>
+          <span class="mt-1 inline-block text-sm font-semibold text-primary">Lihat detail →</span>
+        </div>
       </div>
     </NuxtLink>
   </li>

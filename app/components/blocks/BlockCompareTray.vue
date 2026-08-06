@@ -35,19 +35,17 @@ const posisiKelas = "bottom-20 md:bottom-4";
     role="region"
     :aria-label="data.label ?? 'Perbandingan varian'"
   >
-    <div
-      class="mx-auto flex max-w-3xl items-center gap-3 rounded-theme border border-text/10 bg-bg p-3 shadow-lg"
-    >
+    <div class="mi-tray mx-auto flex max-w-3xl items-center gap-3 p-2.5">
       <ul class="flex min-w-0 flex-1 gap-2 overflow-x-auto">
         <li
           v-for="item in compare.items.value"
           :key="`${item.modelSlug}:${item.variantSlug}`"
-          class="flex shrink-0 items-center gap-1 rounded-theme border border-text/10 px-2 py-1 text-xs"
+          class="mi-chip shrink-0 gap-1.5 px-2.5 py-1 text-xs"
         >
           <span class="max-w-[9rem] truncate">{{ item.modelSlug }} {{ item.variantSlug }}</span>
           <button
             type="button"
-            class="opacity-60 hover:opacity-100"
+            class="opacity-60 transition-opacity hover:opacity-100"
             :aria-label="`Hapus ${item.modelSlug} ${item.variantSlug} dari perbandingan`"
             @click="compare.remove(item)"
           >

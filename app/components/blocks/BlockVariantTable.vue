@@ -49,43 +49,64 @@ const STOK_LABEL = { ready: "Ready", indent: "Indent", habis: "Habis" } as const
 
 <template>
   <div v-if="model" class="section-inner py-8 md:py-12">
-    <h2 v-if="data.heading" class="mb-2 text-2xl font-bold md:text-3xl">{{ data.heading }}</h2>
-    <p class="mb-6 text-sm opacity-70">Harga OTR {{ model.city?.name ?? "kota utama" }}</p>
+    <div class="mi-section-head">
+      <h2 v-if="data.heading" class="text-2xl font-bold text-balance md:text-3xl">
+        {{ data.heading }}
+      </h2>
+      <p class="mt-1.5 text-sm" style="color: var(--color-muted)">
+        Harga OTR {{ model.city?.name ?? "kota utama" }}
+      </p>
+    </div>
 
-    <ul class="space-y-3">
+    <ul class="flex flex-col" style="gap: var(--mi-gap, 1rem)">
       <li
         v-for="variant in model.variants"
         :key="variant.slug"
-        class="rounded-theme border border-text/10 p-4"
+        class="mi-card mi-variant-row p-4 md:p-5"
       >
-        <div class="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 class="font-semibold">{{ variant.name }}</h3>
-          <span class="text-xs opacity-70">{{ STOK_LABEL[variant.stockStatus] }}</span>
+        <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="text-base font-semibold">{{ variant.name }}</h3>
+              <span class="mi-badge" :class="`mi-stok-${variant.stockStatus}`">
+                {{ STOK_LABEL[variant.stockStatus] }}
+              </span>
+            </div>
+
+            <ul v-if="variant.highlights.length" class="mt-2.5 flex flex-wrap gap-1.5">
+              <li
+                v-for="h in variant.highlights.slice(0, jumlahHighlight)"
+                :key="h"
+                class="mi-spec-pill"
+              >
+                {{ h }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Harga di kanan pada layar lebar: kolom angka yang sejajar jauh
+               lebih mudah dibandingkan sekilas daripada harga yang berpindah
+               posisi mengikuti panjang nama varian. -->
+          <p class="shrink-0 text-lg font-bold text-primary md:text-right">
+            {{ hargaVarian(variant.priceOtr) ? formatRupiah(hargaVarian(variant.priceOtr)!.price) : "—" }}
+          </p>
         </div>
 
-        <p class="mt-1 font-bold text-primary">
-          {{ hargaVarian(variant.priceOtr) ? formatRupiah(hargaVarian(variant.priceOtr)!.price) : "—" }}
-        </p>
-
-        <ul v-if="variant.highlights.length" class="mt-2 space-y-0.5 text-sm opacity-80">
-          <li v-for="h in variant.highlights.slice(0, jumlahHighlight)" :key="h">• {{ h }}</li>
-        </ul>
-
-        <div class="mt-3 flex flex-wrap gap-3">
+        <div class="mt-4 flex flex-wrap items-center gap-2">
           <NuxtLink
             :to="tautan(`/mobil/${model.model.slug}/${variant.slug}`)"
-            class="text-sm font-semibold text-primary"
+            class="mi-chip"
           >
             Lihat detail →
           </NuxtLink>
           <button
             v-if="data.tampilkanTombolBandingkan"
             type="button"
-            class="text-sm font-semibold"
+            class="mi-chip"
             :class="
               compare.has({ modelSlug: model.model.slug, variantSlug: variant.slug })
-                ? 'text-primary'
-                : 'opacity-80'
+                ? 'mi-chip-active'
+                : ''
             "
             :aria-pressed="compare.has({ modelSlug: model.model.slug, variantSlug: variant.slug })"
             @click="compare.toggle({ modelSlug: model.model.slug, variantSlug: variant.slug })"

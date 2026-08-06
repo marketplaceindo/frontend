@@ -65,51 +65,54 @@ useTenantSeo({
 <template>
   <NuxtLayout v-if="data && site" name="tenant" :site="site" :preview="isPreview">
     <div class="section-inner py-8 md:py-12">
-      <h1 class="text-2xl font-bold md:text-3xl">Semua Produk</h1>
+      <div class="mi-section-head">
+        <p class="mi-eyebrow">Katalog</p>
+        <h1 class="mt-1.5 text-3xl font-bold md:text-4xl">Semua Produk</h1>
+      </div>
 
-      <form method="get" class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-5" action="/produk">
+      <form method="get" class="mb-7 grid grid-cols-2 gap-3 md:grid-cols-5" action="/produk">
         <input
           type="text"
           name="q"
           placeholder="Cari produk…"
           :value="route.query.q ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         />
         <input
           type="text"
           name="category"
           placeholder="Kategori"
           :value="route.query.category ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         />
         <input
           type="number"
           name="priceMin"
           placeholder="Harga min"
           :value="route.query.priceMin ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         />
         <input
           type="number"
           name="priceMax"
           placeholder="Harga maks"
           :value="route.query.priceMax ?? ''"
-          class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+          class="mi-field"
         />
         <button type="submit" :class="ctaClass('primary')">Terapkan</button>
       </form>
 
-      <p class="mt-4 text-sm opacity-70" data-testid="jumlah-hasil">
-        {{ data.list.items.length }} produk ditampilkan
-        <NuxtLink v-if="Object.keys(route.query).length" :to="tautan('/produk')" class="ml-2 font-medium">
+      <p class="mb-4 flex flex-wrap items-center gap-3 text-sm" data-testid="jumlah-hasil">
+        <span style="color: var(--color-muted)">{{ data.list.items.length }} produk ditampilkan</span>
+        <NuxtLink v-if="Object.keys(route.query).length" :to="tautan('/produk')" class="mi-chip">
           Hapus filter
         </NuxtLink>
       </p>
 
-      <ul v-if="data.list.items.length" class="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <ul v-if="data.list.items.length" class="mi-grid-sm">
         <ProductCard v-for="product in data.list.items" :key="product.id" :product="product" />
       </ul>
-      <p v-else class="mt-6 text-sm opacity-70">Tidak ada produk yang cocok dengan filter ini.</p>
+      <p v-else class="mt-6 mi-empty">Tidak ada produk yang cocok dengan filter ini.</p>
 
       <p v-if="nextPageTo" class="mt-6">
         <NuxtLink :to="nextPageTo" :class="ctaClass('outline')">Muat produk berikutnya »</NuxtLink>

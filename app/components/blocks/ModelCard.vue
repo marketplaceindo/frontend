@@ -36,34 +36,50 @@ const dipilih = computed(() => compare.has(refVarian.value));
 </script>
 
 <template>
-  <li class="overflow-hidden rounded-theme border border-text/10" :data-model="model.slug">
-    <NuxtLink :to="tautan(href)" class="block">
-      <div class="aspect-video bg-text/5">
+  <li class="mi-card mi-card-link flex flex-col" :data-model="model.slug">
+    <NuxtLink :to="tautan(href)" class="flex flex-1 flex-col no-underline">
+      <div class="mi-card-media relative aspect-video">
         <BlockImage :image="model.image" />
+        <!-- Jumlah varian di atas foto: informasi yang menentukan klik, jadi
+             ditaruh di tempat mata jatuh pertama, bukan di baris terakhir. -->
+        <span v-if="model.variantCount" class="mi-badge mi-badge-overlay absolute top-2.5 left-2.5">
+          {{ model.variantCount }} varian
+        </span>
       </div>
-      <div class="p-4">
-        <p class="text-xs opacity-70">{{ model.brand }} · {{ model.modelYear }}</p>
-        <h3 class="mt-0.5 font-semibold">{{ model.name }}</h3>
-        <p class="mt-1 line-clamp-2 text-sm opacity-80">{{ model.summary }}</p>
-        <p v-if="model.priceFrom !== null" class="mt-2 font-bold text-primary">
-          <span class="text-xs font-normal opacity-70">Mulai dari</span>
-          {{ formatRupiah(model.priceFrom) }}
+
+      <div class="flex flex-1 flex-col p-4">
+        <p class="mi-eyebrow">{{ model.brand }} · {{ model.modelYear }}</p>
+        <h3 class="mt-1.5 text-base font-semibold">{{ model.name }}</h3>
+        <p
+          v-if="model.summary"
+          class="mt-1.5 line-clamp-2 text-sm leading-relaxed"
+          style="color: var(--color-muted)"
+        >
+          {{ model.summary }}
         </p>
-        <PriceEstimatedNote
-          v-if="model.priceFrom !== null && model.priceEstimated"
-          ringkas
-          :from-city="model.priceEstimatedFromCity"
-        />
-        <p v-else class="mt-2 text-sm opacity-70">Harga belum tersedia di kota ini</p>
-        <p class="mt-1 text-xs opacity-70">{{ model.variantCount }} varian</p>
+
+        <!-- mt-auto: harga selalu menempel di dasar kartu, jadi seluruh baris
+             harga sejajar antar kartu walau ringkasannya beda panjang. -->
+        <div class="mt-auto pt-4">
+          <template v-if="model.priceFrom !== null">
+            <p class="mi-eyebrow">Mulai dari</p>
+            <p class="mt-0.5 text-lg font-bold text-primary">
+              {{ formatRupiah(model.priceFrom) }}
+            </p>
+            <PriceEstimatedNote v-if="model.priceEstimated" ringkas :from-city="model.priceEstimatedFromCity" />
+          </template>
+          <p v-else class="text-sm" style="color: var(--color-muted)">
+            Harga belum tersedia di kota ini
+          </p>
+        </div>
       </div>
     </NuxtLink>
 
-    <div v-if="!tanpaBandingkan" class="border-t border-text/10 px-4 py-3">
+    <div v-if="!tanpaBandingkan" class="px-4 pb-4">
       <button
         type="button"
-        class="text-sm font-semibold"
-        :class="dipilih ? 'text-primary' : 'opacity-80'"
+        class="mi-chip w-full justify-center"
+        :class="dipilih ? 'mi-chip-active' : ''"
         :aria-pressed="dipilih"
         @click="compare.toggle(refVarian)"
       >

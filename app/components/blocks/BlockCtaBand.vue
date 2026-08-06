@@ -9,14 +9,16 @@ const { tautan } = useTenantLink();
 
 <template>
   <div class="section-inner py-8 md:py-12">
-    <div class="rounded-theme bg-primary p-8 text-center text-white md:p-12">
-      <h2 class="text-2xl font-bold md:text-3xl">{{ data.heading }}</h2>
-      <p v-if="data.subheading" class="mt-3 opacity-90">{{ data.subheading }}</p>
-      <!-- Band sudah ber-bg primary → tombol dibalik (bg putih, teks primary). -->
-      <a
-        :href="tautan(data.cta.href)"
-        class="mt-6 inline-block rounded-theme bg-white px-6 py-3 text-sm font-semibold text-primary transition-opacity hover:opacity-85"
-      >
+    <div class="mi-cta-band relative overflow-hidden p-8 text-center md:p-14">
+      <h2 class="relative text-2xl font-bold text-balance md:text-4xl">{{ data.heading }}</h2>
+      <p v-if="data.subheading" class="relative mx-auto mt-4 max-w-xl opacity-90">
+        {{ data.subheading }}
+      </p>
+      <!-- Band sudah ber-bg primary → tombol dibalik: latar = warna teks band
+           itu sendiri, jadi kontrasnya ikut benar meski tenant memilih warna
+           utama terang (dulu selalu putih + teks primary, yang hilang total
+           kalau warna utamanya pucat). -->
+      <a :href="tautan(data.cta.href)" class="mi-cta mi-cta-band-btn relative mt-8">
         {{ data.cta.label }}
       </a>
     </div>

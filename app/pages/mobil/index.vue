@@ -68,17 +68,20 @@ useTenantSeo({
   <NuxtLayout v-if="data" name="tenant" :site="data.site" :preview="isPreview">
     <div class="section-shell">
       <div class="section-inner py-8 md:py-12">
-        <h1 class="text-2xl font-bold md:text-3xl">Mobil Baru</h1>
-        <p class="mt-1 text-sm opacity-70">Harga OTR {{ data.list.city?.name ?? "kota utama" }}</p>
+        <div class="mi-section-head">
+          <p class="mi-eyebrow">Katalog</p>
+          <h1 class="mt-1.5 text-3xl font-bold md:text-4xl">Mobil Baru</h1>
+          <p class="mt-2 text-sm" style="color: var(--color-muted)">
+            Harga OTR {{ data.list.city?.name ?? "kota utama" }}
+            <template v-if="data.list.items.length">
+              · {{ data.list.items.length }} model
+            </template>
+          </p>
+        </div>
 
         <!-- Form GET native: setiap filter menghasilkan URL sendiri -->
-        <form method="get" class="mt-6 flex flex-wrap gap-2">
-          <select
-            name="body"
-            :value="route.query.body ?? ''"
-            class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
-            aria-label="Tipe bodi"
-          >
+        <form method="get" class="mb-7 flex flex-wrap items-center gap-2">
+          <select name="body" :value="route.query.body ?? ''" class="mi-field w-auto" aria-label="Tipe bodi">
             <option value="">Semua tipe</option>
             <option v-for="[value, label] in BODY_TYPES" :key="value" :value="value">
               {{ label }}
@@ -90,15 +93,10 @@ useTenantSeo({
             step="10000000"
             placeholder="Harga maksimal"
             :value="route.query.hargaMax ?? ''"
-            class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+            class="mi-field w-auto"
             aria-label="Harga maksimal"
           />
-          <select
-            name="sort"
-            :value="route.query.sort ?? ''"
-            class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
-            aria-label="Urutkan"
-          >
+          <select name="sort" :value="route.query.sort ?? ''" class="mi-field w-auto" aria-label="Urutkan">
             <option value="">Urutan default</option>
             <option value="harga_asc">Harga termurah</option>
             <option value="harga_desc">Harga tertinggi</option>
@@ -106,12 +104,10 @@ useTenantSeo({
           <button type="submit" :class="ctaClass('primary')">Terapkan</button>
         </form>
 
-        <ul v-if="data.list.items.length" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul v-if="data.list.items.length" class="mi-grid">
           <ModelCard v-for="model in data.list.items" :key="model.slug" :model="model" />
         </ul>
-        <p v-else class="mt-8 text-sm opacity-70">
-          Tidak ada model yang cocok dengan filter ini.
-        </p>
+        <p v-else class="mi-empty">Tidak ada model yang cocok dengan filter ini.</p>
       </div>
     </div>
 

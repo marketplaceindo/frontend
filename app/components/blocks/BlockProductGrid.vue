@@ -33,12 +33,12 @@ const items = computed(() => {
 
 <template>
   <div class="section-inner py-8 md:py-12">
-    <h2 v-if="data.heading" class="mb-6 text-2xl font-bold md:text-3xl">
-      {{ data.heading }}
-    </h2>
-    <ul v-if="items.length" class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div v-if="data.heading" class="mi-section-head">
+      <h2 class="text-2xl font-bold text-balance md:text-3xl">{{ data.heading }}</h2>
+    </div>
+    <ul v-if="items.length" class="mi-grid-sm">
       <ProductCard v-for="product in items" :key="product.id" :product="product" />
     </ul>
-    <p v-else class="text-sm opacity-70">Belum ada produk.</p>
+    <p v-else class="mi-empty">Belum ada produk.</p>
   </div>
 </template>

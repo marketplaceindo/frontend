@@ -36,17 +36,13 @@ const items = computed(() => {
 
 <template>
   <div class="section-inner py-8 md:py-12">
-    <h2 v-if="data.heading" class="mb-6 text-2xl font-bold md:text-3xl">
-      {{ data.heading }}
-    </h2>
-    <ul v-if="items.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <UnitCard
-        v-for="unit in items"
-        :key="unit.id"
-        :unit="unit"
-
-      />
+    <div v-if="data.heading" class="mi-section-head">
+      <p class="mi-eyebrow">Stok tersedia</p>
+      <h2 class="mt-1.5 text-2xl font-bold text-balance md:text-3xl">{{ data.heading }}</h2>
+    </div>
+    <ul v-if="items.length" class="mi-grid">
+      <UnitCard v-for="unit in items" :key="unit.id" :unit="unit" />
     </ul>
-    <p v-else class="text-sm opacity-70">Belum ada unit tersedia.</p>
+    <p v-else class="mi-empty">Belum ada unit tersedia.</p>
   </div>
 </template>

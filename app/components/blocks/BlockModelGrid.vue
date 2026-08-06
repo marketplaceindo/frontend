@@ -49,14 +49,17 @@ const items = computed(() => result.value?.items ?? []);
 
 <template>
   <div class="section-inner py-8 md:py-12">
-    <h2 v-if="data.heading" class="mb-6 text-2xl font-bold md:text-3xl">{{ data.heading }}</h2>
+    <div v-if="data.heading" class="mi-section-head">
+      <p class="mi-eyebrow">Kendaraan</p>
+      <h2 class="mt-1.5 text-2xl font-bold text-balance md:text-3xl">{{ data.heading }}</h2>
+    </div>
 
     <!-- Form GET: setiap filter jadi URL sendiri (crawlable + bisa dibagikan) -->
-    <form v-if="data.tampilkanFilter" method="get" class="mb-6 flex flex-wrap gap-2">
+    <form v-if="data.tampilkanFilter" method="get" class="mb-7 flex flex-wrap items-center gap-2">
       <select
         name="body"
         :value="route.query.body ?? ''"
-        class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+        class="mi-field w-auto"
         aria-label="Tipe bodi"
       >
         <option value="">Semua tipe</option>
@@ -68,15 +71,15 @@ const items = computed(() => result.value?.items ?? []);
         step="10000000"
         placeholder="Harga maksimal"
         :value="route.query.hargaMax ?? ''"
-        class="rounded-theme border border-text/20 bg-bg px-3 py-2 text-sm"
+        class="mi-field w-auto"
         aria-label="Harga maksimal"
       />
       <button type="submit" :class="ctaClass('primary')">Terapkan</button>
     </form>
 
-    <ul v-if="items.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul v-if="items.length" class="mi-grid">
       <ModelCard v-for="model in items" :key="model.slug" :model="model" />
     </ul>
-    <p v-else class="text-sm opacity-70">Belum ada model yang cocok dengan filter ini.</p>
+    <p v-else class="mi-empty">Belum ada model yang cocok dengan filter ini.</p>
   </div>
 </template>
