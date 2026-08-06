@@ -11,7 +11,8 @@
       "textColor": "#0f172a",
       "fontHeading": "Plus Jakarta Sans",
       "fontBody": "Inter",
-      "radius": "lg"
+      "radius": "lg",
+      "preset": "soft"
     },
     "template": {
       "slug": "otomotif"
@@ -29,7 +30,8 @@
     "contact": {
       "whatsapp": "6281299988877",
       "address": "Jl. Raya Serpong KM 7, Tangerang Selatan"
-    }
+    },
+    "brandName": "Otojaya Motor"
   },
   "pages": {
     "home": {

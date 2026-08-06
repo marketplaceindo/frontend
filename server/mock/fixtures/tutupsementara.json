@@ -1,14 +1,35 @@
 {
   "site": {
-    "tenant": { "subdomain": "tutupsementara", "status": "suspended", "publishedAt": "2026-05-01T00:00:00Z" },
-    "theme": { "primaryColor": "#7c3aed" },
-    "template": { "slug": "katalog" },
-    "nav": [{ "slug": "home", "title": "Beranda" }],
-    "contact": { "whatsapp": "6289900011122", "address": "Jl. Pahlawan No. 10, Surabaya" }
+    "tenant": {
+      "subdomain": "tutupsementara",
+      "status": "suspended",
+      "publishedAt": "2026-05-01T00:00:00Z"
+    },
+    "theme": {
+      "primaryColor": "#7c3aed",
+      "preset": "clean"
+    },
+    "template": {
+      "slug": "katalog"
+    },
+    "nav": [
+      {
+        "slug": "home",
+        "title": "Beranda"
+      }
+    ],
+    "contact": {
+      "whatsapp": "6289900011122",
+      "address": "Jl. Pahlawan No. 10, Surabaya"
+    },
+    "brandName": "Tutup Sementara"
   },
   "pages": {
     "home": {
-      "page": { "slug": "home", "title": "Beranda" },
+      "page": {
+        "slug": "home",
+        "title": "Beranda"
+      },
       "sections": [
         {
           "sectionKey": "hero",

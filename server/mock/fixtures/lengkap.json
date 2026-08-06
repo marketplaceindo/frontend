@@ -13,7 +13,8 @@
       "textColor": "#111827",
       "fontHeading": "Poppins",
       "fontBody": "Inter",
-      "radius": "lg"
+      "radius": "lg",
+      "preset": "bold"
     },
     "template": {
       "slug": "bisnis-jasa"
@@ -27,7 +28,8 @@
     "contact": {
       "whatsapp": "6281255566777",
       "address": "Jl. Sudirman Kav. 21, Jakarta Selatan"
-    }
+    },
+    "brandName": "Showroom Lengkap"
   },
   "pages": {
     "home": {

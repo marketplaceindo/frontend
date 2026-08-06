@@ -11,7 +11,8 @@
       "textColor": "#1c1917",
       "fontHeading": "Poppins",
       "fontBody": "Inter",
-      "radius": "md"
+      "radius": "md",
+      "preset": "clean"
     },
     "template": {
       "slug": "kuliner"
@@ -29,7 +30,8 @@
     "contact": {
       "whatsapp": "6281234567890",
       "address": "Jl. Melati No. 5, Bandung"
-    }
+    },
+    "brandName": "Warung Budi"
   },
   "pages": {
     "home": {
