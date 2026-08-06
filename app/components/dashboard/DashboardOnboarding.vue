@@ -22,6 +22,7 @@ import {
   type SeedInventoryResult,
   type ImageRef,
   type Tenant,
+  type ThemePreset,
   type VehicleVertical,
   type WizardAnswers,
 } from "@marketplaceindo/shared";
@@ -30,6 +31,7 @@ import DashboardShell from "./DashboardShell.vue";
 import WizardField from "./WizardField.vue";
 import DashboardPublish from "./DashboardPublish.vue";
 import EditorImageInput from "./EditorImageInput.vue";
+import { THEME_PRESETS, THEME_PRESET_ORDER } from "~~/shared/utils/theme-presets";
 
 const {
   listTenants,
@@ -64,6 +66,7 @@ type StepId =
   | "kontak"
   | "jam"
   | "andalan"
+  | "gaya"
   | "subdomain";
 
 /** Salinan teks step andalan — lihat app/utils/wizard-copy.ts. */
@@ -79,6 +82,7 @@ const STEP_TITLES: Record<StepId, string> = {
   kontak: "Di mana dan ke mana pelanggan menghubungi?",
   jam: "Kapan kamu buka?",
   andalan: "Apa 3 andalanmu?",
+  gaya: "Mau tampilan seperti apa?",
   subdomain: "Mau pakai alamat apa?",
 };
 
@@ -106,6 +110,13 @@ const form = reactive({
   openingHours: [{ days: "Senin–Minggu", open: "08:00", close: "21:00" }],
   highlights: [{ name: "", price: "" }] as HighlightDraft[],
 });
+
+/**
+ * Gaya tampilan pilihan tenant (shared 1.2.0). Default `soft` supaya tenant
+ * yang menekan "lanjut" tanpa memilih tetap keluar dari tampilan bawaan yang
+ * polos — bukan pilihan kosong yang menghasilkan situs tanpa gaya.
+ */
+const stylePreset = ref<ThemePreset>("soft");
 
 const subdomain = ref("");
 const subdomainState = ref<"idle" | "checking" | "ok" | "bad">("idle");
@@ -154,7 +165,7 @@ const steps = computed<StepId[]>(() => {
   const dasar: StepId[] = ["nama", "jenis"];
   if (form.businessType === "otomotif") dasar.push("jual-apa");
   if (pakaiKatalog.value) dasar.push("merk", "kota", "model");
-  return [...dasar, "kontak", "jam", "andalan", "subdomain"];
+  return [...dasar, "kontak", "jam", "andalan", "gaya", "subdomain"];
 });
 
 const stepId = computed<StepId>(() => steps.value[step.value] ?? "nama");
@@ -326,6 +337,7 @@ const answers = computed<WizardAnswers>(() => ({
   ...(form.showHours ? { openingHours: form.openingHours } : {}),
   highlights: highlightsPayload.value,
   ...(form.tagline.trim() ? { tagline: form.tagline.trim() } : {}),
+  ...(stylePreset.value ? { stylePreset: stylePreset.value } : {}),
 }));
 
 async function nextStep() {
@@ -958,6 +970,60 @@ const inputClass =
         </template>
 
         <!-- 6. Alamat situs (subdomain) -->
+        <template v-else-if="stepId === 'gaya'">
+          <p class="-mt-1 text-sm text-slate-600">
+            Bisa diganti kapan saja lewat menu Tampilan.
+          </p>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              v-for="nama in THEME_PRESET_ORDER"
+              :key="nama"
+              type="button"
+              class="rounded-xl border p-3 text-left transition-colors"
+              :class="
+                stylePreset === nama
+                  ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600'
+                  : 'border-slate-200'
+              "
+              :aria-pressed="stylePreset === nama"
+              @click="stylePreset = nama"
+            >
+              <!-- Mini-mockup, bukan sekadar nama: tenant memilih dengan mata.
+                   Warnanya diambil dari palet preset itu sendiri, jadi yang
+                   terlihat di sini memang yang akan dipakai situsnya. -->
+              <span
+                class="block overflow-hidden rounded-lg border border-slate-200 p-2"
+                :style="{ background: THEME_PRESETS[nama].palette.backgroundColor }"
+                aria-hidden="true"
+              >
+                <span
+                  class="block h-1.5 w-10 rounded"
+                  :style="{ background: THEME_PRESETS[nama].palette.primaryColor }"
+                />
+                <span
+                  class="mt-1.5 block h-2 w-full rounded"
+                  :style="{ background: THEME_PRESETS[nama].palette.textColor, opacity: 0.75 }"
+                />
+                <span
+                  class="mt-1 block h-2 w-2/3 rounded"
+                  :style="{ background: THEME_PRESETS[nama].palette.textColor, opacity: 0.35 }"
+                />
+                <span
+                  class="mt-2 block h-4 w-14 rounded"
+                  :style="{ background: THEME_PRESETS[nama].palette.accentColor }"
+                />
+              </span>
+              <span class="mt-2 block text-sm font-semibold text-slate-900">
+                {{ THEME_PRESETS[nama].label }}
+              </span>
+              <span class="mt-0.5 block text-xs leading-snug text-slate-500">
+                {{ THEME_PRESETS[nama].description }}
+              </span>
+            </button>
+          </div>
+        </template>
+
         <template v-else-if="stepId === 'subdomain'">
           <WizardField label="Alamat situs" :error="errors.subdomain">
             <div class="flex items-center rounded-lg border border-slate-300 bg-white pr-3">

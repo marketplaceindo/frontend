@@ -17,8 +17,10 @@ import type {
   RenderPageResponse,
   TenantStatus,
   TenantTheme,
+  ThemePreset,
   WizardAnswers,
 } from "@marketplaceindo/shared";
+import { applyThemePreset } from "../../shared/utils/theme-presets";
 import type { TenantFixture } from "./render-store";
 
 type Section = RenderPageResponse["sections"][number];
@@ -119,9 +121,21 @@ const PRESETS: Record<BusinessType, Preset> = {
   },
 };
 
-/** Tema default per jenis usaha — dipakai saat wizard memilih template. */
-export function themeForBusinessType(type: BusinessType): TenantTheme {
-  return { ...PRESETS[type].theme };
+/**
+ * Tema awal tenant: bawaan jenis usaha, ditimpa gaya yang dipilih tenant di
+ * wizard bila ada.
+ *
+ * Preset menang penuh — termasuk warnanya — karena langkah wizard-nya
+ * menampilkan mini-mockup berwarna palet itu. Menahan warnanya dan hanya
+ * memakai lapisan bentuk akan membuat situs jadi berbeda dari yang barusan
+ * dilihat tenant saat memilih.
+ */
+export function themeForBusinessType(
+  type: BusinessType,
+  stylePreset?: ThemePreset,
+): TenantTheme {
+  const dasar: TenantTheme = { ...PRESETS[type].theme };
+  return stylePreset ? applyThemePreset(dasar, stylePreset) : dasar;
 }
 
 export function templateIdForBusinessType(type: BusinessType): string {
@@ -373,8 +387,11 @@ export function materializeWizard(
   return {
     site: {
       tenant: { subdomain, status, publishedAt },
-      theme: themeForBusinessType(answers.businessType),
+      theme: themeForBusinessType(answers.businessType, answers.stylePreset),
       template: { slug: preset.templateSlug },
+      // Nama usaha jadi wordmark di navigasi & kaki situs (shared 1.2.0).
+      // Tanpa ini renderer tidak punya satu pun sumber identitas tenant.
+      brandName: answers.businessName,
       nav,
       contact: { whatsapp: wa, address: answers.address },
     },
