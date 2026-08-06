@@ -19,6 +19,13 @@ const props = defineProps<{
   section: { id: string; sectionKey: string; order: number; enabled: boolean; styleJson: SectionStyle; blocks: Block[] };
   isFirst: boolean;
   isLast: boolean;
+  /**
+   * Halaman tenant yang sudah ada — sumber tombol "isi dari daftar halaman"
+   * pada block navbar. Navigasi kini murni konten yang diedit tenant (layout
+   * tidak lagi merender `<header>` sendiri dari `site.nav`), jadi menambah
+   * halaman tidak otomatis menambah tautan; tombol itu yang menutup celahnya.
+   */
+  pages?: { slug: string; title: string }[];
 }>();
 
 const emit = defineEmits<{ changed: [] }>();
@@ -56,6 +63,36 @@ const SECTION_LABELS: Record<string, string> = {
 const label = computed(() => SECTION_LABELS[props.section.sectionKey] ?? props.section.sectionKey);
 
 const fieldsByBlock = computed(() => draft.value.map((block) => describeBlockFields(block.type)));
+
+/** `navbarDataSchema.links` dibatasi 8 di shared — jangan melebihi lewat UI. */
+const MAX_NAV_LINKS = 8;
+
+/**
+ * Isi tautan navbar dari daftar halaman tenant. Tautan yang sudah ada
+ * dipertahankan (tenant mungkin menaruh anchor atau tautan luar); hanya
+ * halaman yang belum tertaut yang ditambahkan.
+ */
+function isiNavDariHalaman(blockIndex: number) {
+  const block = draft.value[blockIndex];
+  if (!props.pages?.length || block?.type !== "navbar") return;
+
+  const adaHref = new Set(block.data.links.map((l) => l.href));
+  const tambahan = props.pages
+    .map((p) => ({ label: p.title, href: p.slug === "home" ? "/" : `/${p.slug}` }))
+    .filter((l) => !adaHref.has(l.href));
+
+  if (!tambahan.length) return;
+  setBlockField(blockIndex, "links", [...block.data.links, ...tambahan].slice(0, MAX_NAV_LINKS));
+}
+
+const bisaIsiNav = computed(() =>
+  draft.value.map((block, i) => {
+    if (block.type !== "navbar" || !props.pages?.length) return false;
+    if (block.data.links.length >= MAX_NAV_LINKS) return false;
+    const adaHref = new Set(block.data.links.map((l) => l.href));
+    return props.pages.some((p) => !adaHref.has(p.slug === "home" ? "/" : `/${p.slug}`));
+  }),
+);
 
 function setBlockField(blockIndex: number, key: string, value: unknown) {
   const block = draft.value[blockIndex];
@@ -217,9 +254,19 @@ const ALIGN_OPTIONS = ["left", "center", "right"] as const;
       </p>
 
       <div v-for="(block, i) in draft" :key="i" class="mb-4 space-y-3">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          {{ block.type }}
-        </p>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            {{ block.type }}
+          </p>
+          <button
+            v-if="bisaIsiNav[i]"
+            type="button"
+            class="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700"
+            @click="isiNavDariHalaman(i)"
+          >
+            Isi dari daftar halaman
+          </button>
+        </div>
         <EditorField
           v-for="field in fieldsByBlock[i]"
           :key="field.key"

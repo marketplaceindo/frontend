@@ -339,6 +339,7 @@ function themeSaved(theme: TenantTheme) {
                 :section="section"
                 :is-first="i === 0"
                 :is-last="i === sections.length - 1"
+                :pages="pages ?? []"
                 @changed="onContentChanged"
               />
             </ul>
