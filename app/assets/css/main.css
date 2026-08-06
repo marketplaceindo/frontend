@@ -18,11 +18,36 @@
   --color-white: #ffffff;
   --color-black: #000000;
 
+  /*
+   * Token permukaan & kedalaman (shared 1.2.0).
+   *
+   * Nilai di sini hanya SEED supaya Tailwind menghasilkan utility-nya
+   * (bg-surface, border-border, shadow-card, …). Nilai sebenarnya diturunkan
+   * ulang di `.tenant-shell` dan `.section-shell` dari warna tenant — lihat
+   * catatan "kenapa diturunkan per-elemen" di bawah.
+   */
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f5f7;
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-primary-soft: #eff4ff;
+  --color-accent-soft: #fff7e6;
+  /* Teks di atas primary — dihitung kontrasnya di themeToVars(), bukan ditebak. */
+  --color-on-primary: #ffffff;
+  --color-muted: #6b7280;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 3px rgb(16 24 40 / 0.1);
+  --shadow-card-hover: 0 8px 24px rgb(16 24 40 / 0.1), 0 2px 6px rgb(16 24 40 / 0.06);
+  --shadow-pop: 0 12px 32px rgb(16 24 40 / 0.14);
+
   --font-heading: system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Radius global tenant (theme.radius: none|sm|md|lg|full). */
   --radius-theme: 0.5rem;
+  /* Radius kartu — ikut --radius-theme tapi bisa dilebihkan preset. */
+  --radius-card: 0.75rem;
+  --radius-pill: 9999px;
 }
 
 /*
@@ -82,6 +107,74 @@
 }
 
 @layer components {
+  /*
+   * ---------------------------------------------------------------------
+   * Turunan token: kenapa dideklarasikan per-elemen, bukan di :root
+   * ---------------------------------------------------------------------
+   * Nilai custom property disubstitusi pada ELEMEN TEMPAT IA DIDEKLARASIKAN,
+   * lalu diwariskan sebagai hasil jadi. Kalau `--color-surface` ditulis sekali
+   * di `:root` sebagai color-mix() dari `--color-bg`, ia membeku memakai
+   * `--color-bg` milik :root — override Level 2 (inline di .tenant-shell) dan
+   * Level 3 (inline di .section-shell) TIDAK akan terbaca.
+   *
+   * Karena itu blok turunan yang sama diulang di `.tenant-shell` dan
+   * `.section-shell`: keduanya elemen yang menerima override warna, jadi
+   * turunannya ikut dihitung ulang di sana. Section yang mengganti latar
+   * otomatis mendapat permukaan, garis, dan bayangan yang serasi.
+   *
+   * Tiap properti ditulis dua kali: nilai statis dulu, color-mix() sesudahnya.
+   * Peramban tanpa color-mix() (Android WebView lawas) membuang deklarasi kedua
+   * dan tetap mendapat versi statis — bukan halaman tanpa warna.
+   */
+  .tenant-shell,
+  .section-shell,
+  .mi-tokens {
+    /* Knob yang boleh disetel preset — turunannya ikut berubah sendiri. */
+    --mi-surface-mix: 3.5%;
+    --mi-surface-2-mix: 7%;
+    --mi-border-mix: 12%;
+    --mi-border-strong-mix: 22%;
+    --mi-primary-soft-mix: 10%;
+    --mi-muted-mix: 55%;
+
+    --color-surface: #ffffff;
+    --color-surface: color-mix(in oklab, var(--color-text) var(--mi-surface-mix), var(--color-bg));
+    --color-surface-2: #f4f5f7;
+    --color-surface-2: color-mix(in oklab, var(--color-text) var(--mi-surface-2-mix), var(--color-bg));
+    --color-border: #e5e7eb;
+    --color-border: color-mix(in oklab, var(--color-text) var(--mi-border-mix), var(--color-bg));
+    --color-border-strong: #d1d5db;
+    --color-border-strong: color-mix(in oklab, var(--color-text) var(--mi-border-strong-mix), var(--color-bg));
+    --color-primary-soft: #eff4ff;
+    --color-primary-soft: color-mix(in oklab, var(--color-primary) var(--mi-primary-soft-mix), var(--color-bg));
+    --color-accent-soft: #fff7e6;
+    --color-accent-soft: color-mix(in oklab, var(--color-accent) var(--mi-primary-soft-mix), var(--color-bg));
+    /* Teks sekunder: peredupan terhadap latar, bukan abu-abu tetap — supaya
+       tetap terbaca di tema gelap maupun terang. */
+    --color-muted: #6b7280;
+    --color-muted: color-mix(in oklab, var(--color-text) var(--mi-muted-mix), var(--color-bg));
+  }
+
+  /*
+   * Knob bentuk & gerak (knob preset, lihat .mi-preset-*).
+   *
+   * `.mi-tokens` ada untuk pratinjau tema di dashboard: ia membawa seluruh
+   * token & knob yang sama TANPA `min-height: 100vh` dan tanpa latar
+   * seukuran layar milik `.tenant-shell` — kalau pratinjau memakai
+   * `.tenant-shell` langsung, kotaknya memanjang setinggi viewport.
+   */
+  .tenant-shell,
+  .mi-tokens {
+    --mi-lift: -3px;
+    --mi-speed: 180ms;
+    --mi-heading-weight: 700;
+    --mi-heading-tracking: -0.02em;
+    --mi-radius-card: var(--radius-theme);
+    --mi-card-border-width: 1px;
+    --mi-card-shadow: var(--shadow-card);
+    --mi-card-shadow-hover: var(--shadow-card-hover);
+    --mi-card-bg: var(--color-surface);
+  }
   /* Shell situs tenant — konsumsi token (Level 2 di-set inline oleh layout). */
   .tenant-shell {
     background-color: var(--color-bg);
@@ -91,16 +184,31 @@
   }
   .tenant-shell :is(h1, h2, h3, h4) {
     font-family: var(--font-heading);
+    font-weight: var(--mi-heading-weight);
+    letter-spacing: var(--mi-heading-tracking);
   }
   /* :where → specificity 0, supaya utility (mis. text-white di tombol CTA)
      selalu bisa menimpa warna link default. */
   :where(.tenant-shell) a {
     color: var(--color-primary);
   }
+  /* Fokus keyboard yang terlihat di semua tema — sebelumnya mengandalkan
+     outline bawaan peramban yang hilang di latar gelap. */
+  :where(.tenant-shell) :is(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 
   /* Container konten di dalam section full-bleed (bg section menyentuh tepi). */
   .section-inner {
-    max-width: 64rem;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  /* Varian sempit untuk teks panjang — baris > 75 karakter melelahkan dibaca. */
+  .section-inner-narrow {
+    max-width: 48rem;
     margin-inline: auto;
     padding-inline: 1rem;
   }
