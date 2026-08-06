@@ -7,6 +7,8 @@ import {
   googleFontsHref,
   sectionStyleToCss,
   selfHostedFontPlan,
+  pickOnColor,
+  themeClasses,
   themeToVars,
 } from "../app/utils/theme-vars";
 
@@ -31,8 +33,11 @@ describe("themeToVars (Level 2)", () => {
   });
 
   it("field kosong tidak menghasilkan var (fallback ke Level 1)", () => {
+    // --color-on-primary ikut muncul karena primaryColor terisi: warnanya
+    // diturunkan dari sana, bukan field terpisah yang dikosongkan tenant.
     expect(themeToVars({ primaryColor: "#123456" })).toEqual({
       "--color-primary": "#123456",
+      "--color-on-primary": "#ffffff",
     });
     expect(themeToVars({})).toEqual({});
   });
@@ -138,5 +143,52 @@ describe("font self-host (registry curated)", () => {
   it("semua font sistem → null tanpa preload", () => {
     expect(selfHostedFontPlan({})).toBeNull();
     expect(selfHostedFontPlan({ fontBody: "system-ui" })).toBeNull();
+  });
+});
+
+describe("kontras teks di atas warna utama (pickOnColor)", () => {
+  /*
+   * Regresi yang dijaga: tombol CTA dulu selalu `text-white`. Tenant yang
+   * memilih warna utama pucat mendapat tombol putih-di-atas-terang yang ada di
+   * DOM, lolos seluruh test berbasis HTML, dan tidak terbaca di layar — persis
+   * pola bug §4.1 di REPORT-FRONTEND.
+   */
+  it("warna utama gelap → teks putih", () => {
+    expect(pickOnColor("#1d4ed8")).toBe("#ffffff");
+    expect(pickOnColor("#0b1120")).toBe("#ffffff");
+    expect(pickOnColor("#000")).toBe("#ffffff");
+  });
+
+  it("warna utama terang → teks gelap", () => {
+    expect(pickOnColor("#facc15")).toBe("#111827");
+    expect(pickOnColor("#a3e635")).toBe("#111827");
+    expect(pickOnColor("#ffffff")).toBe("#111827");
+  });
+
+  it("hex tak terbaca → putih (aman: pasangan token seed --color-primary)", () => {
+    expect(pickOnColor("bukan-hex")).toBe("#ffffff");
+  });
+
+  it("onPrimaryColor pilihan tenant menang atas hasil hitung", () => {
+    const vars = themeToVars({ primaryColor: "#facc15", onPrimaryColor: "#7c2d12" });
+    expect(vars["--color-on-primary"]).toBe("#7c2d12");
+  });
+});
+
+describe("themeClasses (lapisan bentuk)", () => {
+  it("preset & gaya kartu jadi kelas, kerapatan selalu ada", () => {
+    expect(themeClasses({ preset: "soft", cardStyle: "elevated", density: "roomy" })).toEqual([
+      "mi-preset-soft",
+      "mi-card-elevated",
+      "mi-density-roomy",
+    ]);
+  });
+
+  it("tanpa preset → hanya kerapatan default (tenant lama tidak berubah tampilan)", () => {
+    expect(themeClasses({ primaryColor: "#123456" })).toEqual(["mi-density-normal"]);
+  });
+
+  it("theme invalid → tetap mengembalikan kerapatan, bukan kelas kosong", () => {
+    expect(themeClasses(null)).toEqual(["mi-density-normal"]);
   });
 });

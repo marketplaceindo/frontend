@@ -9,6 +9,9 @@ export function useTenantTheme(theme: MaybeRefOrGetter<unknown>) {
   /** Inline style untuk root wrapper tenant — ter-render di HTML SSR (anti-FOUC). */
   const themeStyle = computed(() => themeToVars(toValue(theme)));
 
+  /** Lapisan bentuk (preset/cardStyle/density) — kelas, bukan var. */
+  const themeClass = computed(() => themeClasses(toValue(theme)));
+
   // Font curated → self-host: @font-face inline + preload woff2 heading
   // (same-origin, tanpa chain koneksi Google — LCP teks tidak tertahan).
   const fontPlan = computed(() => selfHostedFontPlan(toValue(theme)));
@@ -47,5 +50,5 @@ export function useTenantTheme(theme: MaybeRefOrGetter<unknown>) {
         : [],
   });
 
-  return { themeStyle, fontsHref };
+  return { themeStyle, themeClass, fontsHref };
 }

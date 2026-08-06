@@ -16,6 +16,10 @@ import {
 
 export type CssVars = Record<string, string>;
 
+/** Teks gelap default di atas warna terang — sama dengan token `--color-text`. */
+const ON_LIGHT = "#111827";
+const ON_DARK = "#ffffff";
+
 /** Nama font yang boleh masuk ke value CSS & URL Google Fonts. */
 const FONT_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9\- ]{0,79}$/;
 
@@ -47,6 +51,54 @@ const ALIGN_MAP: Record<NonNullable<SectionStyle["align"]>, string> = {
   right: "right",
 };
 
+/** `#abc` / `#aabbcc` → [r,g,b] 0–255; bentuk lain → null. */
+function parseHex(hex: string): [number, number, number] | null {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const h = m[1]!;
+  const full = h.length === 3 ? h.replace(/./g, (c) => c + c) : h;
+  return [
+    parseInt(full.slice(0, 2), 16),
+    parseInt(full.slice(2, 4), 16),
+    parseInt(full.slice(4, 6), 16),
+  ];
+}
+
+/** Luminansi relatif WCAG 2.x (sRGB → linear). */
+function relativeLuminance([r, g, b]: [number, number, number]): number {
+  const lin = (c: number) => {
+    const s = c / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+function contrastRatio(a: number, b: number): number {
+  const [hi, lo] = a > b ? [a, b] : [b, a];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/**
+ * Warna teks yang paling terbaca di atas `bg` — hitam atau putih, mana pun yang
+ * rasio kontrasnya lebih tinggi.
+ *
+ * Ada karena tombol CTA dulu terkunci `bg-primary text-white`: tenant yang
+ * memilih warna utama pucat (kuning, lime, cyan) mendapat tombol putih-di-atas-
+ * terang yang tidak terbaca, tanpa jalan keluar dari UI. Sengaja dihitung di JS,
+ * bukan lewat `contrast-color()`/relative color syntax CSS, supaya hasilnya
+ * sama di semua peramban dan ikut ter-render di HTML SSR (tanpa FOUC, tanpa
+ * mismatch hidrasi — fungsinya murni terhadap themeJson).
+ */
+export function pickOnColor(bg: string): string {
+  const rgb = parseHex(bg);
+  if (!rgb) return ON_DARK;
+  const l = relativeLuminance(rgb);
+  return contrastRatio(l, relativeLuminance([255, 255, 255])) >=
+    contrastRatio(l, relativeLuminance(parseHex(ON_LIGHT)!))
+    ? ON_DARK
+    : ON_LIGHT;
+}
+
 /** Family valid → value font-family CSS ber-fallback; invalid → null (fallback token). */
 function toFontFamilyValue(family: string, fallback: "heading" | "body"): string | null {
   if (!FONT_NAME_RE.test(family)) return null;
@@ -71,6 +123,19 @@ export function themeToVars(theme: unknown): CssVars {
   if (t.textColor) vars["--color-text"] = t.textColor;
   if (t.radius) vars["--radius-theme"] = RADIUS_MAP[t.radius];
 
+  /* Permukaan kartu: kalau tenant tidak menentukan, TIDAK diisi di sini —
+     biar `.tenant-shell` menurunkannya dari bg+text lewat color-mix(), supaya
+     section yang mengganti latar (Level 3) ikut menyesuaikan sendiri. */
+  if (t.surfaceColor) vars["--color-surface"] = t.surfaceColor;
+
+  /* Teks di atas tombol utama: pilihan tenant menang, kalau kosong dihitung
+     kontrasnya dari primaryColor. Tenant yang belum menyetel warna utama sama
+     sekali tidak menghasilkan var — token Level 1 (#ffffff, pasangan dari
+     --color-primary seed) sudah benar, dan invariant "field kosong → fallback
+     Level 1" tetap utuh. */
+  if (t.onPrimaryColor) vars["--color-on-primary"] = t.onPrimaryColor;
+  else if (t.primaryColor) vars["--color-on-primary"] = pickOnColor(t.primaryColor);
+
   if (t.fontHeading) {
     const v = toFontFamilyValue(t.fontHeading, "heading");
     if (v) vars["--font-heading"] = v;
@@ -80,6 +145,30 @@ export function themeToVars(theme: unknown): CssVars {
     if (v) vars["--font-body"] = v;
   }
   return vars;
+}
+
+/**
+ * Level 2 (lapisan bentuk): preset/cardStyle/density → kelas CSS di root
+ * wrapper tenant.
+ *
+ * Sengaja kelas, bukan inline var: satu preset menyetel belasan knob sekaligus
+ * (bayangan, tebal garis, radius, bobot judul, skala padding). Menuliskannya
+ * sebagai inline style berarti mengirim belasan properti di tiap HTML SSR dan
+ * memindahkan nilai desain ke JavaScript — nilainya ditaruh di main.css supaya
+ * tetap satu tempat bersama primitifnya.
+ *
+ * `cardStyle`/`density` yang diisi tenant menang atas bawaan preset karena
+ * kelasnya diurutkan belakangan di main.css.
+ */
+export function themeClasses(theme: unknown): string[] {
+  const parsed = tenantThemeSchema.safeParse(theme);
+  if (!parsed.success) return ["mi-density-normal"];
+  const t = parsed.data;
+  const classes: string[] = [];
+  if (t.preset) classes.push(`mi-preset-${t.preset}`);
+  if (t.cardStyle) classes.push(`mi-card-${t.cardStyle}`);
+  classes.push(`mi-density-${t.density ?? "normal"}`);
+  return classes;
 }
 
 /**
