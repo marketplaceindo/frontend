@@ -4,6 +4,8 @@ import BlockImage from "./BlockImage.vue";
 
 type Data = Extract<Block, { type: "services" }>["data"];
 defineProps<{ data: Data }>();
+
+const { tautan } = useTenantLink();
 </script>
 
 <template>
@@ -16,17 +18,28 @@ defineProps<{ data: Data }>();
         v-for="(item, i) in data.items"
         :key="i"
         class="overflow-hidden rounded-theme border border-text/10"
+        :class="item.href ? 'transition-shadow hover:shadow-md' : ''"
       >
-        <div v-if="item.image" class="aspect-video">
-          <BlockImage :image="item.image" />
-        </div>
-        <div class="p-5">
-          <h3 class="font-semibold">{{ item.name }}</h3>
-          <p v-if="item.description" class="mt-1 text-sm opacity-80">{{ item.description }}</p>
-          <p v-if="item.price !== undefined" class="mt-3 font-semibold text-primary">
-            {{ formatRupiah(item.price) }}
-          </p>
-        </div>
+        <component
+          :is="item.href ? 'a' : 'div'"
+          :href="item.href ? tautan(item.href) : undefined"
+          class="block no-underline"
+        >
+          <div v-if="item.image" class="aspect-video">
+            <BlockImage :image="item.image" />
+          </div>
+          <div class="p-5">
+            <h3 class="font-semibold">{{ item.name }}</h3>
+            <p v-if="item.description" class="mt-1 text-sm opacity-80">{{ item.description }}</p>
+            <p v-if="item.price !== undefined" class="mt-3 font-semibold text-primary">
+              {{ formatRupiah(item.price) }}
+            </p>
+            <span
+              v-if="item.href"
+              class="mt-3 inline-block text-sm font-semibold text-primary"
+            >Lihat detail →</span>
+          </div>
+        </component>
       </li>
     </ul>
   </div>

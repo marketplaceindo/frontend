@@ -187,11 +187,21 @@ function highlightItems(answers: WizardAnswers, mediaUrl?: MediaUrlResolver): Me
  * Andalan → block yang paling sesuai per jenis usaha. Kuliner memakai
  * `featured_menu`; sisanya `services` (grid kartu nama + harga opsional).
  * Keduanya menerima harga opsional, jadi user tak wajib mengisi harga.
+ *
+ * Untuk otomotif, setiap item mendapat `href` ke halaman model agar kartu
+ * bisa diklik langsung ke detail — slug diturunkan dari nama andalan.
  */
 function highlightBlock(answers: WizardAnswers, preset: Preset, mediaUrl?: MediaUrlResolver): Block {
   const items = highlightItems(answers, mediaUrl);
   if (answers.businessType === "kuliner") {
     return { type: "featured_menu", data: { heading: preset.highlightHeading, items } };
+  }
+  if (answers.businessType === "otomotif") {
+    const serviceItems = items.map((item) => ({
+      ...item,
+      href: `/mobil/${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+    }));
+    return { type: "services", data: { heading: preset.highlightHeading, items: serviceItems } };
   }
   return { type: "services", data: { heading: preset.highlightHeading, items } };
 }
