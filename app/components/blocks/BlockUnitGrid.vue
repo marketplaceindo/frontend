@@ -37,7 +37,7 @@ const items = computed(() => {
 <template>
   <div class="section-inner py-8 md:py-12">
     <div v-if="data.heading" class="mi-section-head">
-      <p class="mi-eyebrow">Stok tersedia</p>
+      <p class="mi-eyebrow">Unit Unggulan</p>
       <h2 class="mt-1.5 text-2xl font-bold text-balance md:text-3xl">{{ data.heading }}</h2>
     </div>
     <ul v-if="items.length" class="mi-grid">

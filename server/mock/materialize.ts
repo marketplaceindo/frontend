@@ -106,7 +106,7 @@ const PRESETS: Record<BusinessType, Preset> = {
     templateSlug: "otomotif",
     templateId: TEMPLATE_IDS.otomotif,
     noun: "dealer",
-    highlightHeading: "Unit Tersedia",
+    highlightHeading: "Unit Unggulan",
     ctaLabel: "Hubungi Sales",
     waMessage: (n) => `Halo ${n}, saya tertarik dengan unit yang tersedia.`,
     theme: {
@@ -215,6 +215,7 @@ export function materializeWizard(
 ): TenantFixture {
   const preset = PRESETS[answers.businessType];
   const isKuliner = answers.businessType === "kuliner";
+  const isOtomotif = answers.businessType === "otomotif";
   const wa = answers.whatsapp;
   const tagline = answers.tagline?.trim();
 
@@ -257,6 +258,25 @@ export function materializeWizard(
           heading: answers.businessName,
           subheading: tagline || `${preset.noun.replace(/^./, (c) => c.toUpperCase())} di ${answers.address}.`,
           align: "center",
+          ...(isOtomotif
+            ? {
+                slides: [
+                  {
+                    image: { url: "https://placehold.co/1200x500/111827/ffffff?text=Promo+Spesial", alt: "Promo spesial" },
+                    href: "#unit",
+                    label: "Promo Spesial",
+                    labelVariant: "accent" as const,
+                  },
+                  {
+                    image: { url: "https://placehold.co/1200x500/1f2937/ffffff?text=Unit+Terbaru", alt: "Unit terbaru" },
+                    href: "#unit",
+                    label: "Unit Terbaru",
+                    labelVariant: "primary" as const,
+                  },
+                ],
+                autoPlayMs: 5000,
+              }
+            : {}),
           ctas: [
             {
               label: preset.ctaLabel,

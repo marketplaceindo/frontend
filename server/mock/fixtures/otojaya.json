@@ -54,6 +54,21 @@
               "data": {
                 "heading": "Otojaya Motor — Mobil Bekas Berkualitas",
                 "subheading": "Garansi mesin 1 bulan, bebas banjir, dokumen dijamin lengkap.",
+                "slides": [
+                  {
+                    "image": { "url": "https://placehold.co/1200x500/111827/ffffff?text=Promo+Spesial", "alt": "Promo spesial" },
+                    "href": "#unit",
+                    "label": "Promo Spesial",
+                    "labelVariant": "accent"
+                  },
+                  {
+                    "image": { "url": "https://placehold.co/1200x500/1f2937/ffffff?text=Unit+Terbaru", "alt": "Unit terbaru" },
+                    "href": "#unit",
+                    "label": "Unit Terbaru",
+                    "labelVariant": "primary"
+                  }
+                ],
+                "autoPlayMs": 5000,
                 "ctas": [
                   {
                     "label": "Hubungi Sales",
@@ -103,11 +118,14 @@
                 "sales": [
                   {
                     "name": "Ridwan",
-                    "whatsapp": "6281299988877"
+                    "whatsapp": "6281299988877",
+                    "role": "Sales Consultant",
+                    "photo": { "url": "https://placehold.co/200x200/111827/ffffff?text=R", "alt": "Ridwan" }
                   },
                   {
                     "name": "Sari",
-                    "whatsapp": "6281377766655"
+                    "whatsapp": "6281377766655",
+                    "role": "Sales Executive"
                   }
                 ]
               }

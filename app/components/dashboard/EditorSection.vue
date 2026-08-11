@@ -59,6 +59,7 @@ const SECTION_LABELS: Record<string, string> = {
   contact: "Kontak & lokasi",
   footer: "Bagian bawah",
   menu: "Daftar menu",
+  unit: "Unit Unggulan",
 };
 const label = computed(() => SECTION_LABELS[props.section.sectionKey] ?? props.section.sectionKey);
 
